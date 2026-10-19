@@ -18,7 +18,7 @@
      새로고침 후에는 "업데이트 완료" 팝업으로 변경 내역을 보여줍니다.
   ─────────────────────────────────────────────────────────────
 -->
-<meta name="app-version" content="1.2.0">
+<meta name="app-version" content="1.3.1">
 <title>독서노트</title>
 <meta name="theme-color" content="#ffffff">
 <meta name="description" content="레이아웃을 자유롭게 꾸미는 독서노트 · 등장인물 맵 · 자동 저장 · PDF 내보내기">
@@ -29,6 +29,25 @@
 
 <script type="application/json" id="changelog">
 [
+  {
+    "version": "1.3.1",
+    "date": "2026-10-19",
+    "notes": [
+      "아이폰·아이패드에서 글이 있는 메모를 눌러도 편집이 열리지 않아 글을 쓸 수 없던 문제를 고쳤어요",
+      "아이폰에서 입력칸을 누를 때 화면이 확대되던 문제를 고쳤어요"
+    ]
+  },
+  {
+    "version": "1.3.0",
+    "date": "2026-10-19",
+    "notes": [
+      "색상 팔레트를 직접 정할 수 있어요 (색 추가·수정·삭제·순서 바꾸기)",
+      "Liked · Unliked 등 섹션마다 색을 고를 수 있어요 — 모든 책에 한 번에, 또는 이 섹션만",
+      "팔레트 색을 바꾸면 그 색을 쓰는 섹션과 인물이 함께 바뀌어요",
+      "섹션 색 표시 방식(점 · 제목 색 · 윗줄)과 포인트 색도 고를 수 있어요",
+      "등장인물 색도 팔레트나 직접 고른 색으로 정할 수 있어요"
+    ]
+  },
   {
     "version": "1.2.0",
     "date": "2026-10-19",
@@ -75,7 +94,7 @@
   --font:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
   --ink:#18181B; --ink2:#3F3F46; --muted:#71717A; --faint:#A1A1AA;
   --line:#ECECEF; --line2:#DEDEE3; --soft:#F5F5F7; --hover:#F1F1F3;
-  --accent:#2E6B57; --accent-ink:#245746; --accent-soft:#E8F1ED; --accent-line:#BFD8CD;
+  --accent:#2E6B57; --accent-ink:#245746; --accent-soft:#E8F1ED; --accent-line:#BFD8CD; --accent-fg:#fff;
   --danger:#D7373F; --danger-soft:#FDECEC; --star:#F2A60C;
   --shadow:0 1px 2px rgba(16,16,24,.05),0 10px 30px -8px rgba(16,16,24,.12);
 }
@@ -377,7 +396,6 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
 .ilabel{font-size:12px;color:var(--muted);font-weight:600;min-width:52px}
 .swatches{display:flex;gap:7px;flex-wrap:wrap}
 .sw{width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:var(--sw);box-shadow:0 0 0 1px rgba(0,0,0,.1);padding:0}
-.sw.on{box-shadow:0 0 0 2px var(--sw)}
 .check{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:var(--ink2);cursor:pointer;margin-left:auto}
 .check input{width:16px;height:16px;accent-color:var(--accent)}
 .insp-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
@@ -496,6 +514,7 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
 .md-view{cursor:text;border-radius:8px;outline:none;min-height:36px;padding:6px 8px;transition:background .12s}
 .md-view:hover{background:#FAFAFB}
 .md-view:focus-visible{box-shadow:0 0 0 1.5px var(--accent) inset}
+@media (hover:none),(pointer:coarse){.md-view{cursor:pointer;-webkit-tap-highlight-color:transparent}}
 .md-view.fin-view{min-height:34px;font-size:14.5px}
 .md-tools{display:none;align-items:center;gap:1px;width:max-content;max-width:100%;margin:4px 0;padding:3px;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:0 4px 14px -6px rgba(0,0,0,.14);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .md-tools::-webkit-scrollbar{display:none}
@@ -525,13 +544,13 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
 .md ul.st,.md ol.st{list-style:none}
 .md .st>li{position:relative}
 .md-mk{position:absolute;left:-1.7em;width:1.25em;text-align:right;color:#8B8B93;font-variant-numeric:tabular-nums}
-.md-check.on{background:var(--accent);border-color:var(--accent)}
+.md-check.on{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
 .md blockquote{margin:.3em 0 .5em;padding:.15em 0 .15em .9em;border-left:3px solid var(--line2);color:var(--ink2)}
 .md code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"D2Coding",monospace;font-size:.87em;background:var(--soft);padding:.12em .38em;border-radius:5px}
 .md pre{margin:.35em 0 .55em;padding:.7em .9em;background:var(--soft);border-radius:10px;overflow-x:auto}
 .md pre code{background:none;padding:0;font-size:.85em;white-space:pre;line-height:1.55}
 .md hr{border:0;border-top:1px solid var(--line2);margin:.8em 0}
-.md a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.md a{color:var(--accent-ink);text-decoration:underline;text-underline-offset:2px}
 .md mark{background:#FFEB80;color:inherit;padding:0 .12em;border-radius:3px}
 .md del{color:var(--muted)}
 .md strong{font-weight:750}
@@ -558,6 +577,48 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
 .p-doc .md-table{overflow:visible}
 .p-frow .v .md{white-space:normal}
 
+/* ── 색상 ── */
+.sw{display:inline-block;position:relative;flex:none;cursor:pointer}
+.sw.on{box-shadow:0 0 0 2px var(--ink)}
+.sw-custom{background:conic-gradient(#F43F5E,#F59E0B,#EAB308,#22C55E,#06B6D4,#3B82F6,#A855F7,#F43F5E);overflow:hidden}
+.sw-custom.on{background:var(--sw)}
+.sw-custom input,.pal-sw input{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);opacity:0;cursor:pointer;border:0;padding:0;margin:0}
+.cp{display:flex;flex-wrap:wrap;align-items:center;gap:7px;min-width:0}
+.cp-reset{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px 0 6px;border:1px solid var(--line2);border-radius:999px;background:#fff;font-size:12px;font-weight:600;color:var(--muted)}
+.cp-reset i{width:14px;height:14px;border-radius:50%;flex:none}
+.cp-reset.on{border-color:var(--ink);color:var(--ink);box-shadow:0 0 0 1px var(--ink) inset}
+.cs-sec{padding:16px 0;border-top:1px solid var(--line)}
+.cs-sec:first-child{border-top:0;padding-top:4px}
+.cs-sec h3{margin:0 0 6px;font-size:14.5px;font-weight:800;display:flex;align-items:center;gap:7px}
+.cs-sec>p{margin:0 0 12px;color:var(--muted);font-size:13px;line-height:1.55}
+.pal-list{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-direction:column;gap:6px}
+.pal-item{display:flex;align-items:center;gap:8px;padding:5px 6px 5px 2px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.pal-sw{position:relative;display:block;width:32px;height:32px;border-radius:9px;background:var(--sw);box-shadow:inset 0 0 0 1px rgba(0,0,0,.1);cursor:pointer;overflow:hidden;flex:none}
+.pal-hex{width:88px;height:32px;flex:none;border:1px solid var(--line2);border-radius:8px;padding:0 8px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;text-transform:uppercase;outline:none;color:var(--ink)}
+.pal-hex:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.pal-hex.bad{border-color:var(--danger);box-shadow:0 0 0 3px var(--danger-soft)}
+.pal-use{flex:1;min-width:0;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.faint{color:var(--faint)}
+.sc-list{display:flex;flex-direction:column}
+.sc-row{display:grid;grid-template-columns:168px minmax(0,1fr);gap:8px 14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.sc-row:last-child{border-bottom:0}
+.sc-label{display:flex;align-items:center;gap:8px;min-width:0;font-size:14px}
+.sc-label small{color:var(--faint);font-size:12px;white-space:nowrap}
+.sc-dot{width:11px;height:11px;border-radius:4px;flex:none;display:inline-block}
+.sc-style{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.scm-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.scm-head .sc-dot{width:14px;height:14px}
+.scm-note{margin:0 0 12px;line-height:1.55}
+.scm-pal{margin-top:14px}
+.pal-strip{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 12px}
+.pal-strip span{width:22px;height:22px;border-radius:7px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+@media (max-width:600px){.sc-row{grid-template-columns:minmax(0,1fr);gap:6px}.pal-use{display:none}.pal-item{gap:6px}}
+/* 섹션 색 표시 방식 */
+.sec-style-title .sec-title{color:var(--c-ink)}
+.sec-style-band .sec{position:relative}
+.sec-style-band .sec::before{content:"";position:absolute;left:18px;right:18px;top:-1px;height:3px;border-radius:0 0 3px 3px;background:var(--c);pointer-events:none}
+.p-band{height:3px;border-radius:2px;margin:-3px 0 7px}
+
 /* ── Print / PDF document ── */
 #printRoot{display:none}
 .pdf-holder{position:fixed;left:-14000px;top:0;width:186mm;background:#fff;pointer-events:none}
@@ -574,7 +635,7 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
 .p-text{flex:1;min-width:0}
 .p-page{color:#A1A1AA;font-size:8pt;white-space:nowrap;padding-top:1px}
 .p-check{width:12px;height:12px;border:1.2px solid #A1A1AA;border-radius:3px;flex:none;margin-top:3px;font-size:8pt;line-height:9px;text-align:center;color:#fff;font-weight:800}
-.p-check.on{background:#2E6B57;border-color:#2E6B57}
+.p-check.on{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
 .p-done .p-text{color:#A1A1AA;text-decoration:line-through}
 .p-done .p-text p,.p-done .p-text li,.p-done .p-text h1,.p-done .p-text h2,.p-done .p-text h3,.p-done .p-text h4,.p-done .p-text h5,.p-done .p-text h6,.p-done .p-text td,.p-done .p-text th{text-decoration:line-through;color:#A1A1AA}
 .p-info{display:flex;gap:14px;align-items:flex-start}
@@ -639,9 +700,12 @@ const APP_VERSION = document.querySelector('meta[name="app-version"]').content;
 const CHANGELOG = (() => { try { return JSON.parse(document.getElementById('changelog').textContent); } catch (e) { return []; } })();
 const H2P_URL = 'https://cdn.jsdelivr.net/npm/html2pdf.js@0.14.0/dist/html2pdf.bundle.min.js';
 const FONT = '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif';
-const ACCENT = '#2E6B57';
 const TAB_ID = Math.random().toString(36).slice(2);
 const IS_TOUCH = matchMedia('(hover: none)').matches;
+const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+['app', 'layer', 'toasts'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('click', () => { }); });
+/* 아이폰은 16px보다 작은 입력칸을 누르면 화면을 확대함 → 입력할 때 확대되지 않게 (두 손가락 확대는 그대로 가능) */
+if (IS_IOS) { const vp = document.querySelector('meta[name="viewport"]'); if (vp && !/maximum-scale/.test(vp.content)) vp.content += ', maximum-scale=1'; }
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -707,6 +771,7 @@ const ICONS = {
   printer: '<path d="M6 9V3h12v6M6 18H4.5A1.5 1.5 0 0 1 3 16.5v-6A1.5 1.5 0 0 1 4.5 9h15a1.5 1.5 0 0 1 1.5 1.5v6a1.5 1.5 0 0 1-1.5 1.5H18"/><rect x="6" y="14" width="12" height="7" rx="1"/>',
   edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/>',
+  palette: '<path d="M12 3a9 9 0 0 0 0 18c1.1 0 1.8-.8 1.8-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H16.5A4.5 4.5 0 0 0 21 10.7C21 6.4 17 3 12 3z"/><circle cx="7.6" cy="11.6" r="1.2" fill="currentColor" stroke="none"/><circle cx="10" cy="7.4" r="1.2" fill="currentColor" stroke="none"/><circle cx="14.8" cy="7.4" r="1.2" fill="currentColor" stroke="none"/><circle cx="17.4" cy="11" r="1.2" fill="currentColor" stroke="none"/>',
   columns: '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9 4v16M15 4v16"/>',
   highlight: '<path d="M14.5 4.5l5 5L11 18H6v-5z"/><path d="M4 21h16"/>',
   heading: '<path d="M6 4v16M18 4v16M6 12h12"/>',
@@ -898,7 +963,7 @@ function mdToolsHTML() {
 }
 function mdxHTML(text, taHTML, viewClass = '') {
   const empty = !String(text || '').trim();
-  return `<div class="mdx${empty ? ' is-empty' : ''}"><div class="md md-view ${viewClass}" tabindex="0" title="눌러서 편집">${empty ? '' : md(text)}</div>${taHTML}${mdToolsHTML()}</div>`;
+  return `<div class="mdx${empty ? ' is-empty' : ''}"><div class="md md-view ${viewClass}" tabindex="0" role="button" title="눌러서 편집" onclick="void 0">${empty ? '' : md(text)}</div>${taHTML}${mdToolsHTML()}</div>`;
 }
 function mdRender(wrap) {
   if (!wrap || !wrap.isConnected) return;
@@ -1102,8 +1167,158 @@ const PRESETS = [
 const PRESET = Object.fromEntries(PRESETS.map(p => [p.role, p]));
 const DEFAULT_ROLES = ['title', 'author', 'publisher', 'rating', 'status', 'genre', 'period'];
 const STATUS_TONE = { '읽는 중': 'blue', '완독': 'green', '읽고 싶은': 'amber', '중단': 'gray' };
-const PALETTE = ['#2563EB', '#0D9488', '#16A34A', '#D97706', '#E5484D', '#DB2777', '#7C3AED', '#64748B'];
+
 const RATIOS = { 2: ['1:1', '2:1', '1:2'], 3: ['1:1:1', '2:1:1', '1:2:1', '1:1:2'] };
+/* ── 색상: 팔레트 · 섹션 색 · 포인트 색 ──
+   색 값은 '#RRGGBB'(직접 고른 색) 또는 '@팔레트ID'(팔레트 연결) 중 하나.
+   팔레트 색을 바꾸면 '@ID'로 연결된 섹션·인물이 함께 바뀜. */
+const HEX_RX = /^#[0-9a-f]{6}$/i;
+const REF_RX = /^@[A-Za-z0-9_-]{1,64}$/;
+const PALETTE_MAX = 24;
+const DEFAULT_PALETTE = [
+  { id: 'blue', hex: '#2563EB' }, { id: 'teal', hex: '#0D9488' }, { id: 'green', hex: '#16A34A' }, { id: 'amber', hex: '#D97706' }, { id: 'red', hex: '#E5484D' },
+  { id: 'pink', hex: '#DB2777' }, { id: 'violet', hex: '#7C3AED' }, { id: 'slate', hex: '#64748B' }, { id: 'gray', hex: '#71717A' },
+];
+const DEFAULT_SEC_COLORS = { info: '@gray', motivation: '@amber', liked: '@pink', unliked: '@slate', learned: '@green', action: '@blue', comment: '@violet', characters: '@teal', custom: '@gray' };
+const DEFAULT_ACCENT = '#2E6B57';
+const FALLBACK_HEX = '#71717A';
+const SEC_STYLES = [{ v: 'dot', l: '점' }, { v: 'title', l: '제목 색' }, { v: 'band', l: '윗줄' }];
+const COLOR_SUGGEST = ['#0EA5E9', '#84CC16', '#F59E0B', '#F43F5E', '#A855F7', '#14B8A6', '#EAB308', '#6366F1', '#EC4899', '#78716C', '#22C55E', '#06B6D4'];
+const isColor = v => typeof v === 'string' && (HEX_RX.test(v) || REF_RX.test(v));
+function parseHex(v) {
+  const m = String(v == null ? '' : v).trim().match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i); if (!m) return null;
+  let h = m[1]; if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  return '#' + h.toUpperCase();
+}
+function palette() { return (state && state.settings && Array.isArray(state.settings.palette) && state.settings.palette.length) ? state.settings.palette : DEFAULT_PALETTE; }
+function resolveColor(v, fb = FALLBACK_HEX) {
+  if (typeof v === 'string') {
+    if (HEX_RX.test(v)) return v.toUpperCase();
+    if (REF_RX.test(v)) { const id = v.slice(1), p = palette().find(x => x.id === id); if (p) return p.hex; }
+  }
+  return fb;
+}
+function secTypeKey(type) { return Object.prototype.hasOwnProperty.call(DEFAULT_SEC_COLORS, type) ? type : 'custom'; }
+function defaultSecHex(type) { const r = DEFAULT_SEC_COLORS[secTypeKey(type)], p = DEFAULT_PALETTE.find(x => '@' + x.id === r); return p ? p.hex : FALLBACK_HEX; }
+function secTypeHex(type) { const t = secTypeKey(type); return resolveColor(state && state.settings && state.settings.secColors ? state.settings.secColors[t] : null, defaultSecHex(t)); }
+function secColor(s) { return (s && isColor(s.color)) ? resolveColor(s.color, secTypeHex(s.type)) : secTypeHex(s && s.type); }
+function accentHex() { return resolveColor(state && state.settings ? state.settings.accent : null, DEFAULT_ACCENT); }
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
+function rgbHex(a) { return '#' + a.map(c => clamp(Math.round(c), 0, 255).toString(16).padStart(2, '0')).join('').toUpperCase(); }
+function mixHex(a, b, t) { const x = hexRgb(a), y = hexRgb(b); return rgbHex(x.map((c, i) => c + (y[i] - c) * t)); }
+function lum(h) { return hexRgb(h).map(c => { c /= 255; return c <= .03928 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4); }).reduce((s, c, i) => s + c * [.2126, .7152, .0722][i], 0); }
+function contrast(a, b) { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); }
+/** 흰 배경에서 글자로 읽힐 만큼 어둡게 */
+function readableOn(h, bg = '#FFFFFF', min = 4.5) { let c = h; for (let t = .05; contrast(c, bg) < min && t <= 1.001; t += .05) c = mixHex(h, '#000000', t); return c; }
+/** 이 색 위에 올릴 글자 색 */
+function onColor(h) { return contrast('#FFFFFF', h) >= 3 ? '#FFFFFF' : '#18181B'; }
+function visibleStroke(h) { return contrast(h, '#FFFFFF') < 1.6 ? mixHex(h, '#000000', .3) : h; }
+function normalizeSettings(x) {
+  const s = (x && typeof x === 'object' && !Array.isArray(x)) ? x : {};
+  const out = { sort: SORTS.some(o => o.v === s.sort) ? s.sort : 'custom', stackMobile: s.stackMobile === true };
+  const seen = new Set();
+  out.palette = (Array.isArray(s.palette) ? s.palette : [])
+    .filter(p => p && typeof p === 'object' && typeof p.id === 'string' && SAFE_ID.test(p.id) && HEX_RX.test(p.hex) && !seen.has(p.id) && seen.add(p.id))
+    .slice(0, PALETTE_MAX).map(p => ({ id: p.id, hex: p.hex.toUpperCase() }));
+  if (!out.palette.length) out.palette = deep(DEFAULT_PALETTE);
+  const sc = (s.secColors && typeof s.secColors === 'object') ? s.secColors : {};
+  out.secColors = {}; Object.keys(DEFAULT_SEC_COLORS).forEach(t => { out.secColors[t] = isColor(sc[t]) ? sc[t] : DEFAULT_SEC_COLORS[t]; });
+  out.accent = isColor(s.accent) ? s.accent : null;
+  out.secStyle = SEC_STYLES.some(o => o.v === s.secStyle) ? s.secStyle : 'dot';
+  return out;
+}
+function applyTheme() {
+  const r = document.documentElement.style, a = accentHex(), keys = ['--accent', '--accent-ink', '--accent-soft', '--accent-line', '--accent-fg'];
+  if (a === DEFAULT_ACCENT) { keys.forEach(k => r.removeProperty(k)); return; }
+  r.setProperty('--accent', a); r.setProperty('--accent-ink', readableOn(a)); r.setProperty('--accent-soft', tint(a, .9)); r.setProperty('--accent-line', tint(a, .66)); r.setProperty('--accent-fg', onColor(a));
+}
+function secVars(s) { const c = secColor(s); return `--c:${c};--c-ink:${readableOn(c)}`; }
+let _themeRaf = 0;
+function themeChanged(msg) {
+  if (msg) commit(msg);
+  if (_themeRaf) return;
+  _themeRaf = requestAnimationFrame(() => { _themeRaf = 0; if (!state) return; applyTheme(); refreshColors(); });
+}
+function refreshColors() {
+  const bk = $('.wrap.book', view);
+  if (bk) {
+    SEC_STYLES.forEach(o => bk.classList.toggle('sec-style-' + o.v, state.settings.secStyle === o.v));
+    const b = curBook();
+    if (b) $$('.sec[data-sec]', bk).forEach(el => { const s = b.sections[el.dataset.sec]; if (!s) return; const c = secColor(s); el.style.setProperty('--c', c); el.style.setProperty('--c-ink', readableOn(c)); });
+  }
+  $$('.cmap', view).forEach(r => { drawMap(r); renderLists(r); const ins = $('.cmap-insp', r); if (ins && !ins.contains(document.activeElement)) renderInsp(r); });
+}
+function colorUsage(id) {
+  const ref = '@' + id, u = { types: [], secs: 0, nodes: 0, accent: state.settings.accent === ref };
+  Object.keys(DEFAULT_SEC_COLORS).forEach(t => { if (state.settings.secColors[t] === ref) u.types.push(t === 'custom' ? '직접 만든 섹션' : SEC[t].title); });
+  state.books.forEach(b => Object.values(b.sections).forEach(s => { if (s.color === ref) u.secs++; if (s.map) s.map.nodes.forEach(n => { if (n.color === ref) u.nodes++; }); }));
+  return u;
+}
+function usageText(u) { const a = u.types.slice(); if (u.secs) a.push(`따로 정한 섹션 ${u.secs}`); if (u.nodes) a.push(`인물 ${u.nodes}`); if (u.accent) a.push('포인트 색'); return a.join(' · '); }
+/** 팔레트 색을 지우기 전에, 그 색을 쓰던 곳을 지금 색 그대로 고정 */
+function delinkColor(id, hex) {
+  const ref = '@' + id, fix = (o, k) => { if (o && o[k] === ref) o[k] = hex; };
+  state.books.forEach(b => Object.values(b.sections).forEach(s => { fix(s, 'color'); if (s.map) s.map.nodes.forEach(n => fix(n, 'color')); }));
+  if (state.template) Object.values(state.template.sections).forEach(s => fix(s, 'color'));
+  Object.keys(state.settings.secColors).forEach(t => fix(state.settings.secColors, t));
+  fix(state.settings, 'accent');
+}
+/** 가져온 책이 이 기기 팔레트에 없는 색을 가리키면, 원래 색 그대로 고정 */
+function relinkColors(books, foreignPal) {
+  const cur = new Set(palette().map(p => p.id)), foreign = new Map((foreignPal || []).map(p => [p.id, p.hex]));
+  const fix = v => (typeof v === 'string' && REF_RX.test(v) && !cur.has(v.slice(1))) ? (foreign.get(v.slice(1)) || null) : v;
+  books.forEach(b => Object.values(b.sections).forEach(s => {
+    if (s.color) { const v = fix(s.color); if (v) s.color = v; else delete s.color; }
+    if (s.map) s.map.nodes.forEach(n => { n.color = fix(n.color) || FALLBACK_HEX; });
+  }));
+}
+/** 색 고르기 줄: 팔레트 색 + 직접 고르기 (+ 기본값) */
+function cpHTML(target, value, o = {}) {
+  const v = isColor(value) ? value : '', isH = HEX_RX.test(v), cur = resolveColor(v, o.resetHex || FALLBACK_HEX);
+  return `<div class="cp" data-cp="${esc(target)}"${o.clearSec ? ` data-clear-sec="${esc(o.clearSec)}"` : ''}>${palette().map(p => `<button type="button" class="sw${v === '@' + p.id ? ' on' : ''}" style="--sw:${p.hex}" data-cp-val="@${p.id}" data-pal-ref="${p.id}" title="${p.hex}" aria-label="팔레트 색 ${p.hex}"></button>`).join('')}<label class="sw sw-custom${isH ? ' on' : ''}"${isH ? ` style="--sw:${v}"` : ''} title="직접 고르기"><input type="color" data-cp-custom value="${cur.toLowerCase()}" aria-label="직접 고르기"></label>${o.reset ? `<button type="button" class="cp-reset${v ? '' : ' on'}" data-cp-val=""><i style="background:${o.resetHex || FALLBACK_HEX}"></i>${o.reset}</button>` : ''}</div>`;
+}
+function cpValue(cp) {
+  const target = cp.dataset.cp || '';
+  if (target === 'accent') return state.settings.accent || '';
+  if (target.startsWith('type:')) return state.settings.secColors[secTypeKey(target.slice(5))] || '';
+  if (target.startsWith('sec:')) { const b = curBook(), s = b && b.sections[target.slice(4)]; return (s && s.color) || ''; }
+  if (target === 'node') { const c = mapCtx(cp), n = c.s && c.mu && c.mu.sel && c.s.map.nodes.find(x => x.id === c.mu.sel.id); return n ? n.color : ''; }
+  return '';
+}
+function cpMark(cp, live) {
+  const v = cpValue(cp);
+  $$('[data-cp-val]', cp).forEach(b => b.classList.toggle('on', b.dataset.cpVal === v));
+  const cu = $('.sw-custom', cp); if (!cu) return;
+  const isH = HEX_RX.test(v); cu.classList.toggle('on', isH);
+  if (isH) cu.style.setProperty('--sw', v); else cu.style.removeProperty('--sw');
+  if (!live) { const inp = $('input', cu); if (inp) inp.value = resolveColor(v, inp.value.toUpperCase() || FALLBACK_HEX).toLowerCase(); }
+}
+function cpSet(cp, val, live) {
+  if (!cp || !state) return;
+  if (val && !isColor(val)) return;
+  const target = cp.dataset.cp || '';
+  if (target === 'node') {
+    const { root, b, s, mu } = mapCtx(cp), n = s && mu && mu.sel && s.map.nodes.find(x => x.id === mu.sel.id); if (!n || !val) return;
+    n.color = val; commit('인물 색상 변경', b); scheduleDraw(root); renderLists(root);
+  } else if (target.startsWith('type:')) {
+    const t = secTypeKey(target.slice(5)); state.settings.secColors[t] = val || DEFAULT_SEC_COLORS[t];
+    const cs = cp.dataset.clearSec; if (cs) { const b = curBook(), s = b && b.sections[cs]; if (s && s.color) { delete s.color; b.updatedAt = nowISO(); } }
+    themeChanged('섹션 색 변경');
+  } else if (target === 'accent') { state.settings.accent = val || null; themeChanged('포인트 색 변경'); }
+  else if (target.startsWith('sec:')) {
+    const b = curBook(), s = b && b.sections[target.slice(4)]; if (!s) return;
+    if (val) s.color = val; else delete s.color;
+    commit('섹션 색 변경', b); themeChanged();
+  } else return;
+  $$('.cp').forEach(x => { if (x.dataset.cp === target) cpMark(x, live && x === cp); });
+  updateColorPreviews();
+  if (cp._after) cp._after();
+}
+function updateColorPreviews() {
+  $$('[data-dot-type]').forEach(el => { el.style.background = secTypeHex(el.dataset.dotType); });
+  $$('[data-dot-sec]').forEach(el => { const b = curBook(), s = b && b.sections[el.dataset.dotSec]; if (s) el.style.background = secColor(s); });
+  $$('[data-pal-strip]').forEach(el => { el.innerHTML = palette().map(p => `<span style="background:${p.hex}"></span>`).join(''); });
+}
 const SORTS = [
   { v: 'custom', l: '직접 정렬 (끌어서)' }, { v: 'updated', l: '최근 수정순' }, { v: 'created', l: '최근 추가순' },
   { v: 'title', l: '제목 가나다순' }, { v: 'author', l: '작가 가나다순' }, { v: 'rating', l: '별점 높은순' },
@@ -1165,7 +1380,7 @@ function normalizeBook(b) {
     if (!secMap.has(k)) secMap.set(k, s.id);
     if (!SEC[s.type]) s.type = 'custom';
     s.title = typeof s.title === 'string' ? s.title : SEC[s.type].title;
-    if (s.color && !/^#[0-9a-f]{6}$/i.test(s.color)) delete s.color;
+    if (s.color !== undefined && !isColor(s.color)) delete s.color;
     if (s.type === 'info') {
       const fSeen = new Set();
       s.fields = (Array.isArray(s.fields) ? s.fields : []).filter(f => f && typeof f === 'object').map(f => {
@@ -1177,7 +1392,7 @@ function normalizeBook(b) {
     } else if (s.type === 'characters') {
       const m = (s.map && typeof s.map === 'object') ? s.map : {};
       const nSeen = new Set(), nMap = new Map(), eSeen = new Set();
-      const nodes = (Array.isArray(m.nodes) ? m.nodes : []).filter(x => x && typeof x === 'object').map(x => { const nid = safeId(x.id, 'n', nSeen); if (typeof x.id === 'string' && !nMap.has(x.id)) nMap.set(x.id, nid); return { id: nid, name: String(x.name ?? ''), role: String(x.role ?? ''), desc: String(x.desc ?? ''), color: /^#[0-9a-f]{6}$/i.test(x.color) ? x.color : PALETTE[7], main: !!x.main, x: clamp(Math.round(+x.x || 0), -1e5, 1e5), y: clamp(Math.round(+x.y || 0), -1e5, 1e5) }; });
+      const nodes = (Array.isArray(m.nodes) ? m.nodes : []).filter(x => x && typeof x === 'object').map(x => { const nid = safeId(x.id, 'n', nSeen); if (typeof x.id === 'string' && !nMap.has(x.id)) nMap.set(x.id, nid); return { id: nid, name: String(x.name ?? ''), role: String(x.role ?? ''), desc: String(x.desc ?? ''), color: isColor(x.color) ? x.color : FALLBACK_HEX, main: !!x.main, x: clamp(Math.round(+x.x || 0), -1e5, 1e5), y: clamp(Math.round(+x.y || 0), -1e5, 1e5) }; });
       const edges = (Array.isArray(m.edges) ? m.edges : []).filter(e => e && typeof e === 'object' && nMap.has(e.from) && nMap.has(e.to) && nMap.get(e.from) !== nMap.get(e.to)).map(e => ({ id: safeId(e.id, 'l', eSeen), from: nMap.get(e.from), to: nMap.get(e.to), label: String(e.label ?? ''), dir: ['none', 'forward', 'both'].includes(e.dir) ? e.dir : 'forward', style: e.style === 'dashed' ? 'dashed' : 'solid' }));
       s.map = { nodes, edges }; delete s.entries; delete s.fields;
     } else {
@@ -1207,7 +1422,7 @@ function migrate(s) {
     const tb = normalizeBook({ id: 'tpl', sections: st.template.sections, rows: st.template.rows });
     st.template = { sections: tb.sections, rows: tb.rows };
   } else st.template = defaultTemplate();
-  st.settings = Object.assign({ sort: 'custom', stackMobile: false }, st.settings || {});
+  st.settings = normalizeSettings(st.settings);
   if (!Array.isArray(st.saveLog)) st.saveLog = [];
   return st;
 }
@@ -1268,12 +1483,12 @@ function sampleBook() {
   T('comment').entries = [newEntry('읽을 때마다 *다른 문장*이 눈에 들어오는 책.\n\n> 몇 년 뒤에 다시 꺼내 읽어 보고 싶다.')];
   const cm = T('characters').map;
   const N = (name, role, color, main = false, desc = '') => { const n = { id: uid('n'), name, role, desc, color, main, x: 0, y: 0 }; cm.nodes.push(n); return n.id; };
-  const sin = N('에밀 싱클레어', '주인공 · 화자', PALETTE[0], true, '두 세계 사이에서 흔들리며 자기 자신을 찾아가는 소년');
-  const dem = N('막스 데미안', '친구 · 인도자', PALETTE[1]);
-  const eva = N('에바 부인', '데미안의 어머니', PALETTE[6]);
-  const kro = N('프란츠 크로머', '동네 불량배', PALETTE[4]);
-  const pis = N('피스토리우스', '오르간 연주자', PALETTE[3]);
-  const bea = N('베아트리체', '첫사랑', PALETTE[5]);
+  const sin = N('에밀 싱클레어', '주인공 · 화자', '@blue', true, '두 세계 사이에서 흔들리며 자기 자신을 찾아가는 소년');
+  const dem = N('막스 데미안', '친구 · 인도자', '@teal');
+  const eva = N('에바 부인', '데미안의 어머니', '@violet');
+  const kro = N('프란츠 크로머', '동네 불량배', '@red');
+  const pis = N('피스토리우스', '오르간 연주자', '@amber');
+  const bea = N('베아트리체', '첫사랑', '@pink');
   const E = (from, to, label, dir = 'forward', style = 'solid') => cm.edges.push({ id: uid('l'), from, to, label, dir, style });
   E(sin, dem, '우정', 'both'); E(kro, sin, '협박'); E(dem, kro, '떼어 놓음'); E(eva, dem, '모자', 'none');
   E(sin, eva, '동경'); E(pis, sin, '가르침'); E(sin, bea, '짝사랑', 'forward', 'dashed');
@@ -1470,6 +1685,7 @@ function parseHash() { const m = location.hash.match(/^#\/book\/([^/?]+)/); retu
 window.addEventListener('hashchange', () => { if (!state) return; ui.route = parseHash(); ui.layoutEdit = false; closeMenu(); modalStack.slice().forEach(m => m.close()); render(); window.scrollTo(0, 0); });
 function render() {
   if (!state) return;
+  applyTheme();
   if (ui.route.name === 'book') { const b = getBook(ui.route.id); if (!b) { location.hash = ''; ui.route = { name: 'library' }; return renderLibrary(); } renderBook(b); }
   else renderLibrary();
 }
@@ -1571,7 +1787,7 @@ function renderBook(b) {
   document.title = `${bookTitle(b)} · 독서노트`;
   $('#abLeft').innerHTML = `<button class="icon-btn" data-act="back" title="서재로" aria-label="서재로">${icon('back', 21)}</button><div class="ab-title"><span class="t">${esc(bookTitle(b))}</span><span class="a">${esc(bookAuthor(b))}</span></div>`;
   const hasSec = b.rows.some(r => r.cols.some(c => c.length));
-  view.innerHTML = `<div class="wrap book ${ui.layoutEdit ? 'layout-mode' : ''} ${state.settings.stackMobile ? 'stack-narrow' : ''}" data-book="${b.id}">
+  view.innerHTML = `<div class="wrap book ${ui.layoutEdit ? 'layout-mode' : ''} ${state.settings.stackMobile ? 'stack-narrow' : ''} sec-style-${state.settings.secStyle}" data-book="${b.id}">
     <div class="book-tools">
       <div class="bt-meta">${icon('clock', 14)}<span>마지막 수정</span><span id="bookUpdated">${fmtDT(b.updatedAt)}</span></div>
       <div class="bt-actions">
@@ -1614,10 +1830,10 @@ function secSummary(b, s) {
 }
 function secHTML(b, s) {
   if (!s) return '';
-  const d = SEC[s.type] || SEC.custom, color = s.color || d.color;
+  const d = SEC[s.type] || SEC.custom;
   const hint = d.hint && s.title === d.title ? `<span class="sec-hint">${d.hint}</span>` : '';
   const tools = s.type === 'info' ? `<button class="btn ghost sm sec-tool" data-act="fieldSettings" title="필드 설정">${icon('settings', 15)}<span>필드 설정</span></button>` : '';
-  return `<article class="sec sec-${s.type}" data-sec="${s.id}" style="--c:${color}">
+  return `<article class="sec sec-${s.type}" data-sec="${s.id}" style="${secVars(s)}">
     <header class="sec-head">
       <span class="grip sec-handle" title="끌어서 이동">${icon('grip', 16)}</span>
       <span class="sec-dot"></span>
@@ -1742,6 +1958,7 @@ function fitView(m, W, H) {
   return { cx: bb.x + bb.w / 2, cy: bb.y + bb.h / 2, k: clamp(Math.min(W / bb.w, H / bb.h), .3, 1.4) };
 }
 function mapInner(s, o = {}) {
+  const ACCENT = accentHex();
   const m = s.map, idp = (o.idp || 'm' + s.id).replace(/[^\w-]/g, '');
   const byId = new Map(m.nodes.map(n => [n.id, n])), sizes = new Map(m.nodes.map(n => [n.id, nodeSize(n)]));
   const groups = new Map();
@@ -1770,10 +1987,10 @@ function mapInner(s, o = {}) {
     });
   });
   const nodes = m.nodes.map(n => {
-    const { w, h } = sizes.get(n.id), c = n.color || PALETTE[7];
+    const { w, h } = sizes.get(n.id), c = resolveColor(n.color);
     const sel = o.sel && o.sel.kind === 'node' && o.sel.id === n.id, src = o.from === n.id;
-    const fill = n.main ? c : tint(c, .87), tc = n.main ? '#ffffff' : '#18181B';
-    return `<g data-node="${n.id}" transform="translate(${n.x},${n.y})">${(sel || src) ? `<rect x="${-w / 2 - 5}" y="${-h / 2 - 5}" width="${w + 10}" height="${h + 10}" rx="${(h + 10) / 2}" fill="none" stroke="${ACCENT}" stroke-width="2"${src ? ' stroke-dasharray="5 4"' : ''} opacity=".75"/>` : ''}<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="${h / 2}" fill="${fill}" stroke="${c}" stroke-width="${n.main ? 0 : 1.4}"/><text text-anchor="middle" y="${n.role ? -1.5 : 5}" font-size="${n.main ? 15 : 13.5}" font-weight="${n.main ? 700 : 600}" fill="${tc}" ${fa}>${esc(n.name || '이름 없음')}</text>${n.role ? `<text text-anchor="middle" y="${n.main ? 15 : 14}" font-size="11" font-weight="500" fill="${n.main ? '#ffffff' : '#71717A'}"${n.main ? ' fill-opacity=".86"' : ''} ${fa}>${esc(n.role)}</text>` : ''}</g>`;
+    const fill = n.main ? c : tint(c, .87), tc = n.main ? onColor(c) : '#18181B', sk = visibleStroke(c);
+    return `<g data-node="${n.id}" transform="translate(${n.x},${n.y})">${(sel || src) ? `<rect x="${-w / 2 - 5}" y="${-h / 2 - 5}" width="${w + 10}" height="${h + 10}" rx="${(h + 10) / 2}" fill="none" stroke="${ACCENT}" stroke-width="2"${src ? ' stroke-dasharray="5 4"' : ''} opacity=".75"/>` : ''}<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="${h / 2}" fill="${fill}" stroke="${sk}" stroke-width="${n.main ? 0 : 1.4}"/><text text-anchor="middle" y="${n.role ? -1.5 : 5}" font-size="${n.main ? 15 : 13.5}" font-weight="${n.main ? 700 : 600}" fill="${tc}" ${fa}>${esc(n.name || '이름 없음')}</text>${n.role ? `<text text-anchor="middle" y="${n.main ? 15 : 14}" font-size="11" font-weight="500" fill="${n.main ? tc : '#71717A'}"${n.main ? ' fill-opacity=".86"' : ''} ${fa}>${esc(n.role)}</text>` : ''}</g>`;
   }).join('');
   const defs = `<defs>${['', 's'].map(x => `<marker id="${idp}-a${x}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0.5L10 5L0 9.5z" fill="${x ? ACCENT : '#A1A1AA'}"/></marker>`).join('')}</defs>`;
   return `${defs}<g>${edges}</g><g>${labels}</g><g>${nodes}</g>`;
@@ -1965,7 +2182,7 @@ function addNode(root, x, y) {
   if (!mu.view) mu.view = fitView(s.map, svg.clientWidth || 600, svg.clientHeight || 400);
   const p = (x == null) ? freeSpot(s.map, mu.view.cx, mu.view.cy) : { x: Math.round(x), y: Math.round(y) };
   const i = s.map.nodes.length;
-  const n = { id: uid('n'), name: `인물 ${i + 1}`, role: '', desc: '', color: PALETTE[i % PALETTE.length], main: i === 0, x: p.x, y: p.y };
+  const n = { id: uid('n'), name: `인물 ${i + 1}`, role: '', desc: '', color: '@' + palette()[i % palette().length].id, main: i === 0, x: p.x, y: p.y };
   s.map.nodes.push(n); mu.sel = { kind: 'node', id: n.id };
   const W = svg.clientWidth, H = svg.clientHeight;
   if (W && H) { const k = mu.view.k; if (Math.abs(n.x - mu.view.cx) > W / k / 2 - 60 || Math.abs(n.y - mu.view.cy) > H / k / 2 - 30) mu.view = fitView(s.map, W, H); }
@@ -1985,7 +2202,7 @@ function renderInsp(root) {
         <label class="ifield"><span>역할</span><input data-mi="role" value="${esc(n.role)}" placeholder="예: 주인공, 형사"></label>
         <label class="ifield wide"><span>설명</span><textarea data-mi="desc" rows="2" placeholder="인물에 대한 메모">${esc(n.desc)}</textarea></label>
       </div>
-      <div class="insp-row"><span class="ilabel">색상</span><div class="swatches">${PALETTE.map(c => `<button type="button" class="sw ${n.color === c ? 'on' : ''}" style="--sw:${c}" data-act="mapColor" data-color="${c}" aria-label="색상"></button>`).join('')}</div>
+      <div class="insp-row"><span class="ilabel">색상</span>${cpHTML('node', n.color)}
         <label class="check"><input type="checkbox" data-mi="main" ${n.main ? 'checked' : ''}> 중심 인물</label></div>
       ${others.length ? `<div class="insp-row quick"><span class="ilabel">관계 추가</span><select data-mq="to" aria-label="연결할 인물">${others.map(o => `<option value="${o.id}">${esc(o.name || '이름 없음')}</option>`).join('')}</select><input data-mq="label" placeholder="관계 (예: 친구)"><button type="button" class="btn sm" data-act="mapQuickEdge">잇기</button></div>` : ''}
       <div class="insp-foot"><span class="muted small">연결된 관계 ${rels}개</span><button type="button" class="btn sm danger-ghost" data-act="mapDelNode">${icon('trash', 15)} 인물 삭제</button></div>`;
@@ -2007,7 +2224,7 @@ function renderLists(root) {
   const byId = new Map(s.map.nodes.map(n => [n.id, n]));
   $('.cmap-lists .cnt', root).textContent = `(${s.map.nodes.length} · ${s.map.edges.length})`;
   const on = (k, id) => mu.sel && mu.sel.kind === k && mu.sel.id === id ? 'on' : '';
-  box.innerHTML = `<div><h4>등장인물</h4><ul class="cl-list" data-list="nodes">${s.map.nodes.map(n => `<li class="cl-item ${on('node', n.id)}" data-id="${n.id}"><span class="grip cl-handle">${icon('grip', 14)}</span><span class="cdot" style="background:${n.color}"></span><button type="button" class="cl-main" data-act="mapSelNode" data-id="${n.id}">${esc(n.name || '이름 없음')}<small>${esc(n.role)}</small></button><button type="button" class="icon-btn xs" data-act="mapDelNode" data-id="${n.id}" title="삭제" aria-label="인물 삭제">${icon('x', 14)}</button></li>`).join('')}</ul>${s.map.nodes.length ? '' : '<p class="muted small">아직 인물이 없어요</p>'}</div>
+  box.innerHTML = `<div><h4>등장인물</h4><ul class="cl-list" data-list="nodes">${s.map.nodes.map(n => `<li class="cl-item ${on('node', n.id)}" data-id="${n.id}"><span class="grip cl-handle">${icon('grip', 14)}</span><span class="cdot" style="background:${resolveColor(n.color)}"></span><button type="button" class="cl-main" data-act="mapSelNode" data-id="${n.id}">${esc(n.name || '이름 없음')}<small>${esc(n.role)}</small></button><button type="button" class="icon-btn xs" data-act="mapDelNode" data-id="${n.id}" title="삭제" aria-label="인물 삭제">${icon('x', 14)}</button></li>`).join('')}</ul>${s.map.nodes.length ? '' : '<p class="muted small">아직 인물이 없어요</p>'}</div>
     <div><h4>관계</h4><ul class="cl-list" data-list="edges">${s.map.edges.map(e => { const a = byId.get(e.from), b = byId.get(e.to); if (!a || !b) return ''; const sym = e.dir === 'both' ? '↔' : e.dir === 'none' ? '—' : '→'; return `<li class="cl-item ${on('edge', e.id)}" data-id="${e.id}"><span class="grip cl-handle">${icon('grip', 14)}</span><button type="button" class="cl-main" data-act="mapSelEdge" data-id="${e.id}">${esc(a.name || '이름 없음')} <span class="arr">${sym}</span> ${esc(b.name || '이름 없음')}<small>${esc(e.label)}</small></button><button type="button" class="icon-btn xs" data-act="mapDelEdge" data-id="${e.id}" title="삭제" aria-label="관계 삭제">${icon('x', 14)}</button></li>`; }).join('')}</ul>${s.map.edges.length ? '' : '<p class="muted small">아직 관계가 없어요</p>'}</div>`;
   $$('.cl-list', box).forEach(ul => sortable(ul, {
     handle: '.cl-handle', draggable: '.cl-item',
@@ -2022,6 +2239,8 @@ function redrawMapParts(root) { drawMap(root); renderLists(root); }
 const ACT = {};
 document.addEventListener('click', e => {
   if (!state) return;
+  const cv = e.target.closest('[data-cp-val]');
+  if (cv && cv.closest('.cp')) { e.preventDefault(); cpSet(cv.closest('.cp'), cv.dataset.cpVal || null, false); return; }
   const mb = e.target.closest('.md-btn');
   if (mb) { e.preventDefault(); if (e.detail === 0) { const w = mb.closest('.mdx'); mdAction(w && w.querySelector(':scope > textarea'), mb.dataset.md); } return; }
   const mv = e.target.closest('.md-view');
@@ -2072,6 +2291,7 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('input', e => {
   const t = e.target;
+  if (t.matches && t.matches('[data-cp-custom]')) { const h = parseHex(t.value); if (h) cpSet(t.closest('.cp'), h, true); return; }
   if (t.id === 'libSearch') { ui.search = t.value; renderGrid(); return; }
   if (t.type === 'checkbox') return;
   const b = curBook(); if (!b) return;
@@ -2093,6 +2313,7 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('change', e => {
   const t = e.target;
+  if (t.matches && t.matches('[data-cp-custom]')) { const h = parseHex(t.value); if (h) cpSet(t.closest('.cp'), h, false); return; }
   if (t.id === 'libSort') { state.settings.sort = t.value; commit('정렬 방식 변경'); renderGrid(); return; }
   if (t.matches && t.matches('[data-set="stackMobile"]')) {
     state.settings.stackMobile = t.checked; commit('화면 설정 변경');
@@ -2234,6 +2455,7 @@ Object.assign(ACT, {
     const { b, s } = ctxSec(el); if (!s) return;
     const isText = !!s.entries;
     openMenu(el, [
+      { icon: 'palette', label: '색상', onClick: () => openSecColor(b, s) },
       { icon: 'edit', label: '이름 바꾸기', onClick: () => { const t = $(`.sec[data-sec="${s.id}"] .sec-title`); t.focus(); const r = document.createRange(); r.selectNodeContents(t); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } },
       s.type === 'info' ? { icon: 'settings', label: '필드 설정', onClick: () => openFieldSettings(b, s) } : null,
       isText ? { icon: 'sort', label: '메모를 페이지 순으로 정렬', onClick: () => { const pn = e => { const m = String(e.page).match(/\d+/); return m ? +m[0] : Infinity; }; s.entries.sort((a, c) => pn(a) - pn(c)); commit('메모 정렬', b); refreshSection(b, s.id); toast('페이지 순으로 정렬했어요'); } } : null,
@@ -2273,7 +2495,6 @@ Object.assign(ACT, {
   mapDeselect: (el) => { const { root, mu } = mapCtx(el); mu.sel = null; drawMap(root); renderInsp(root); renderLists(root); },
   mapSelNode: (el) => { const { root, s, mu } = mapCtx(el); const n = s.map.nodes.find(x => x.id === el.dataset.id); if (!n) return; mu.sel = { kind: 'node', id: n.id }; if (mu.view) { mu.view.cx = n.x; mu.view.cy = n.y; } drawMap(root); renderInsp(root); renderLists(root); },
   mapSelEdge: (el) => { const { root, s, mu } = mapCtx(el); const e = s.map.edges.find(x => x.id === el.dataset.id); if (!e) return; mu.sel = { kind: 'edge', id: e.id }; const a = s.map.nodes.find(n => n.id === e.from), c = s.map.nodes.find(n => n.id === e.to); if (mu.view && a && c) { mu.view.cx = (a.x + c.x) / 2; mu.view.cy = (a.y + c.y) / 2; } drawMap(root); renderInsp(root); renderLists(root); },
-  mapColor: (el) => { const { root, b, s, mu } = mapCtx(el); const n = s.map.nodes.find(x => x.id === mu.sel.id); if (!n) return; n.color = el.dataset.color; $$('.sw', root).forEach(x => x.classList.toggle('on', x === el)); commit('인물 색상 변경', b); redrawMapParts(root); },
   mapQuickEdge: (el) => {
     const { root, b, s, mu } = mapCtx(el); const to = $('[data-mq="to"]', root).value, label = $('[data-mq="label"]', root).value.trim();
     if (!to || !mu.sel) return; s.map.edges.push({ id: uid('l'), from: mu.sel.id, to, label, dir: 'forward', style: 'solid' });
@@ -2302,6 +2523,7 @@ Object.assign(ACT, {
   importData: () => importJSON(),
   pdfAll: () => pdfDialog(pdfScopesFor(null)),
   checkUpdate: () => checkRemote(true),
+  colorSettings: () => openColorSettings(),
   resetTemplate: async () => {
     if (!await confirmDialog({ title: '기본 템플릿을 처음 상태로 되돌릴까요?', message: '이미 만든 책에는 영향이 없고, 새로 만드는 책부터 적용돼요.', ok: '되돌리기', danger: false })) return;
     state.template = defaultTemplate(); commit('기본 템플릿 초기화'); toast('기본 템플릿을 되돌렸어요');
@@ -2474,6 +2696,123 @@ function openFieldSettings(b, s) {
   draw();
 }
 
+/* ── 색상 꾸미기 (팔레트 · 섹션 색 · 포인트 색) ── */
+function openColorSettings(onDone) {
+  const m = modal({ title: `${icon('palette', 20)} 색상 꾸미기`, width: 640, body: '<div class="cs"></div>', actions: [{ label: '완료', primary: true }], onClose: () => { if (onDone) onDone(); } });
+  const box = $('.cs', m.body);
+  const overrides = () => { let n = 0; state.books.forEach(b => Object.values(b.sections).forEach(s => { if (s.color) n++; })); return n; };
+  const palItem = p => {
+    const u = usageText(colorUsage(p.id));
+    return `<li class="pal-item" data-pid="${p.id}"><span class="grip pal-handle" title="끌어서 순서 변경">${icon('grip', 15)}</span>
+      <label class="pal-sw" style="--sw:${p.hex}" title="색 고르기"><input type="color" class="pal-color" value="${p.hex.toLowerCase()}" aria-label="색 고르기"></label>
+      <input class="pal-hex" value="${p.hex}" maxlength="7" spellcheck="false" autocomplete="off" aria-label="색 코드">
+      <span class="pal-use">${u ? esc(u) : '<span class="faint">쓰는 곳 없음</span>'}</span>
+      <button type="button" class="icon-btn sm danger" data-cs="palDel" title="삭제" aria-label="색 삭제" ${palette().length <= 1 ? 'disabled' : ''}>${icon('trash', 16)}</button></li>`;
+  };
+  const typeRows = () => Object.keys(DEFAULT_SEC_COLORS).map(t => {
+    const d = SEC[t], lab = t === 'custom' ? '직접 만든 섹션' : d.title;
+    return `<div class="sc-row"><div class="sc-label"><span class="sc-dot" data-dot-type="${t}" style="background:${secTypeHex(t)}"></span><b>${esc(lab)}</b>${d.hint && t !== 'custom' ? `<small>${esc(d.hint)}</small>` : ''}</div>${cpHTML('type:' + t, state.settings.secColors[t])}</div>`;
+  }).join('');
+  const draw = () => {
+    const ov = overrides(), pal = palette();
+    box.innerHTML = `<section class="cs-sec"><h3>${icon('palette', 17)} 팔레트</h3><p>섹션 색과 등장인물 색을 고를 때 나오는 색이에요. 색을 바꾸면 그 색을 쓰는 모든 곳이 함께 바뀌어요.</p>
+        <ul class="pal-list">${pal.map(palItem).join('')}</ul>
+        <div class="btn-row"><button type="button" class="btn sm" data-cs="palAdd" ${pal.length >= PALETTE_MAX ? 'disabled' : ''}>${icon('plus', 15)}색 추가</button><button type="button" class="btn sm ghost" data-cs="palReset">${icon('refresh', 15)}기본 팔레트로</button></div></section>
+      <section class="cs-sec"><h3>${icon('layout', 17)} 섹션 색</h3><p>모든 책에 함께 적용돼요. 한 책의 섹션만 다르게 하려면 그 섹션의 ⋯ 메뉴 → ‘색상’을 쓰세요.</p>
+        <div class="sc-list">${typeRows()}</div>
+        <div class="sc-style"><span class="ilabel">표시 방식</span><div class="seg">${SEC_STYLES.map(o => `<button type="button" class="${state.settings.secStyle === o.v ? 'on' : ''}" data-cs-style="${o.v}">${o.l}</button>`).join('')}</div></div>
+        <div class="btn-row" style="margin-top:12px"><button type="button" class="btn sm ghost" data-cs="secReset">${icon('refresh', 15)}섹션 색 기본값으로</button>${ov ? `<button type="button" class="btn sm danger-ghost" data-cs="ovClear">${icon('trash', 15)}책마다 따로 정한 색 지우기 (${ov}개)</button>` : ''}</div></section>
+      <section class="cs-sec"><h3>${icon('sparkles', 17)} 포인트 색</h3><p>선택 표시, 링크, 체크 표시, 켜진 버튼에 쓰여요.</p>
+        ${cpHTML('accent', state.settings.accent || '', { reset: '기본', resetHex: DEFAULT_ACCENT })}</section>`;
+    sortable($('.pal-list', box), {
+      handle: '.pal-handle', draggable: '.pal-item',
+      onEnd: () => { const ids = $$('.pal-item', box).map(x => x.dataset.pid); state.settings.palette.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id)); themeChanged('팔레트 순서 변경'); draw(); }
+    });
+  };
+  const palOf = el => { const it = el.closest('.pal-item'); return it && state.settings.palette.find(p => p.id === it.dataset.pid); };
+  const livePal = (p, hex, from) => {
+    if (!p || p.hex === hex) return;
+    p.hex = hex;
+    const item = $(`.pal-item[data-pid="${p.id}"]`, box);
+    if (item) {
+      $('.pal-sw', item).style.setProperty('--sw', hex);
+      if (from !== 'hex') { const hx = $('.pal-hex', item); hx.value = hex; hx.classList.remove('bad'); }
+      if (from !== 'color') $('.pal-color', item).value = hex.toLowerCase();
+    }
+    $$(`[data-pal-ref="${p.id}"]`).forEach(el => { el.style.setProperty('--sw', hex); el.title = hex; });
+    updateColorPreviews(); themeChanged('팔레트 색 변경');
+  };
+  box.addEventListener('input', e => {
+    const t = e.target;
+    if (t.classList.contains('pal-color')) { const h = parseHex(t.value); if (h) livePal(palOf(t), h, 'color'); return; }
+    if (t.classList.contains('pal-hex')) { const h = parseHex(t.value); t.classList.toggle('bad', !h); if (h) livePal(palOf(t), h, 'hex'); }
+  });
+  box.addEventListener('change', e => {
+    const t = e.target;
+    if (t.classList.contains('pal-hex')) { const p = palOf(t); if (p) { t.value = p.hex; t.classList.remove('bad'); } }
+    if (t.classList.contains('pal-color')) { const h = parseHex(t.value); if (h) livePal(palOf(t), h, 'color'); }
+  });
+  box.addEventListener('keydown', e => { if (e.target.classList.contains('pal-hex') && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); e.target.blur(); } });
+  box.addEventListener('click', async e => {
+    const st = e.target.closest('[data-cs-style]');
+    if (st) { state.settings.secStyle = st.dataset.csStyle; $$('[data-cs-style]', box).forEach(x => x.classList.toggle('on', x === st)); themeChanged('섹션 색 표시 방식 변경'); return; }
+    const btn = e.target.closest('[data-cs]'); if (!btn) return;
+    const k = btn.dataset.cs;
+    if (k === 'palAdd') {
+      if (palette().length >= PALETTE_MAX) return;
+      const used = new Set(palette().map(p => p.hex));
+      const hex = COLOR_SUGGEST.find(h => !used.has(h)) || mixHex(COLOR_SUGGEST[palette().length % COLOR_SUGGEST.length], '#000000', .2);
+      state.settings.palette.push({ id: uid('c'), hex }); themeChanged('팔레트 색 추가'); draw();
+      const last = $$('.pal-item', box).pop(); if (last) last.scrollIntoView({ block: 'nearest' });
+    } else if (k === 'palDel') {
+      const p = palOf(btn); if (!p || palette().length <= 1) return;
+      const u = usageText(colorUsage(p.id));
+      const ok = await confirmDialog({ title: '이 색을 팔레트에서 삭제할까요?', message: `<span class="cdot" style="display:inline-block;background:${p.hex};vertical-align:-1px;margin-right:6px"></span>${p.hex}${u ? `\n이 색을 쓰는 곳(${esc(u)})은 지금 색 그대로 남고, 팔레트와의 연결만 풀려요.` : ''}` });
+      if (!ok || !state.settings.palette.includes(p)) return;
+      delinkColor(p.id, p.hex); state.settings.palette = state.settings.palette.filter(x => x !== p);
+      themeChanged('팔레트 색 삭제'); draw();
+    } else if (k === 'palReset') {
+      if (!await confirmDialog({ title: '기본 팔레트로 되돌릴까요?', message: '직접 추가한 색을 쓰던 곳은 지금 색 그대로 남고, 기본 색(파랑·초록 등)을 쓰던 곳은 기본 색으로 돌아가요.', ok: '되돌리기', danger: false })) return;
+      const defIds = new Set(DEFAULT_PALETTE.map(p => p.id));
+      state.settings.palette.filter(p => !defIds.has(p.id)).forEach(p => delinkColor(p.id, p.hex));
+      state.settings.palette = deep(DEFAULT_PALETTE); themeChanged('팔레트 기본값으로'); draw();
+    } else if (k === 'secReset') {
+      if (!await confirmDialog({ title: '섹션 색을 기본값으로 되돌릴까요?', message: 'Info · Motivation · Liked 등 섹션 종류별 공통 색이 처음 색으로 돌아가요. 책마다 따로 정한 색은 그대로 남아요.', ok: '되돌리기', danger: false })) return;
+      state.settings.secColors = deep(DEFAULT_SEC_COLORS); themeChanged('섹션 색 기본값으로'); draw();
+    } else if (k === 'ovClear') {
+      const n = overrides(); if (!n) return;
+      if (!await confirmDialog({ title: `책마다 따로 정한 섹션 색 ${n}개를 지울까요?`, message: '지우면 그 섹션들은 위의 공통 섹션 색을 따라가요.' })) return;
+      const t = nowISO();
+      state.books.forEach(b => { let ch = false; Object.values(b.sections).forEach(s => { if (s.color) { delete s.color; ch = true; } }); if (ch) b.updatedAt = t; });
+      themeChanged('따로 정한 섹션 색 지우기'); draw();
+    }
+  });
+  draw();
+}
+/* ── 섹션 하나의 색 ── */
+function openSecColor(b, s) {
+  const t = secTypeKey(s.type), tl = t === 'custom' ? '직접 만든 섹션' : SEC[t].title;
+  let scope = s.color ? 'one' : 'all';
+  const m = modal({ title: `${icon('palette', 20)} ‘${esc(s.title || tl)}’ 색상`, width: 500, body: '<div class="scm"></div>', actions: [{ label: '완료', primary: true }] });
+  const box = $('.scm', m.body);
+  const note = () => scope === 'all'
+    ? `모든 책의 ${esc(tl)} 섹션 색이 함께 바뀌어요. 책마다 따로 정한 색은 그대로 남아요.${s.color ? ' 이 섹션에 따로 정한 색은 지워지고 공통 색을 따라가요.' : ''}`
+    : '이 책의 이 섹션만 다른 색으로 바꿔요. ‘공통 색’을 누르면 다시 공통 색을 따라가요.';
+  const draw = () => {
+    if (!b.sections[s.id]) { m.close(); return; }
+    box.innerHTML = `<div class="scm-head"><span class="sc-dot" data-dot-sec="${s.id}" style="background:${secColor(s)}"></span><div class="seg" role="group" aria-label="적용 범위"><button type="button" data-scope="all" class="${scope === 'all' ? 'on' : ''}">모든 책의 ${esc(tl)}</button><button type="button" data-scope="one" class="${scope === 'one' ? 'on' : ''}">이 섹션만</button></div></div>
+      <p class="muted small scm-note">${note()}</p>
+      ${scope === 'all' ? cpHTML('type:' + t, state.settings.secColors[t], { clearSec: s.id }) : cpHTML('sec:' + s.id, s.color || '', { reset: '공통 색', resetHex: secTypeHex(t) })}
+      <button type="button" class="btn sm ghost scm-pal">${icon('palette', 15)}팔레트 편집</button>`;
+    const cp = $('.cp', box); if (cp) cp._after = () => { const n = $('.scm-note', box); if (n) n.innerHTML = note(); };
+  };
+  box.addEventListener('click', e => {
+    const sc = e.target.closest('[data-scope]'); if (sc) { scope = sc.dataset.scope; draw(); return; }
+    if (e.target.closest('.scm-pal')) openColorSettings(() => { if (box.isConnected) draw(); });
+  });
+  draw();
+}
+
 /* ════════════════════════════════════════════════════════════
    7. 가져오기 · 내보내기
    ════════════════════════════════════════════════════════════ */
@@ -2483,7 +2822,7 @@ function exportAllJSON() {
   state.lastBackupAt = nowISO(); commit('JSON 백업 내보내기'); toast(`책 ${state.books.length}권을 백업 파일로 내보냈어요`);
 }
 function exportBookJSON(b) {
-  const data = { app: 'reading-note-book', version: APP_VERSION, exportedAt: nowISO(), book: b };
+  const data = { app: 'reading-note-book', version: APP_VERSION, exportedAt: nowISO(), book: b, palette: state.settings.palette };
   download(`독서노트_${safeName(bookTitle(b))}_${fileStamp()}.json`, new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' }));
   toast('이 책을 JSON으로 내보냈어요');
 }
@@ -2491,18 +2830,18 @@ function importJSON() { const inp = $('#fileImport'); inp.value = ''; inp.click(
 $('#fileImport').addEventListener('change', async (ev) => {
     const file = ev.target.files[0]; if (!file) return;
     try {
-      const data = JSON.parse(await file.text()); let books = [], full = null;
-      if (data && data.app === 'reading-note' && Array.isArray(data.books)) { books = data.books; full = data; }
-      else if (data && data.app === 'reading-note-book' && data.book) books = [data.book];
+      const data = JSON.parse(await file.text()); let books = [], full = null, foreignPal = null;
+      if (data && data.app === 'reading-note' && Array.isArray(data.books)) { books = data.books; full = data; foreignPal = normalizeSettings(data.settings).palette; }
+      else if (data && data.app === 'reading-note-book' && data.book) { books = [data.book]; foreignPal = normalizeSettings({ palette: data.palette }).palette; }
       else if (Array.isArray(data)) books = data;
       else if (data && data.sections && data.rows) books = [data];
       else throw new Error('format');
       books = dedupeBooks(books.map(x => normalizeBook(deep(x))).filter(Boolean));
       if (!books.length) throw new Error('empty');
-      importDialog(books, full, file.name);
+      importDialog(books, full, file.name, foreignPal);
     } catch (e) { toast('가져올 수 없는 파일이에요. 독서노트에서 내보낸 JSON인지 확인해 주세요.', { ms: 4500 }); }
 });
-function importDialog(books, full, name) {
+function importDialog(books, full, name, foreignPal) {
   const same = books.filter(b => getBook(b.id)).length;
   modal({
     title: '데이터 가져오기', width: 480,
@@ -2511,16 +2850,19 @@ function importDialog(books, full, name) {
         <label><input type="radio" name="imode" value="merge" checked><div><b>기존 서재에 합치기</b><span>새 책은 추가하고, 같은 책은 더 최근에 수정된 쪽을 남겨요</span></div></label>
         <label><input type="radio" name="imode" value="replace"><div><b>전체 덮어쓰기</b><span>지금 서재를 모두 지우고 가져온 데이터로 바꿔요</span></div></label>
       </div>`,
-    actions: [{ label: '취소' }, { label: '가져오기', primary: true, onClick: (api) => { const mode = $('input[name=imode]:checked', api.el).value; doImport(books, full, mode); } }]
+    actions: [{ label: '취소' }, { label: '가져오기', primary: true, onClick: (api) => { const mode = $('input[name=imode]:checked', api.el).value; doImport(books, full, mode, foreignPal); } }]
   });
 }
-async function doImport(books, full, mode) {
+async function doImport(books, full, mode, foreignPal) {
+  const replaceSettings = mode === 'replace' && full && full.settings;
   if (mode === 'replace') {
     if (!await confirmDialog({ title: '전체 덮어쓸까요?', message: `지금 서재의 책 ${state.books.length}권이 모두 삭제되고, 가져온 책 ${books.length}권으로 바뀌어요.`, ok: '덮어쓰기' })) return;
     state.books = books;
     if (full && full.template) { const tb = normalizeBook({ id: 'tpl', sections: full.template.sections, rows: full.template.rows }); if (tb && Object.keys(tb.sections).length) state.template = { sections: tb.sections, rows: tb.rows }; }
-    if (full && full.settings) state.settings = Object.assign({ sort: 'custom', stackMobile: false }, full.settings);
+    if (replaceSettings) state.settings = normalizeSettings(full.settings);
+    else relinkColors(books, foreignPal);
   } else {
+    relinkColors(books, foreignPal);
     let added = 0, updated = 0, kept = 0;
     books.forEach(nb => {
       const i = state.books.findIndex(x => x.id === nb.id);
@@ -2570,8 +2912,8 @@ function printVal(f) {
 function isEmptyVal(f) { return f.type === 'period' ? !(f.value.start || f.value.end) : f.type === 'rating' ? !+f.value : !String(f.value).trim(); }
 function printSecHTML(b, s) {
   if (!s) return '';
-  const d = SEC[s.type] || SEC.custom, color = s.color || d.color;
-  const head = `<div class="p-sec-head"><span class="p-dot" style="background:${color}"></span><span>${esc(s.title || '이름 없음')}</span>${d.hint && s.title === d.title ? `<span class="p-hint">${d.hint}</span>` : ''}</div>`;
+  const d = SEC[s.type] || SEC.custom, color = secColor(s), sty = state.settings.secStyle;
+  const head = `${sty === 'band' ? `<div class="p-band" style="background:${color}"></div>` : ''}<div class="p-sec-head"><span class="p-dot" style="background:${color}"></span><span${sty === 'title' ? ` style="color:${readableOn(color)}"` : ''}>${esc(s.title || '이름 없음')}</span>${d.hint && s.title === d.title ? `<span class="p-hint">${d.hint}</span>` : ''}</div>`;
   if (s.type === 'info') {
     const vis = s.fields.filter(f => !f.hidden && !isEmptyVal(f)), title = vis.find(f => f.role === 'title'), rest = vis.filter(f => f !== title);
     if (!vis.length && !b.cover) return '';
@@ -2581,7 +2923,7 @@ function printSecHTML(b, s) {
     if (!s.map.nodes.length) return '';
     const byId = new Map(s.map.nodes.map(n => [n.id, n]));
     return `<section class="p-sec">${head}<div class="p-map">${staticMapSVG(s)}</div><div class="p-chars">
-      <div><h5>등장인물</h5><ul>${s.map.nodes.map(n => `<li><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${n.color};margin-right:6px"></span><b>${esc(n.name || '이름 없음')}</b>${n.role ? ` <span class="r">· ${esc(n.role)}</span>` : ''}${n.desc ? `<div class="r" style="padding-left:13px;white-space:pre-wrap">${esc(n.desc)}</div>` : ''}</li>`).join('')}</ul></div>
+      <div><h5>등장인물</h5><ul>${s.map.nodes.map(n => `<li><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${resolveColor(n.color)};margin-right:6px"></span><b>${esc(n.name || '이름 없음')}</b>${n.role ? ` <span class="r">· ${esc(n.role)}</span>` : ''}${n.desc ? `<div class="r" style="padding-left:13px;white-space:pre-wrap">${esc(n.desc)}</div>` : ''}</li>`).join('')}</ul></div>
       <div><h5>관계</h5><ul>${s.map.edges.map(e => { const a = byId.get(e.from), c = byId.get(e.to); if (!a || !c) return ''; return `<li>${esc(a.name)} <span class="r">${e.dir === 'both' ? '↔' : e.dir === 'none' ? '—' : '→'}</span> ${esc(c.name)}${e.label ? ` <span class="r">· ${esc(e.label)}</span>` : ''}</li>`; }).join('') || '<li class="r">없음</li>'}</ul></div></div></section>`;
   }
   const es = (s.entries || []).filter(e => e.text.trim()); if (!es.length) return '';
@@ -2673,6 +3015,10 @@ function openSettings() {
       <section class="set-sec"><h3>${icon('columns', 17)} 화면</h3>
         <p>행마다 정한 1~3단은 PC·태블릿·휴대폰 모두에서 그대로 보여요. 휴대폰에서 글이 너무 좁게 느껴지면 아래를 켜 보세요. (PDF는 항상 설정한 단 그대로 나와요)</p>
         <label class="check" style="margin:0"><input type="checkbox" data-set="stackMobile" ${state.settings.stackMobile ? 'checked' : ''}> 휴대폰처럼 좁은 화면에서는 1단으로 쌓아 보기</label></section>
+      <section class="set-sec"><h3>${icon('palette', 17)} 색상</h3>
+        <p>팔레트, Liked · Unliked 같은 섹션별 색, 포인트 색을 직접 정할 수 있어요.</p>
+        <div class="pal-strip" data-pal-strip>${palette().map(p => `<span style="background:${p.hex}"></span>`).join('')}</div>
+        <button class="btn" data-act="colorSettings">${icon('palette', 16)}색상 꾸미기</button></section>
       <section class="set-sec"><h3>${icon('layout', 17)} 기본 템플릿</h3>
         <p>새 책은 기본 템플릿의 섹션 · 레이아웃 · Info 필드로 시작해요. 책 화면의 ⋯ 메뉴에서 ‘이 구성을 기본 템플릿으로’를 누르면 바꿀 수 있어요.</p>
         <button class="btn" data-act="resetTemplate">${icon('refresh', 16)}기본 템플릿 되돌리기</button></section>
