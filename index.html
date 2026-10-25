@@ -18,7 +18,7 @@
      새로고침 후에는 "업데이트 완료" 팝업으로 변경 내역을 보여줍니다.
   ─────────────────────────────────────────────────────────────
 -->
-<meta name="app-version" content="1.3.1">
+<meta name="app-version" content="1.5.1">
 <title>독서노트</title>
 <meta name="theme-color" content="#ffffff">
 <meta name="description" content="레이아웃을 자유롭게 꾸미는 독서노트 · 등장인물 맵 · 자동 저장 · PDF 내보내기">
@@ -29,6 +29,37 @@
 
 <script type="application/json" id="changelog">
 [
+  {
+    "version": "1.5.1",
+    "date": "2026-10-25",
+    "notes": [
+      "Tab 키로 글이 있는 메모로 이동하면 바로 이어서 쓸 수 있어요",
+      "글을 쓰는 동안에는 ‘새 버전’ 알림이 끼어들지 않아요",
+      "알림 창이 떠도 Enter · Space 키가 버튼을 잘못 누르지 않게 했어요 (다른 탭 충돌 시 쓰던 글 보호)"
+    ]
+  },
+  {
+    "version": "1.5.0",
+    "date": "2026-10-25",
+    "notes": [
+      "섹션 안에 카테고리를 만들어 메모를 크게 묶을 수 있어요 (Learned, Liked, Words 등 모든 메모 섹션)",
+      "카테고리는 ▾ 버튼으로 접고 펼칠 수 있고, 접힌 상태도 저장돼요",
+      "메모를 끌어서 카테고리 안팎으로 옮기고, 카테고리를 끌면 안의 메모가 함께 움직여요",
+      "카테고리를 지울 때 안의 메모를 남길지 함께 지울지 고를 수 있어요",
+      "PDF에서는 카테고리 제목 아래로 메모가 정리돼요"
+    ]
+  },
+  {
+    "version": "1.4.0",
+    "date": "2026-10-25",
+    "notes": [
+      "Words 섹션이 생겼어요 — [모르는 단어] | [뜻] [페이지]를 한 줄씩 기록해요",
+      "단어는 끌어서 순서를 바꾸거나 가나다순 · 페이지순으로 정렬할 수 있어요",
+      "뜻 칸에는 마크다운 서식을 쓸 수 있어요",
+      "새로 만드는 책에 Words 섹션이 기본으로 들어가요 (기존 책은 ‘섹션 추가 → Words’)",
+      "PDF에서는 단어 · 뜻 · 쪽이 표로 깔끔하게 정리돼요"
+    ]
+  },
   {
     "version": "1.3.1",
     "date": "2026-10-19",
@@ -320,8 +351,9 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
   .eh-main{display:none}
   .entry-ctl{display:none;flex-basis:100%;align-items:center;gap:2px;padding:0 0 4px 2px}
   .entry:focus-within .entry-ctl,.entry:has(.mdx.editing) .entry-ctl,.entry-ctl:has(.entry-page:not(:placeholder-shown)){display:flex}
-  .entry-ctl .eh-ctl,.entry-ctl .entry-del{display:none}
-  .entry:focus-within .entry-ctl .eh-ctl,.entry:has(.mdx.editing) .entry-ctl .eh-ctl{display:grid;opacity:1;height:28px}
+  .entry-ctl .entry-del{display:none}
+  .entry-ctl .eh-ctl{display:grid;visibility:hidden;height:28px}
+  .entry:focus-within .entry-ctl .eh-ctl,.entry:has(.mdx.editing) .entry-ctl .eh-ctl{visibility:visible;opacity:1}
   .entry:focus-within .entry-ctl .entry-del,.entry:has(.mdx.editing) .entry-ctl .entry-del{display:grid;opacity:1;margin:0 0 0 auto}
   .entry-ctl .entry-page{opacity:1;text-align:left;width:70px;padding:4px 6px;font-size:12px}
   .md-view,.entry-text{padding:5px 6px}
@@ -418,6 +450,7 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
 /* ── Overlay layer: modal / menu / toast ── */
 .mwrap{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
 .mback{position:absolute;inset:0;background:rgba(24,24,27,.34);opacity:0;transition:opacity .16s}
+.mdl:focus{outline:none}
 .mdl{position:relative;width:100%;max-width:var(--mw);max-height:min(88vh,880px);display:flex;flex-direction:column;background:#fff;border-radius:20px;box-shadow:0 30px 70px -14px rgba(0,0,0,.32);transform:translateY(10px) scale(.985);opacity:0;transition:transform .18s,opacity .18s}
 .mwrap.in .mback{opacity:1}.mwrap.in .mdl{transform:none;opacity:1}
 .mwrap.out .mback{opacity:0}.mwrap.out .mdl{opacity:0;transform:translateY(8px) scale(.985)}
@@ -619,6 +652,72 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
 .sec-style-band .sec::before{content:"";position:absolute;left:18px;right:18px;top:-1px;height:3px;border-radius:0 0 3px 3px;background:var(--c);pointer-events:none}
 .p-band{height:3px;border-radius:2px;margin:-3px 0 7px}
 
+/* ── Words: [단어] | [뜻] [쪽] ── */
+.wentry .entry-word{flex:0 0 32%;max-width:240px;min-width:0;border:0;resize:none;background:transparent;padding:6px 8px;border-radius:8px;line-height:1.6;min-height:36px;overflow:hidden;outline:none;color:var(--ink);font-size:15px;font-weight:650;field-sizing:content;overflow-wrap:anywhere}
+.wentry .entry-word:hover{background:#FAFAFB}
+.wentry .entry-word:focus{background:var(--soft)}
+.wentry .entry-word::placeholder{color:#B9B9C0;font-weight:500}
+.wentry>.mdx{border-left:1.5px solid var(--line);padding-left:6px;align-self:stretch}
+.w-head{display:flex;align-items:center;gap:2px;margin:0 0 0 -8px;padding:0 0 5px;border-bottom:1px solid var(--line);font-size:11.5px;font-weight:700;color:var(--faint)}
+.w-head .wh-g{width:22px;flex:none}
+.w-head .wh-w{flex:0 0 32%;max-width:240px;padding:0 8px}
+.w-head .wh-m{flex:1;padding:0 15px}
+.w-head .wh-p{width:48px;flex:none;text-align:right;padding-right:6px}
+.w-head .wh-x{width:26px;flex:none}
+.words .entry:first-child{border-top:0}
+@container (max-width:440px){
+  .w-head{display:none}
+  .wentry{flex-wrap:wrap}
+  .wentry .entry-word{flex:1 1 0;max-width:none;order:1}
+  .wentry .entry-ctl{order:2}
+  .wentry>.mdx{order:3;flex:1 1 100%;border-left:0;padding-left:0;margin:-4px 0 2px 24px}
+  .wentry>.mdx .md-view,.wentry>.mdx .entry-text{color:var(--ink2)}
+}
+@container (max-width:320px){
+  .wentry .entry-word{flex:1 1 100%;font-size:14px;padding:5px 6px}
+  .wentry>.mdx{margin:-4px 0 2px 0}
+  .wentry .entry-ctl{order:4}
+}
+
+/* ── 카테고리 (접고 펼치기) ── */
+.add-btns{display:flex;flex-wrap:wrap;align-items:center;gap:2px}
+.add-btns .add-grp{margin-left:2px}
+.grp{list-style:none;margin:2px 0 2px -8px;border-top:1px solid var(--line)}
+.entries>.grp:first-child{border-top:0}
+.grp-head{display:flex;align-items:center;gap:2px;min-height:38px}
+.grp-handle{height:30px;opacity:0;transition:opacity .15s}
+.grp-head:hover .grp-handle,.grp-head:focus-within .grp-handle{opacity:1}
+.grp-toggle{display:grid;place-items:center;width:26px;height:28px;flex:none;border:0;border-radius:7px;background:transparent;color:var(--muted);padding:0}
+.grp-toggle:hover{background:var(--hover);color:var(--ink)}
+.grp-toggle .ic{transition:transform .16s}
+.grp.collapsed .grp-toggle .ic{transform:rotate(-90deg)}
+.grp-title{flex:1;min-width:0;border:0;background:transparent;padding:5px 6px;border-radius:7px;outline:none;color:var(--ink);font-weight:750;font-size:14.5px;letter-spacing:-.02em}
+.grp-title:hover{background:#FAFAFB}
+.grp-title:focus{background:var(--soft)}
+.grp-title::placeholder{color:#B9B9C0;font-weight:600}
+.grp-count{flex:none;min-width:22px;text-align:center;font-size:11.5px;font-weight:700;color:var(--muted);background:var(--soft);border-radius:999px;padding:1px 7px;font-variant-numeric:tabular-nums}
+.grp-more{opacity:0;transition:opacity .15s;margin-left:2px}
+.grp-head:hover .grp-more,.grp-head:focus-within .grp-more{opacity:1}
+.grp-body{margin:0 0 6px 30px;padding-left:8px;border-left:2px solid var(--line2)}
+.grp.collapsed .grp-body{display:none}
+.grp-body .entries:empty{min-height:26px}
+.grp-hint{display:none;margin:2px 0 0;font-size:12.5px;color:var(--faint)}
+.grp-body .entries:empty+.grp-hint{display:block}
+.grp-add{margin:2px 0 0 0;height:28px;font-size:12.5px}
+@media (hover:none){.grp-handle,.grp-more{opacity:.55}}
+@container (max-width:320px){
+  .grp{margin-left:-4px}
+  .grp-head{gap:0 1px}
+  .grp-handle{width:14px}
+  .grp-body{margin-left:10px;padding-left:6px}
+  .grp-title{font-size:13.5px;padding:4px 4px}
+  .grp-toggle{width:22px}
+}
+@container (max-width:240px){
+  .grp-count{display:none}
+  .grp-more{width:22px}
+}
+
 /* ── Print / PDF document ── */
 #printRoot{display:none}
 .pdf-holder{position:fixed;left:-14000px;top:0;width:186mm;background:#fff;pointer-events:none}
@@ -631,6 +730,20 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
 .p-dot{width:7px;height:7px;border-radius:2px;flex:none}
 .p-hint{font-weight:500;color:#A1A1AA;font-size:8pt;margin-left:2px}
 .p-entry{display:flex;gap:8px;padding:4px 0;border-top:1px solid #F1F1F3}
+.p-words{width:100%;border-collapse:collapse;table-layout:fixed}
+.p-words th{font-size:7.5pt;color:#A1A1AA;font-weight:700;text-align:left;padding:1px 6px 3px;border-bottom:1px solid #ECECEF}
+.p-words th:first-child,.p-words td:first-child{padding-left:0}
+.p-words th:nth-child(1){width:30%}.p-words th:nth-child(3){width:12mm;text-align:right;padding-right:0}
+.p-words td{padding:4px 6px;border-top:1px solid #F1F1F3;vertical-align:top}
+.p-words tbody tr:first-child td{border-top:0}
+.p-words .w{font-weight:700;overflow-wrap:anywhere}
+.p-words .m{border-left:1px solid #ECECEF}
+.p-words .pg{text-align:right;padding-right:0;color:#A1A1AA;font-size:8pt;white-space:nowrap}
+.p-words .p-wgrp td{font-weight:800;font-size:9pt;color:#3F3F46;padding:7px 0 3px;border-top:1px solid #E6E6EA}
+.p-grp{margin:2px 0}
+.p-grp-title{display:flex;align-items:center;gap:6px;font-weight:800;font-size:9.4pt;color:#3F3F46;padding:6px 0 2px;border-top:1px solid #ECECEF}
+.p-grp-title::before{content:"";width:3px;height:11px;border-radius:2px;background:#C4C4CC;flex:none}
+.p-grp .p-entry{margin-left:9px;padding-left:0}
 .p-entry:first-child{border-top:0}
 .p-text{flex:1;min-width:0}
 .p-page{color:#A1A1AA;font-size:8pt;white-space:nowrap;padding-top:1px}
@@ -664,8 +777,8 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
   body>*:not(#printRoot){display:none!important}
   #printRoot{display:block}
   .p-book+.p-book{break-before:page}
-  .p-sec,.p-entry,.p-frow,.p-info,.p-map,.p-toc tr,.p-chars li{break-inside:avoid}
-  .p-sec-head{break-after:avoid}
+  .p-sec,.p-entry,.p-words tr,.p-frow,.p-info,.p-map,.p-toc tr,.p-chars li{break-inside:avoid}
+  .p-sec-head,.p-grp-title{break-after:avoid}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
@@ -772,6 +885,9 @@ const ICONS = {
   edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/>',
   palette: '<path d="M12 3a9 9 0 0 0 0 18c1.1 0 1.8-.8 1.8-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H16.5A4.5 4.5 0 0 0 21 10.7C21 6.4 17 3 12 3z"/><circle cx="7.6" cy="11.6" r="1.2" fill="currentColor" stroke="none"/><circle cx="10" cy="7.4" r="1.2" fill="currentColor" stroke="none"/><circle cx="14.8" cy="7.4" r="1.2" fill="currentColor" stroke="none"/><circle cx="17.4" cy="11" r="1.2" fill="currentColor" stroke="none"/>',
+  words: '<path d="M3 18L7.5 6 12 18M4.7 14h5.6"/><path d="M15 8h6M15 12h6M15 16h4"/>',
+  chevron: '<path d="M6 9l6 6 6-6"/>',
+  folder: '<path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l2 2.2h7.5A2.5 2.5 0 0 1 21 9.7v7.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/>',
   columns: '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9 4v16M15 4v16"/>',
   highlight: '<path d="M14.5 4.5l5 5L11 18H6v-5z"/><path d="M4 21h16"/>',
   heading: '<path d="M6 4v16M18 4v16M6 12h12"/>',
@@ -983,7 +1099,16 @@ function mdExit(wrap) {
 /* 클릭 도중(누르고 있는 동안)에는 레이아웃이 흔들리지 않도록 편집 종료를 잠시 미룸 */
 let mdPtrDown = false; const mdPending = new Set();
 function mdFlush() { mdPending.forEach(w => mdExit(w)); mdPending.clear(); }
-document.addEventListener('pointerdown', () => { mdPtrDown = true; }, true);
+let lastPtrAt = 0, lastTypeAt = 0, lastTabAt = 0;
+document.addEventListener('pointerdown', () => { mdPtrDown = true; lastPtrAt = Date.now(); }, true);
+document.addEventListener('input', () => { lastTypeAt = Date.now(); }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Tab') lastTabAt = Date.now(); if (!e.ctrlKey && !e.metaKey && !e.altKey) lastTypeAt = Date.now(); }, true);
+/** 지금 무언가를 입력하는 중인지 (입력칸에 있으면 20초, 아니면 3초 안에 입력이 있었는지) */
+function userIsTyping() {
+  const a = document.activeElement;
+  const field = !!a && (a.isContentEditable || a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && !/^(checkbox|radio|color|button|submit|file|range)$/i.test(a.type)));
+  return Date.now() - lastTypeAt < (field ? 20000 : 3000);
+}
 document.addEventListener('pointerup', () => { mdPtrDown = false; setTimeout(mdFlush, 400); }, true);
 document.addEventListener('pointercancel', () => { mdPtrDown = false; setTimeout(mdFlush, 0); }, true);
 document.addEventListener('click', () => { setTimeout(mdFlush, 0); });
@@ -1143,10 +1268,11 @@ const SEC = {
   learned:    { title: 'Learned',    hint: '배운 점',     color: '#16A34A', ph: '새롭게 알게 되거나 깨달은 것' },
   action:     { title: 'Action',     hint: '실천할 것',   color: '#2563EB', ph: '삶에 적용해 볼 행동' },
   comment:    { title: 'Comment',    hint: '총평',        color: '#7C3AED', ph: '자유로운 생각과 총평' },
+  words:      { title: 'Words',      hint: '모르는 단어', color: '#E5484D' },
   characters: { title: 'Characters', hint: '등장인물 맵', color: '#0D9488' },
   custom:     { title: '새 섹션',    hint: '',            color: '#A1A1AA', ph: '내용을 입력하세요' },
 };
-const TEXT_TYPES = ['motivation', 'liked', 'unliked', 'learned', 'action', 'comment', 'custom'];
+const TEXT_TYPES = ['motivation', 'liked', 'unliked', 'learned', 'action', 'comment', 'words', 'custom'];
 const FIELD_TYPES = { text: '짧은 글', longtext: '긴 글', number: '숫자', date: '날짜', period: '기간', rating: '별점', select: '선택', tags: '태그', link: '링크' };
 const PRESETS = [
   { role: 'title', label: '책 제목', type: 'text' },
@@ -1179,7 +1305,7 @@ const DEFAULT_PALETTE = [
   { id: 'blue', hex: '#2563EB' }, { id: 'teal', hex: '#0D9488' }, { id: 'green', hex: '#16A34A' }, { id: 'amber', hex: '#D97706' }, { id: 'red', hex: '#E5484D' },
   { id: 'pink', hex: '#DB2777' }, { id: 'violet', hex: '#7C3AED' }, { id: 'slate', hex: '#64748B' }, { id: 'gray', hex: '#71717A' },
 ];
-const DEFAULT_SEC_COLORS = { info: '@gray', motivation: '@amber', liked: '@pink', unliked: '@slate', learned: '@green', action: '@blue', comment: '@violet', characters: '@teal', custom: '@gray' };
+const DEFAULT_SEC_COLORS = { info: '@gray', motivation: '@amber', liked: '@pink', unliked: '@slate', learned: '@green', action: '@blue', comment: '@violet', words: '@red', characters: '@teal', custom: '@gray' };
 const DEFAULT_ACCENT = '#2E6B57';
 const FALLBACK_HEX = '#71717A';
 const SEC_STYLES = [{ v: 'dot', l: '점' }, { v: 'title', l: '제목 색' }, { v: 'band', l: '윗줄' }];
@@ -1327,18 +1453,43 @@ const FILTERS = [{ v: 'all', l: '전체' }, { v: '읽는 중', l: '읽는 중' }
 
 function emptyValue(t) { return t === 'rating' ? 0 : t === 'period' ? { start: '', end: '' } : ''; }
 function newEntry(text = '', page = '') { return { id: uid('e'), text, page, done: false }; }
+function newWord(word = '', text = '', page = '') { return { id: uid('e'), word, text, page, done: false }; }
+function freshEntry(type) { return type === 'words' ? newWord() : newEntry(); }
+function wordSortKey(e) { return String(e.word || '').trim(); }
+/* ── 카테고리(접고 펼치는 묶음): entries 안에 { kind:'group', title, collapsed, items:[...] } ── */
+const isGroup = e => !!e && e.kind === 'group';
+function newGroup(title = '') { return { id: uid('g'), kind: 'group', title, collapsed: false, items: [] }; }
+function allItems(s) { const out = []; ((s && s.entries) || []).forEach(e => { if (isGroup(e)) out.push(...e.items); else out.push(e); }); return out; }
+function allGroups(s) { return ((s && s.entries) || []).filter(isGroup); }
+function findNode(s, id) {
+  const L = (s && s.entries) || [];
+  for (let i = 0; i < L.length; i++) {
+    const e = L[i]; if (e.id === id) return { node: e, list: L, index: i, group: null };
+    if (isGroup(e)) { const j = e.items.findIndex(x => x.id === id); if (j > -1) return { node: e.items[j], list: e.items, index: j, group: e }; }
+  }
+  return null;
+}
+function itemFilled(s, e) { return s.type === 'words' ? !!(String(e.word || '').trim() || String(e.text || '').trim()) : !!String(e.text || '').trim(); }
+/** 그룹 위치는 그대로 두고, 그룹 사이사이의 메모끼리 + 그룹 안의 메모끼리 정렬 */
+function sortRuns(list, cmp) {
+  const out = []; let run = [];
+  const flush = () => { run.sort(cmp); out.push(...run); run = []; };
+  list.forEach(e => { if (isGroup(e)) { flush(); e.items.sort(cmp); out.push(e); } else run.push(e); });
+  flush(); return out;
+}
+function reIdEntries(list) { (list || []).forEach(e => { if (isGroup(e)) { e.id = uid('g'); reIdEntries(e.items); } else e.id = uid('e'); }); }
 function newField(p) { const f = { id: uid('f'), role: p.role || null, label: p.label, type: p.type, value: emptyValue(p.type), hidden: false }; if (p.options) f.options = [...p.options]; return f; }
 function newSection(type) {
   const d = SEC[type] || SEC.custom; const s = { id: uid('s'), type, title: d.title };
   if (type === 'info') s.fields = DEFAULT_ROLES.map(r => newField(PRESET[r]));
   else if (type === 'characters') s.map = { nodes: [], edges: [] };
-  else s.entries = [newEntry()];
+  else s.entries = [freshEntry(type)];
   return s;
 }
 function newRow(cols) { return { id: uid('r'), ratio: cols.map(() => 1), cols }; }
 function defaultTemplate() {
   const sections = {}; const add = t => { const s = newSection(t); sections[s.id] = s; return s.id; };
-  const rows = [newRow([[add('info')]]), newRow([[add('motivation')]]), newRow([[add('liked')], [add('unliked')]]), newRow([[add('learned')], [add('action')]]), newRow([[add('comment')]])];
+  const rows = [newRow([[add('info')]]), newRow([[add('motivation')]]), newRow([[add('liked')], [add('unliked')]]), newRow([[add('learned')], [add('action')]]), newRow([[add('words')]]), newRow([[add('comment')]])];
   Object.values(sections).forEach(s => { if (s.entries) s.entries = []; });
   return { sections, rows };
 }
@@ -1396,7 +1547,13 @@ function normalizeBook(b) {
       const edges = (Array.isArray(m.edges) ? m.edges : []).filter(e => e && typeof e === 'object' && nMap.has(e.from) && nMap.has(e.to) && nMap.get(e.from) !== nMap.get(e.to)).map(e => ({ id: safeId(e.id, 'l', eSeen), from: nMap.get(e.from), to: nMap.get(e.to), label: String(e.label ?? ''), dir: ['none', 'forward', 'both'].includes(e.dir) ? e.dir : 'forward', style: e.style === 'dashed' ? 'dashed' : 'solid' }));
       s.map = { nodes, edges }; delete s.entries; delete s.fields;
     } else {
-      s.entries = (Array.isArray(s.entries) ? s.entries : []).filter(e => e && typeof e === 'object').map(e => ({ id: safeId(e.id, 'e', entSeen), text: String(e.text ?? '').replace(/\r\n?/g, '\n'), page: String(e.page ?? ''), done: !!e.done }));
+      const normItem = e => { const ne = { id: safeId(e.id, 'e', entSeen), text: String(e.text ?? '').replace(/\r\n?/g, '\n'), page: String(e.page ?? ''), done: !!e.done }; if (s.type === 'words') ne.word = String(e.word ?? '').replace(/\s*[\r\n]+\s*/g, ' '); return ne; };
+      const normList = (arr, depth) => (Array.isArray(arr) ? arr : []).filter(e => e && typeof e === 'object' && !Array.isArray(e)).flatMap(e => {
+        if (e.kind !== 'group') return [normItem(e)];
+        if (depth > 0) return normList(e.items, depth);            // 카테고리 안의 카테고리는 펼쳐서 한 단계로
+        return [{ id: safeId(e.id, 'g', entSeen), kind: 'group', title: String(e.title ?? '').replace(/\s*[\r\n]+\s*/g, ' ').slice(0, 200), collapsed: !!e.collapsed, items: normList(e.items, 1) }];
+      });
+      s.entries = normList(s.entries, 0);
       delete s.fields; delete s.map;
     }
     out[s.id] = s;
@@ -1424,14 +1581,23 @@ function migrate(s) {
   } else st.template = defaultTemplate();
   st.settings = normalizeSettings(st.settings);
   if (!Array.isArray(st.saveLog)) st.saveLog = [];
+  st.flags = (st.flags && typeof st.flags === 'object' && !Array.isArray(st.flags)) ? st.flags : {};
+  if (!st.flags.wordsTpl) { addWordsToTemplate(st.template); st.flags.wordsTpl = true; }
   return st;
+}
+/** (한 번만) 기본 템플릿에 Words 섹션 추가 — 이미 있으면 그대로 */
+function addWordsToTemplate(t) {
+  if (!t || !t.sections || !Array.isArray(t.rows) || Object.values(t.sections).some(x => x.type === 'words')) return;
+  const w = newSection('words'); w.entries = []; t.sections[w.id] = w;
+  const ci = t.rows.findIndex(r => r.cols.some(c => c.some(id => t.sections[id] && t.sections[id].type === 'comment')));
+  const row = newRow([[w.id]]); if (ci >= 0) t.rows.splice(ci, 0, row); else t.rows.push(row);
 }
 function makeBook(kind = 'general', title = '') {
   const t = deep(state.template || defaultTemplate());
   const idMap = {}, sections = {};
   Object.values(t.sections).forEach(s => {
     const nid = uid('s'); idMap[s.id] = nid; s.id = nid;
-    if (TEXT_TYPES.includes(s.type)) s.entries = [newEntry()];
+    if (TEXT_TYPES.includes(s.type)) s.entries = [freshEntry(s.type)];
     if (s.fields) s.fields.forEach(f => { f.id = uid('f'); f.value = emptyValue(f.type); });
     if (s.type === 'characters') s.map = { nodes: [], edges: [] };
     sections[nid] = s;
@@ -1478,8 +1644,11 @@ function sampleBook() {
   T('liked').entries = [newEntry('**선과 악**을 둘로 나누지 않고 한 사람 안에 함께 있는 것으로 그려낸 점.', '98'), newEntry('남의 기준이 아니라 자기 안의 목소리를 따라가려는 싱클레어의 여정.')];
   T('unliked').entries = [newEntry('후반부의 꿈과 상징 이야기는 다소 추상적이라 따라가기 어려웠다.')];
   T('learned').entries = [newEntry('성장은 익숙한 세계와 결별하는 아픔을 지나야 한다는 것.\n- 남이 정한 기준보다 ==내 안의 목소리==\n- 흔들림도 과정의 일부')];
+  const lg = newGroup('두 세계'); lg.items = [newEntry('밝고 질서 있는 집 안의 세계와, 그 바깥의 낯설고 어두운 세계가 함께 있다는 것.'), newEntry('어른이 되려면 익숙한 쪽만 고를 수는 없다는 것.')];
+  T('learned').entries.push(lg);
   const a2 = newEntry('한 달에 한 권, 예전에 읽은 고전 다시 읽기'); a2.done = true;
   T('action').entries = [newEntry('하루 10분, 생각을 정리하는 일기 쓰기'), a2];
+  const W = T('words'); if (W) W.entries = [newWord('아브락사스', '선과 악을 함께 품은 신. 작품 속 **중요한 상징**', '118'), newWord('회의(懷疑)', '의심을 품음. 확신하지 못하고 망설이는 마음')];
   T('comment').entries = [newEntry('읽을 때마다 *다른 문장*이 눈에 들어오는 책.\n\n> 몇 년 뒤에 다시 꺼내 읽어 보고 싶다.')];
   const cm = T('characters').map;
   const N = (name, role, color, main = false, desc = '') => { const n = { id: uid('n'), name, role, desc, color, main, x: 0, y: 0 }; cm.nodes.push(n); return n.id; };
@@ -1585,7 +1754,7 @@ async function reloadFromStore(msg) {
 function showConflict() {
   if (conflictOpen) return; conflictOpen = true;
   modal({
-    title: '다른 탭에서 내용이 바뀌었어요', width: 460,
+    title: '다른 탭에서 내용이 바뀌었어요', width: 460, focusDialog: true,
     body: `<p class="confirm-msg">같은 독서노트가 다른 탭(창)에서도 열려 있고, 그쪽에서 더 최근에 저장했어요.<br>이 탭의 내용으로 저장하면 다른 탭에서 바꾼 내용이 사라져요.</p>`,
     actions: [
       { label: '이 탭 내용으로 저장', onClick: () => { otherTabNewer = false; pendingMsg = pendingMsg || '이 탭 내용으로 저장'; saveNow(); } },
@@ -1600,9 +1769,9 @@ function showConflict() {
    ════════════════════════════════════════════════════════════ */
 const layer = $('#layer');
 let modalStack = [];
-function modal({ title, body = '', actions = [], width = 480, onClose, className = '' }) {
+function modal({ title, body = '', actions = [], width = 480, onClose, className = '', focusDialog = false }) {
   const w = document.createElement('div'); w.className = 'mwrap ' + className;
-  w.innerHTML = `<div class="mback"></div><div class="mdl" role="dialog" aria-modal="true" style="--mw:${width}px"><div class="mhead"><h2>${title}</h2><button class="icon-btn" data-mclose aria-label="닫기">${icon('x', 20)}</button></div><div class="mbody"></div>${actions.length ? '<div class="mfoot"></div>' : ''}</div>`;
+  w.innerHTML = `<div class="mback"></div><div class="mdl" role="dialog" aria-modal="true" tabindex="-1" style="--mw:${width}px"><div class="mhead"><h2>${title}</h2><button class="icon-btn" data-mclose aria-label="닫기">${icon('x', 20)}</button></div><div class="mbody"></div>${actions.length ? '<div class="mfoot"></div>' : ''}</div>`;
   const bodyEl = $('.mbody', w); if (typeof body === 'string') bodyEl.innerHTML = body; else bodyEl.append(body);
   const foot = $('.mfoot', w); let closed = false;
   const api = { el: w, body: bodyEl, close(v) { if (closed) return; closed = true; w.classList.add('out'); setTimeout(() => w.remove(), 170); modalStack = modalStack.filter(x => x !== api); if (onClose) onClose(v); } };
@@ -1616,7 +1785,10 @@ function modal({ title, body = '', actions = [], width = 480, onClose, className
   $('.mback', w).onclick = () => api.close(); $('[data-mclose]', w).onclick = () => api.close();
   layer.append(w); modalStack.push(api);
   requestAnimationFrame(() => w.classList.add('in'));
-  setTimeout(() => { const f = $('[autofocus]', w) || $('[data-focus]', w) || (foot && $('.primary', foot)); if (f && !IS_TOUCH) f.focus(); else if (f && f.tagName === 'BUTTON') f.focus(); }, 40);
+  setTimeout(() => {
+    if (focusDialog) { try { $('.mdl', w).focus({ preventScroll: true }); } catch (e) { } return; }
+    const f = $('[autofocus]', w) || $('[data-focus]', w) || (foot && $('.primary', foot)); if (f && !IS_TOUCH) f.focus(); else if (f && f.tagName === 'BUTTON') f.focus();
+  }, 40);
   return api;
 }
 function confirmDialog({ title = '삭제할까요?', message = '', ok = '삭제', danger = true }) {
@@ -1644,10 +1816,15 @@ function openMenu(anchor, items) {
   let top = r.bottom + 6; if (top + mh > innerHeight - 8) top = Math.max(8, r.top - mh - 6);
   m.style.left = left + 'px'; m.style.top = top + 'px';
   menuEl = m; menuAnchor = anchor;
-  setTimeout(() => { document.addEventListener('pointerdown', menuOutside, true); window.addEventListener('scroll', closeMenu, { passive: true, once: true }); }, 0);
+  menuScrollY = window.scrollY;
+  // 메뉴는 click에서 열리므로 그 클릭의 pointerdown은 이미 지나감 → 바로 연결해도 안전
+  document.addEventListener('pointerdown', menuOutside, true); window.addEventListener('scroll', menuOnScroll, { passive: true });
 }
 function menuOutside(e) { if (menuEl && !menuEl.contains(e.target) && !(menuAnchor && menuAnchor.contains(e.target))) closeMenu(); }
-function closeMenu() { if (menuEl) { menuEl.remove(); menuEl = null; menuAnchor = null; document.removeEventListener('pointerdown', menuOutside, true); } }
+let menuScrollY = 0;
+/* 손가락을 뗀 뒤 남은 미끄러짐 정도의 작은 스크롤로는 메뉴를 닫지 않음 */
+function menuOnScroll() { if (menuEl && Math.abs(window.scrollY - menuScrollY) > 40) closeMenu(); }
+function closeMenu() { if (menuEl) { menuEl.remove(); menuEl = null; menuAnchor = null; document.removeEventListener('pointerdown', menuOutside, true); window.removeEventListener('scroll', menuOnScroll); } }
 function toast(msg, o = {}) {
   const t = document.createElement('div'); t.className = 'toast';
   t.innerHTML = `<span>${msg}</span>${o.action ? `<button type="button">${o.action}</button>` : ''}`;
@@ -1719,7 +1896,7 @@ function bookSearchText(b) {
   Object.values(b.sections).forEach(s => {
     parts.push(s.title);
     if (s.fields) s.fields.forEach(f => parts.push(typeof f.value === 'object' ? '' : String(f.value)));
-    if (s.entries) s.entries.forEach(e => parts.push(e.text));
+    if (s.entries) { allGroups(s).forEach(g => parts.push(g.title)); allItems(s).forEach(e => parts.push(e.word || '', e.text)); }
     if (s.map) { s.map.nodes.forEach(n => parts.push(n.name, n.role, n.desc)); s.map.edges.forEach(e => parts.push(e.label)); }
   });
   return parts.join(' ').toLowerCase();
@@ -1826,7 +2003,9 @@ function rowHTML(b, r, i) {
 function secSummary(b, s) {
   if (s.type === 'info') { const t = bookTitle(b), a = bookAuthor(b); return esc(t + (a ? ' · ' + a : '')); }
   if (s.type === 'characters') return `인물 ${s.map.nodes.length}명 · 관계 ${s.map.edges.length}개`;
-  const n = s.entries.filter(e => e.text.trim()).length; return n ? `메모 ${n}개` : '비어 있음';
+  const n = allItems(s).filter(e => itemFilled(s, e)).length, g = allGroups(s).length;
+  const base = n ? `${s.type === 'words' ? '단어' : '메모'} ${n}개` : '비어 있음';
+  return g ? `${base} · 카테고리 ${g}개` : base;
 }
 function secHTML(b, s) {
   if (!s) return '';
@@ -1845,15 +2024,44 @@ function secHTML(b, s) {
     <div class="sec-body">${s.type === 'info' ? infoHTML(b, s) : s.type === 'characters' ? mapHTML(s) : entriesHTML(s)}</div>
   </article>`;
 }
-function entriesHTML(s) {
+function itemHTML(s, e) {
+  const ctl = `<div class="entry-ctl"><span class="grip entry-handle eh-ctl" title="끌어서 순서 변경">${icon('grip', 14)}</span><input class="entry-page" value="${esc(e.page)}" placeholder="p." inputmode="numeric" aria-label="페이지" title="페이지"><button type="button" class="icon-btn xs entry-del" data-act="delEntry" title="삭제" aria-label="${s.type === 'words' ? '단어' : '메모'} 삭제">${icon('x', 14)}</button></div>`;
+  if (s.type === 'words') return `<li class="entry wentry" data-entry="${e.id}">
+      <span class="grip entry-handle eh-main" title="끌어서 순서 변경">${icon('grip', 14)}</span>
+      <textarea class="entry-word" rows="1" placeholder="단어" aria-label="단어" spellcheck="false">${esc(e.word || '')}</textarea>
+      ${mdxHTML(e.text, `<textarea class="entry-text" rows="1" placeholder="뜻" aria-label="뜻">${esc(e.text)}</textarea>`)}
+      ${ctl}
+    </li>`;
   const d = SEC[s.type] || SEC.custom, act = s.type === 'action';
-  return `<ul class="entries" data-sec="${s.id}">${s.entries.map(e => `<li class="entry ${act && e.done ? 'done' : ''}" data-entry="${e.id}">
+  return `<li class="entry ${act && e.done ? 'done' : ''}" data-entry="${e.id}">
       <span class="grip entry-handle eh-main" title="끌어서 순서 변경">${icon('grip', 14)}</span>
       ${act ? `<input type="checkbox" class="entry-done" ${e.done ? 'checked' : ''} aria-label="완료">` : ''}
       ${mdxHTML(e.text, `<textarea class="entry-text" rows="1" placeholder="${esc(d.ph || '내용을 입력하세요')}">${esc(e.text)}</textarea>`)}
-      <div class="entry-ctl"><span class="grip entry-handle eh-ctl" title="끌어서 순서 변경">${icon('grip', 14)}</span><input class="entry-page" value="${esc(e.page)}" placeholder="p." inputmode="numeric" aria-label="페이지" title="페이지"><button type="button" class="icon-btn xs entry-del" data-act="delEntry" title="삭제" aria-label="메모 삭제">${icon('x', 14)}</button></div>
-    </li>`).join('')}</ul>
-    <button type="button" class="add-entry" data-act="addEntry" title="메모 추가 (Ctrl/⌘+Enter로도 추가돼요)" aria-label="메모 추가">${icon('plus', 15)} 메모 추가</button>`;
+      ${ctl}
+    </li>`;
+}
+function groupHTML(s, g) {
+  const words = s.type === 'words', unit = words ? '단어' : '메모', n = g.items.filter(e => itemFilled(s, e)).length;
+  return `<li class="grp${g.collapsed ? ' collapsed' : ''}" data-grp="${g.id}">
+    <div class="grp-head">
+      <span class="grip grp-handle" title="끌어서 카테고리 옮기기">${icon('grip', 14)}</span>
+      <button type="button" class="grp-toggle" data-act="grpToggle" aria-expanded="${!g.collapsed}" aria-label="${g.collapsed ? '펼치기' : '접기'}" title="${g.collapsed ? '펼치기' : '접기'}">${icon('chevron', 16)}</button>
+      <input class="grp-title" value="${esc(g.title)}" placeholder="카테고리 이름" aria-label="카테고리 이름" spellcheck="false" maxlength="200" autocomplete="off">
+      <span class="grp-count" title="${unit} ${n}개">${n}</span>
+      <button type="button" class="icon-btn xs grp-more" data-act="grpMenu" title="카테고리 메뉴" aria-label="카테고리 메뉴">${icon('more', 15)}</button>
+    </div>
+    <div class="grp-body">
+      <ul class="entries${words ? ' words' : ''}" data-sec="${s.id}" data-grp="${g.id}" data-kind="${words ? 'words' : 'notes'}">${g.items.map(e => itemHTML(s, e)).join('')}</ul>
+      <p class="grp-hint">${unit}를 이곳으로 끌어 놓거나 아래에서 추가하세요</p>
+      <button type="button" class="add-entry grp-add" data-act="grpAdd" aria-label="이 카테고리에 ${unit} 추가">${icon('plus', 14)} ${unit} 추가</button>
+    </div>
+  </li>`;
+}
+function entriesHTML(s) {
+  const words = s.type === 'words', unit = words ? '단어' : '메모';
+  const head = words && allItems(s).length ? `<div class="w-head" aria-hidden="true"><span class="wh-g"></span><span class="wh-w">단어</span><span class="wh-m">뜻</span><span class="wh-p">쪽</span><span class="wh-x"></span></div>` : '';
+  return `${head}<ul class="entries${words ? ' words' : ''}" data-sec="${s.id}" data-root="1" data-kind="${words ? 'words' : 'notes'}">${s.entries.map(e => isGroup(e) ? groupHTML(s, e) : itemHTML(s, e)).join('')}</ul>
+    <div class="add-btns"><button type="button" class="add-entry" data-act="addEntry" title="${unit} 추가 (Ctrl/⌘+Enter로도 추가돼요)" aria-label="${unit} 추가">${icon('plus', 15)} ${unit} 추가</button><button type="button" class="add-entry add-grp" data-act="addGroup" title="접고 펼 수 있는 카테고리로 ${unit}를 묶어요" aria-label="카테고리 추가">${icon('folder', 15)} 카테고리</button></div>`;
 }
 function infoHTML(b, s) {
   const fields = s.fields.filter(f => !f.hidden);
@@ -1898,15 +2106,32 @@ function refreshSection(b, secId) {
   return el;
 }
 function initEntrySortable(ul) {
+  const root = ul.dataset.root === '1';
   sortable(ul, {
-    handle: '.entry-handle', draggable: '.entry', group: { name: 'entries' },
+    handle: root ? '.entry-handle, .grp-handle' : '.entry-handle',
+    draggable: root ? '.entry, .grp' : '.entry',
+    group: { name: ul.dataset.kind === 'words' ? 'words' : 'entries', put: (to, from, dragEl) => !!(to && from && to.options.group.name === from.options.group.name && (root || !dragEl.classList.contains('grp'))) },
+    fallbackOnBody: true, swapThreshold: .65, emptyInsertThreshold: 22,
     onEnd: (ev) => {
       const b = curBook(); if (!b) return;
-      const lists = ev.from === ev.to ? [ev.to] : [ev.from, ev.to];
-      const snapshot = new Map(); Object.values(b.sections).forEach(x => (x.entries || []).forEach(e => snapshot.set(e.id, e)));
-      lists.forEach(list => { const s = b.sections[list.dataset.sec]; if (s && s.entries) s.entries = $$('.entry', list).map(li => snapshot.get(li.dataset.entry)).filter(Boolean); });
-      commit('메모 순서 변경', b);
-      if (ev.from !== ev.to) { refreshSection(b, ev.from.dataset.sec); refreshSection(b, ev.to.dataset.sec); }
+      const ids = [...new Set([ev.from.dataset.sec, ev.to.dataset.sec])].filter(Boolean);
+      const items = new Map(), groups = new Map();
+      Object.values(b.sections).forEach(x => { if (!x.entries) return; allItems(x).forEach(e => items.set(e.id, e)); allGroups(x).forEach(g => groups.set(g.id, g)); });
+      ids.forEach(id => {
+        const s = b.sections[id], rootEl = $(`.sec[data-sec="${id}"] ul.entries[data-root="1"]`, view); if (!s || !s.entries || !rootEl) return;
+        s.entries = [...rootEl.children].map(li => {
+          if (li.classList.contains('entry')) return items.get(li.dataset.entry);
+          if (li.classList.contains('grp')) {
+            const g = groups.get(li.dataset.grp); if (!g) return null;
+            const inner = li.querySelector('ul.entries');
+            g.items = inner ? [...inner.children].filter(x => x.classList.contains('entry')).map(x => items.get(x.dataset.entry)).filter(Boolean) : [];
+            return g;
+          }
+          return null;
+        }).filter(Boolean);
+      });
+      commit(ev.item && ev.item.classList.contains('grp') ? '카테고리 이동' : '메모 순서 변경', b);
+      ids.forEach(id => refreshSection(b, id));
     }
   });
 }
@@ -1928,7 +2153,41 @@ function autosize(t) {
   if (!t.getClientRects().length) return;
   t.style.height = 'auto'; t.style.height = (t.scrollHeight + t.offsetHeight - t.clientHeight) + 'px';
 }
-function autosizeAll(root) { requestAnimationFrame(() => $$('textarea.entry-text, textarea.fin', root).forEach(autosize)); }
+function autosizeAll(root) { requestAnimationFrame(() => $$('textarea.entry-text, textarea.entry-word, textarea.fin', root).forEach(autosize)); }
+function updateGrpCount(s, g) {
+  const c = $(`.sec[data-sec="${s.id}"] .grp[data-grp="${g.id}"] .grp-count`, view); if (!c) return;
+  const n = g.items.filter(e => itemFilled(s, e)).length; c.textContent = n; c.title = `${s.type === 'words' ? '단어' : '메모'} ${n}개`;
+}
+function addGroupTo(b, s) {
+  const g = newGroup(); s.entries.push(g); commit('카테고리 추가', b);
+  const el = refreshSection(b, s.id), i = el && $(`.grp[data-grp="${g.id}"] .grp-title`, el);
+  if (i) { i.focus(); i.scrollIntoView({ block: 'nearest' }); }
+}
+function grpAddItem(b, s, g) {
+  g.collapsed = false; const en = freshEntry(s.type); g.items.push(en); commit(s.type === 'words' ? '단어 추가' : '메모 추가', b);
+  const el = refreshSection(b, s.id), ta = el && $(`[data-entry="${en.id}"] ${s.type === 'words' ? '.entry-word' : '.entry-text'}`, el); if (ta) ta.focus();
+}
+function setAllCollapsed(b, s, v) {
+  allGroups(s).forEach(g => { g.collapsed = v; }); commit(v ? '카테고리 모두 접기' : '카테고리 모두 펼치기', b); refreshSection(b, s.id);
+}
+async function deleteGroup(b, s, g) {
+  const unit = s.type === 'words' ? '단어' : '메모', n = g.items.filter(e => itemFilled(s, e)).length, name = g.title.trim() || '이름 없는 카테고리';
+  const remove = keep => {
+    const loc = findNode(s, g.id); if (!loc) return;
+    loc.list.splice(loc.index, 1, ...(keep ? g.items : []));
+    commit(keep ? '카테고리 풀기' : '카테고리 삭제', b); refreshSection(b, s.id);
+    toast(keep ? `카테고리를 지우고 ${unit}는 그대로 남겼어요` : '카테고리를 삭제했어요');
+  };
+  if (!n) {
+    if (await confirmDialog({ title: `‘${esc(name)}’ 카테고리를 삭제할까요?`, message: g.items.length ? `내용이 없는 빈 ${unit} ${g.items.length}개도 함께 지워져요.` : '' })) remove(false);
+    return;
+  }
+  modal({
+    title: `‘${esc(name)}’ 카테고리를 삭제할까요?`, width: 460, className: 'confirm',
+    body: `<p class="confirm-msg">안에 ${unit} ${n}개가 있어요. 어떻게 할까요?\n‘${unit}는 남기기’를 고르면 카테고리만 지워지고 ${unit}는 그 자리에 그대로 남아요.</p>`,
+    actions: [{ label: '취소', focus: true }, { label: `${unit}는 남기기`, onClick: () => remove(true) }, { label: '모두 삭제', danger: true, onClick: () => remove(false) }]
+  });
+}
 let _rz; window.addEventListener('resize', () => { clearTimeout(_rz); _rz = setTimeout(() => autosizeAll(view), 150); });
 
 /* ════════════════════════════════════════════════════════════
@@ -2270,7 +2529,14 @@ document.addEventListener('keydown', e => {
     if (!state) { e.preventDefault(); return; } e.preventDefault(); pendingMsg = pendingMsg || '직접 저장'; saveNow().then(() => toast('저장했어요')); return; }
   const t = e.target;
   if (t.classList && t.classList.contains('sec-title') && e.key === 'Enter') { if (e.isComposing || e.keyCode === 229) return; e.preventDefault(); t.blur(); return; }
+  if (t.classList && t.classList.contains('grp-title') && (e.key === 'Enter' || e.key === 'Escape')) { if (e.isComposing || e.keyCode === 229) return; e.preventDefault(); t.blur(); return; }
   if (t.classList && t.classList.contains('entry-text') && e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); addEntryAfter(t); return; }
+  if (t.classList && t.classList.contains('entry-word') && e.key === 'Enter') {
+    if (e.isComposing || e.keyCode === 229) return;        // 한글 조합 중 Enter는 글자 확정에 쓰임
+    e.preventDefault();
+    if (e.ctrlKey || e.metaKey) { addEntryAfter(t); return; }
+    const w = t.closest('.entry') && t.closest('.entry').querySelector('.mdx'); if (w) mdEdit(w); return;
+  }
   if (t.matches && t.matches('.mdx > textarea')) {
     const mod = e.ctrlKey || e.metaKey;
     if (mod && !e.shiftKey && !e.altKey) {
@@ -2295,12 +2561,22 @@ document.addEventListener('input', e => {
   if (t.id === 'libSearch') { ui.search = t.value; renderGrid(); return; }
   if (t.type === 'checkbox') return;
   const b = curBook(); if (!b) return;
-  if (t.classList.contains('entry-text') || t.classList.contains('entry-page')) {
-    const s = b.sections[t.closest('[data-sec]').dataset.sec]; const en = s && s.entries.find(x => x.id === t.closest('[data-entry]').dataset.entry); if (!en) return;
-    if (t.classList.contains('entry-text')) { en.text = t.value; autosize(t); } else en.page = t.value;
+  if (t.classList.contains('entry-text') || t.classList.contains('entry-page') || t.classList.contains('entry-word')) {
+    const s = b.sections[t.closest('[data-sec]').dataset.sec]; const loc = s && findNode(s, t.closest('[data-entry]').dataset.entry); const en = loc && loc.node; if (!en || isGroup(en)) return;
+    if (loc.group) queueMicrotask(() => updateGrpCount(s, loc.group));
+    if (t.classList.contains('entry-text')) { en.text = t.value; autosize(t); }
+    else if (t.classList.contains('entry-word')) {
+      if (/[\r\n]/.test(t.value) && !e.isComposing) { const pos = t.selectionStart; const v = t.value.replace(/\s*[\r\n]+\s*/g, ' '); t.value = v; try { t.setSelectionRange(Math.min(pos, v.length), Math.min(pos, v.length)); } catch (err) { } }
+      en.word = t.value; autosize(t);
+    }
+    else en.page = t.value;
     commit(`${s.title || '섹션'} 수정`, b); return;
   }
   if (t.classList.contains('sec-title')) { const s = b.sections[t.closest('.sec').dataset.sec]; if (s) { s.title = t.textContent.replace(/\n/g, ' '); commit('섹션 이름 변경', b); } return; }
+  if (t.classList.contains('grp-title')) {
+    const s = b.sections[t.closest('.sec').dataset.sec], g = s && allGroups(s).find(x => x.id === t.closest('.grp').dataset.grp); if (!g) return;
+    g.title = t.value; commit('카테고리 이름 변경', b); return;
+  }
   if (t.classList.contains('fin')) { updateField(t, b); return; }
   if (t.matches('[data-mi]')) {
     const { root, s, mu } = mapCtx(t); const n = s && mu.sel && s.map.nodes.find(x => x.id === mu.sel.id); if (!n) return;
@@ -2322,7 +2598,7 @@ document.addEventListener('change', e => {
     toast(t.checked ? '좁은 화면에서는 1단으로 쌓아서 보여 줄게요' : '좁은 화면에서도 설정한 단 그대로 보여 줄게요'); return;
   }
   const b = curBook(); if (!b) return;
-  if (t.classList.contains('entry-done')) { const s = b.sections[t.closest('[data-sec]').dataset.sec]; const en = s.entries.find(x => x.id === t.closest('[data-entry]').dataset.entry); if (en) { en.done = t.checked; t.closest('.entry').classList.toggle('done', t.checked); commit('실천 체크', b); } return; }
+  if (t.classList.contains('entry-done')) { const s = b.sections[t.closest('[data-sec]').dataset.sec]; const loc = s && findNode(s, t.closest('[data-entry]').dataset.entry); const en = loc && loc.node; if (en) { en.done = t.checked; t.closest('.entry').classList.toggle('done', t.checked); commit('실천 체크', b); } return; }
   if (t.classList.contains('ratio-sel')) { const r = b.rows.find(x => x.id === t.closest('.row').dataset.row); if (r) { r.ratio = t.value.split(':').map(Number); commit('행 비율 변경', b); renderBook(b); } return; }
   if (t.matches('[data-mi="main"]')) { const { root, s, mu } = mapCtx(t); const n = s.map.nodes.find(x => x.id === mu.sel.id); if (n) { n.main = t.checked; commit('인물 수정', b); redrawMapParts(root); } return; }
   if (t.classList.contains('fin') && t.type === 'url') {
@@ -2334,7 +2610,9 @@ document.addEventListener('change', e => {
 });
 document.addEventListener('focusin', e => {
   const t = e.target;
-  if (t.matches && t.matches('.mdx > textarea')) { const w = t.parentElement; mdPending.delete(w); if (!w.classList.contains('editing')) { w.classList.add('editing'); autosize(t); } }
+  if (t.matches && t.matches('.mdx > textarea')) { const w = t.parentElement; mdPending.delete(w); if (!w.classList.contains('editing')) { w.classList.add('editing'); autosize(t); } return; }
+  // Tab 키로 서식이 적용된 메모에 들어오면 바로 편집 상태로 (마우스·터치는 click에서 처리)
+  if (t.classList && t.classList.contains('md-view') && lastTabAt > lastPtrAt && Date.now() - lastTabAt < 1000) { const w = t.closest('.mdx'); if (w) mdEdit(w); }
 });
 document.addEventListener('focusout', e => {
   const t = e.target;
@@ -2391,9 +2669,9 @@ function setRating(st, f, v, b) {
 }
 function addEntryAfter(t) {
   const b = curBook(); const s = b.sections[t.closest('[data-sec]').dataset.sec];
-  const idx = s.entries.findIndex(x => x.id === t.closest('[data-entry]').dataset.entry);
-  const en = newEntry(); s.entries.splice(idx + 1, 0, en); commit('메모 추가', b);
-  const el = refreshSection(b, s.id); const ta = el && $(`[data-entry="${en.id}"] .entry-text`, el); if (ta) ta.focus();
+  const loc = findNode(s, t.closest('[data-entry]').dataset.entry); if (!loc) return;
+  const en = freshEntry(s.type); loc.list.splice(loc.index + 1, 0, en); commit(s.type === 'words' ? '단어 추가' : '메모 추가', b);
+  const el = refreshSection(b, s.id); const ta = el && $(`[data-entry="${en.id}"] ${s.type === 'words' ? '.entry-word' : '.entry-text'}`, el); if (ta) ta.focus();
 }
 
 /* ── 액션 ── */
@@ -2458,8 +2736,12 @@ Object.assign(ACT, {
       { icon: 'palette', label: '색상', onClick: () => openSecColor(b, s) },
       { icon: 'edit', label: '이름 바꾸기', onClick: () => { const t = $(`.sec[data-sec="${s.id}"] .sec-title`); t.focus(); const r = document.createRange(); r.selectNodeContents(t); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } },
       s.type === 'info' ? { icon: 'settings', label: '필드 설정', onClick: () => openFieldSettings(b, s) } : null,
-      isText ? { icon: 'sort', label: '메모를 페이지 순으로 정렬', onClick: () => { const pn = e => { const m = String(e.page).match(/\d+/); return m ? +m[0] : Infinity; }; s.entries.sort((a, c) => pn(a) - pn(c)); commit('메모 정렬', b); refreshSection(b, s.id); toast('페이지 순으로 정렬했어요'); } } : null,
-      s.type === 'info' ? null : { icon: 'copy', label: '섹션 복제', onClick: () => { const c = deep(s); c.id = uid('s'); c.title = (s.title || '섹션') + ' 사본'; if (c.entries) c.entries.forEach(e => e.id = uid('e')); if (c.fields) c.fields.forEach(f => f.id = uid('f')); b.sections[c.id] = c; const loc = secOfRow(b, s.id); if (loc) loc.c.splice(loc.i + 1, 0, c.id); else b.rows.push(newRow([[c.id]])); commit('섹션 복제', b); renderBook(b); } },
+      isText ? { icon: 'folder', label: '카테고리 추가', onClick: () => addGroupTo(b, s) } : null,
+      isText && allGroups(s).length ? { icon: 'chevron', label: '모든 카테고리 접기', onClick: () => setAllCollapsed(b, s, true) } : null,
+      isText && allGroups(s).length ? { icon: 'chevron', label: '모든 카테고리 펼치기', onClick: () => setAllCollapsed(b, s, false) } : null,
+      s.type === 'words' ? { icon: 'sort', label: '단어 가나다순으로 정렬', onClick: () => { s.entries = sortRuns(s.entries, (a, c) => { const x = wordSortKey(a), y = wordSortKey(c); if (!x !== !y) return x ? -1 : 1; return x.localeCompare(y, 'ko'); }); commit('단어 정렬', b); refreshSection(b, s.id); toast('가나다순으로 정렬했어요'); } } : null,
+      isText ? { icon: 'sort', label: s.type === 'words' ? '단어를 페이지 순으로 정렬' : '메모를 페이지 순으로 정렬', onClick: () => { const pn = e => { const m = String(e.page).match(/\d+/); return m ? +m[0] : Infinity; }; s.entries = sortRuns(s.entries, (a, c) => pn(a) - pn(c)); commit('메모 정렬', b); refreshSection(b, s.id); toast('페이지 순으로 정렬했어요'); } } : null,
+      s.type === 'info' ? null : { icon: 'copy', label: '섹션 복제', onClick: () => { const c = deep(s); c.id = uid('s'); c.title = (s.title || '섹션') + ' 사본'; if (c.entries) reIdEntries(c.entries); if (c.fields) c.fields.forEach(f => f.id = uid('f')); b.sections[c.id] = c; const loc = secOfRow(b, s.id); if (loc) loc.c.splice(loc.i + 1, 0, c.id); else b.rows.push(newRow([[c.id]])); commit('섹션 복제', b); renderBook(b); } },
       { icon: 'layout', label: '위치 바꾸기 (레이아웃 편집)', onClick: () => { ui.layoutEdit = true; renderBook(b); } },
       '-',
       { icon: 'trash', label: '섹션 삭제', danger: true, onClick: () => deleteSection(b, s) },
@@ -2472,15 +2754,41 @@ Object.assign(ACT, {
     if (!await confirmDialog({ title: '표지 이미지를 삭제할까요?', message: '이미지만 지워지고 책 정보와 메모는 그대로 남아요.' })) return;
     b.cover = null; commit('표지 삭제', b); render();
   },
+  addGroup: (el) => { const { b, s } = ctxSec(el); if (s && s.entries) addGroupTo(b, s); },
+  grpToggle: (el) => {
+    const { b, s } = ctxSec(el), li = el.closest('.grp'), g = s && li && allGroups(s).find(x => x.id === li.dataset.grp); if (!g) return;
+    g.collapsed = !g.collapsed; li.classList.toggle('collapsed', g.collapsed);
+    el.setAttribute('aria-expanded', String(!g.collapsed)); el.title = g.collapsed ? '펼치기' : '접기'; el.setAttribute('aria-label', el.title);
+    commit(g.collapsed ? '카테고리 접기' : '카테고리 펼치기', b); if (!g.collapsed) autosizeAll(li);
+  },
+  grpAdd: (el) => { const { b, s } = ctxSec(el), li = el.closest('.grp'), g = s && li && allGroups(s).find(x => x.id === li.dataset.grp); if (g) grpAddItem(b, s, g); },
+  grpMenu: (el) => {
+    const { b, s } = ctxSec(el), li = el.closest('.grp'), g = s && li && allGroups(s).find(x => x.id === li.dataset.grp); if (!g) return;
+    const unit = s.type === 'words' ? '단어' : '메모';
+    openMenu(el, [
+      { icon: 'edit', label: '이름 바꾸기', onClick: () => { const i = $(`.grp[data-grp="${g.id}"] .grp-title`); if (i) { i.focus(); i.select(); } } },
+      { icon: 'plus', label: `이 카테고리에 ${unit} 추가`, onClick: () => grpAddItem(b, s, g) },
+      { icon: 'chevron', label: g.collapsed ? '펼치기' : '접기', onClick: () => { const t = $(`.grp[data-grp="${g.id}"] .grp-toggle`); if (t) t.click(); } },
+      '-',
+      { icon: 'trash', label: '카테고리 삭제', danger: true, onClick: () => deleteGroup(b, s, g) },
+    ]);
+  },
   addEntry: (el) => {
-    const { b, s } = ctxSec(el); if (!s) return; const en = newEntry(); s.entries.push(en); commit('메모 추가', b);
-    const sec = refreshSection(b, s.id); const ta = sec && $(`[data-entry="${en.id}"] .entry-text`, sec); if (ta) ta.focus();
+    const { b, s } = ctxSec(el); if (!s) return; const en = freshEntry(s.type); s.entries.push(en); commit(s.type === 'words' ? '단어 추가' : '메모 추가', b);
+    const sec = refreshSection(b, s.id); const ta = sec && $(`[data-entry="${en.id}"] ${s.type === 'words' ? '.entry-word' : '.entry-text'}`, sec); if (ta) ta.focus();
   },
   delEntry: async (el) => {
-    const { b, s } = ctxSec(el); if (!s) return; const id = el.closest('[data-entry]').dataset.entry; const en = s.entries.find(x => x.id === id); if (!en) return;
-    const prev = en.text.trim(); const short = prev.length > 70 ? prev.slice(0, 70) + '…' : prev;
+    const { b, s } = ctxSec(el); if (!s) return; const id = el.closest('[data-entry]').dataset.entry; const loc0 = findNode(s, id), en = loc0 && loc0.node; if (!en || isGroup(en)) return;
+    const removeIt = () => { const l = findNode(s, id); if (l) l.list.splice(l.index, 1); };
+    const cut = (v, n) => v.length > n ? v.slice(0, n) + '…' : v;
+    if (s.type === 'words') {
+      const w = (en.word || '').trim(), m = en.text.trim();
+      if (!await confirmDialog({ title: '이 단어를 삭제할까요?', message: (w || m) ? `<b>${esc(cut(w || '(단어 없음)', 40))}</b>${m ? ` — ${esc(cut(m, 60))}` : ''}` : '내용이 비어 있는 줄이에요.' })) return;
+      removeIt(); commit('단어 삭제', b); refreshSection(b, s.id); return;
+    }
+    const prev = en.text.trim(); const short = cut(prev, 70);
     if (!await confirmDialog({ title: '이 메모를 삭제할까요?', message: prev ? `“${esc(short)}”` : '내용이 비어 있는 메모예요.' })) return;
-    s.entries = s.entries.filter(x => x.id !== id); commit('메모 삭제', b); refreshSection(b, s.id);
+    removeIt(); commit('메모 삭제', b); refreshSection(b, s.id);
   },
   /* 맵 */
   mapAdd: (el) => { const { root } = mapCtx(el); addNode(root); },
@@ -2540,13 +2848,14 @@ function addSectionItems(b, place) {
     { header: '섹션 추가' },
     { icon: 'info', label: 'Info.', hint: hasInfo ? '이미 있음' : '책 정보', disabled: hasInfo, onClick: make('info') },
     ...['motivation', 'liked', 'unliked', 'learned', 'action', 'comment'].map(t => ({ icon: 'edit', label: SEC[t].title, hint: SEC[t].hint, onClick: make(t) })),
+    { icon: 'words', label: 'Words', hint: '모르는 단어', onClick: make('words') },
     { icon: 'users', label: 'Characters', hint: '등장인물 맵', onClick: make('characters') },
     '-',
     { icon: 'plus', label: '직접 만들기', hint: '이름 자유', onClick: make('custom') },
   ];
 }
 async function deleteSection(b, s) {
-  const detail = s.type === 'info' ? '책 제목·작가 등 Info 필드 내용이 함께 삭제돼요. (표지 이미지는 남아요)' : s.type === 'characters' ? `인물 ${s.map.nodes.length}명과 관계 ${s.map.edges.length}개가 함께 삭제돼요.` : `메모 ${s.entries.filter(e => e.text.trim()).length}개가 함께 삭제돼요.`;
+  const detail = s.type === 'info' ? '책 제목·작가 등 Info 필드 내용이 함께 삭제돼요. (표지 이미지는 남아요)' : s.type === 'characters' ? `인물 ${s.map.nodes.length}명과 관계 ${s.map.edges.length}개가 함께 삭제돼요.` : `${s.type === 'words' ? '단어' : '메모'} ${allItems(s).filter(e => itemFilled(s, e)).length}개${allGroups(s).length ? `와 카테고리 ${allGroups(s).length}개` : ''}가 함께 삭제돼요.`;
   if (!await confirmDialog({ title: `‘${esc(s.title || '이름 없음')}’ 섹션을 삭제할까요?`, message: detail })) return;
   const loc = secOfRow(b, s.id); if (loc) { loc.c.splice(loc.i, 1); if (loc.r.cols.every(c => !c.length)) b.rows = b.rows.filter(r => r !== loc.r); }
   delete b.sections[s.id]; commit('섹션 삭제', b); renderBook(b); toast('섹션을 삭제했어요');
@@ -2926,8 +3235,15 @@ function printSecHTML(b, s) {
       <div><h5>등장인물</h5><ul>${s.map.nodes.map(n => `<li><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${resolveColor(n.color)};margin-right:6px"></span><b>${esc(n.name || '이름 없음')}</b>${n.role ? ` <span class="r">· ${esc(n.role)}</span>` : ''}${n.desc ? `<div class="r" style="padding-left:13px;white-space:pre-wrap">${esc(n.desc)}</div>` : ''}</li>`).join('')}</ul></div>
       <div><h5>관계</h5><ul>${s.map.edges.map(e => { const a = byId.get(e.from), c = byId.get(e.to); if (!a || !c) return ''; return `<li>${esc(a.name)} <span class="r">${e.dir === 'both' ? '↔' : e.dir === 'none' ? '—' : '→'}</span> ${esc(c.name)}${e.label ? ` <span class="r">· ${esc(e.label)}</span>` : ''}</li>`; }).join('') || '<li class="r">없음</li>'}</ul></div></div></section>`;
   }
-  const es = (s.entries || []).filter(e => e.text.trim()); if (!es.length) return '';
-  return `<section class="p-sec">${head}<div>${es.map(e => `<div class="p-entry${s.type === 'action' && e.done ? ' p-done' : ''}">${s.type === 'action' ? `<span class="p-check${e.done ? ' on' : ''}">${e.done ? '✓' : ''}</span>` : ''}<div class="p-text md">${md(e.text, { static: true })}</div>${String(e.page).trim() ? `<span class="p-page">p.${esc(String(e.page).trim().replace(/^p\.?\s*/i, ''))}</span>` : ''}</div>`).join('')}</div></section>`;
+  if (!allItems(s).some(e => itemFilled(s, e))) return '';
+  const pg = e => String(e.page).trim() ? 'p.' + esc(String(e.page).trim().replace(/^p\.?\s*/i, '')) : '';
+  const nodes = (s.entries || []).filter(e => isGroup(e) ? e.items.some(x => itemFilled(s, x)) : itemFilled(s, e));
+  if (s.type === 'words') {
+    const wrow = e => `<tr><td class="w">${esc((e.word || '').trim())}</td><td class="m"><div class="md">${md(e.text, { static: true })}</div></td><td class="pg">${pg(e)}</td></tr>`;
+    return `<section class="p-sec">${head}<table class="p-words"><thead><tr><th>단어</th><th>뜻</th><th>쪽</th></tr></thead><tbody>${nodes.map(e => isGroup(e) ? `<tr class="p-wgrp"><td colspan="3">${esc(e.title.trim() || '카테고리')}</td></tr>${e.items.filter(x => itemFilled(s, x)).map(wrow).join('')}` : wrow(e)).join('')}</tbody></table></section>`;
+  }
+  const prow = e => `<div class="p-entry${s.type === 'action' && e.done ? ' p-done' : ''}">${s.type === 'action' ? `<span class="p-check${e.done ? ' on' : ''}">${e.done ? '✓' : ''}</span>` : ''}<div class="p-text md">${md(e.text, { static: true })}</div>${pg(e) ? `<span class="p-page">${pg(e)}</span>` : ''}</div>`;
+  return `<section class="p-sec">${head}<div>${nodes.map(e => isGroup(e) ? `<div class="p-grp"><div class="p-grp-title">${esc(e.title.trim() || '카테고리')}</div>${e.items.filter(x => itemFilled(s, x)).map(prow).join('')}</div>` : prow(e)).join('')}</div></section>`;
 }
 function printBookHTML(b) {
   const rows = b.rows.map(r => {
@@ -2968,7 +3284,7 @@ async function exportPDF(books, mode, filename) {
       image: { type: 'jpeg', quality: .95 },
       html2canvas: { scale, useCORS: true, backgroundColor: '#ffffff', logging: false },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'], avoid: ['.p-sec', '.p-entry', '.p-sec-head', '.p-info', '.p-map', '.p-frow', '.p-toc tr', '.p-chars li'] },
+      pagebreak: { mode: ['css', 'legacy'], avoid: ['.p-sec', '.p-entry', '.p-words tr', '.p-grp-title', '.p-sec-head', '.p-info', '.p-map', '.p-frow', '.p-toc tr', '.p-chars li'] },
     };
     let w = html2pdf().set(opt).from(els[0]).toPdf();
     els.slice(1).forEach(el => { w = w.get('pdf').then(pdf => { pdf.addPage(); }).from(el).toContainer().toCanvas().toPdf(); });
@@ -3037,7 +3353,7 @@ function openSettings() {
   u.textContent = `기록 ${fmt(bytes)}`;
   if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(e => { if (e.quota) u.textContent = `기록 ${fmt(bytes)} · 브라우저 허용량 약 ${fmt(e.quota)}`; }).catch(() => { });
 }
-let lastCheck = 0, snoozed = null, updateShown = false;
+let lastCheck = 0, snoozed = null, updateShown = false, updRetry = 0;
 function checkVersionOnLoad() {
   let seen = null; try { seen = localStorage.getItem('rn:seenVersion'); } catch (e) { }
   if (seen && semver(APP_VERSION, seen) > 0) {
@@ -3058,12 +3374,13 @@ async function checkRemote(manual) {
     const rv = mv[1];
     if (semver(rv, APP_VERSION) > 0) {
       if (!manual && (snoozed === rv || updateShown)) return;
+      if (!manual && userIsTyping()) { clearTimeout(updRetry); updRetry = setTimeout(() => checkRemote(false), 15000); return; }   // 입력 중이면 잠시 뒤에 다시
       let notes = [];
       const mc = html.match(/<script[^>]*id=["']changelog["'][^>]*>([\s\S]*?)<\/script>/i);
       if (mc) { try { notes = JSON.parse(mc[1]).filter(c => semver(c.version, APP_VERSION) > 0); } catch (e) { } }
       updateShown = true;
       modal({
-        title: `${icon('sparkles', 20)} 새 버전이 나왔어요`, width: 460,
+        title: `${icon('sparkles', 20)} 새 버전이 나왔어요`, width: 460, focusDialog: true,
         body: `<p style="margin:0 0 6px">현재 <b>v${APP_VERSION}</b> → 새 버전 <b>v${esc(rv)}</b></p>${changelogHTML(notes)}<p class="muted small" style="margin-top:12px">작성 중인 내용은 자동 저장되어 있으니 안심하고 업데이트하세요.</p>`,
         actions: [{ label: '나중에', onClick: () => { snoozed = rv; } }, { label: '지금 업데이트', primary: true, onClick: () => { reloadForUpdate(rv); return false; } }],
         onClose: () => { updateShown = false; }
