@@ -18,7 +18,7 @@
      새로고침 후에는 "업데이트 완료" 팝업으로 변경 내역을 보여줍니다.
   ─────────────────────────────────────────────────────────────
 -->
-<meta name="app-version" content="1.5.1">
+<meta name="app-version" content="1.6.0">
 <title>독서노트</title>
 <meta name="theme-color" content="#ffffff">
 <meta name="description" content="레이아웃을 자유롭게 꾸미는 독서노트 · 등장인물 맵 · 자동 저장 · PDF 내보내기">
@@ -29,6 +29,17 @@
 
 <script type="application/json" id="changelog">
 [
+  {
+    "version": "1.6.0",
+    "date": "2026-10-25",
+    "notes": [
+      "등장인물 맵에서 인물로부터 가지를 뻗을 수 있어요 (부모 · 자식 노드)",
+      "인물을 누르면 옆에 나오는 ＋ 버튼으로 가지를 바로 추가해요",
+      "부모를 끌면 딸린 가지가 함께 움직이고, 가지를 접고 펼칠 수 있어요",
+      "부모 바꾸기 · 떼어내기, 지울 때 가지를 남길지 고르기",
+      "자동 배치와 PDF가 가지 구조를 따라가요"
+    ]
+  },
   {
     "version": "1.5.1",
     "date": "2026-10-25",
@@ -445,6 +456,10 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
 .cl-main small{color:var(--muted);font-weight:500;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cl-main .arr{color:var(--faint);font-weight:500}
 .cl-item.on .cl-main{background:var(--accent-soft)}
+.cl-item{padding-left:calc(var(--d, 0) * 16px)}
+.cl-tree{color:var(--faint);font-size:12px;margin-right:2px;flex:none}
+.cl-item.cl-hidden .cl-main{color:var(--muted)}
+.br-row .btn{flex:none}
 .cdot{width:10px;height:10px;border-radius:50%;flex:none;align-self:center}
 
 /* ── Overlay layer: modal / menu / toast ── */
@@ -888,6 +903,7 @@ const ICONS = {
   words: '<path d="M3 18L7.5 6 12 18M4.7 14h5.6"/><path d="M15 8h6M15 12h6M15 16h4"/>',
   chevron: '<path d="M6 9l6 6 6-6"/>',
   folder: '<path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l2 2.2h7.5A2.5 2.5 0 0 1 21 9.7v7.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/>',
+  branch: '<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="12" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M8.5 6.5c4 0 4 5.5 7 5.5M8.5 17.5c4 0 4-5.5 7-5.5"/>',
   columns: '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9 4v16M15 4v16"/>',
   highlight: '<path d="M14.5 4.5l5 5L11 18H6v-5z"/><path d="M4 21h16"/>',
   heading: '<path d="M6 4v16M18 4v16M6 12h12"/>',
@@ -1543,7 +1559,10 @@ function normalizeBook(b) {
     } else if (s.type === 'characters') {
       const m = (s.map && typeof s.map === 'object') ? s.map : {};
       const nSeen = new Set(), nMap = new Map(), eSeen = new Set();
-      const nodes = (Array.isArray(m.nodes) ? m.nodes : []).filter(x => x && typeof x === 'object').map(x => { const nid = safeId(x.id, 'n', nSeen); if (typeof x.id === 'string' && !nMap.has(x.id)) nMap.set(x.id, nid); return { id: nid, name: String(x.name ?? ''), role: String(x.role ?? ''), desc: String(x.desc ?? ''), color: isColor(x.color) ? x.color : FALLBACK_HEX, main: !!x.main, x: clamp(Math.round(+x.x || 0), -1e5, 1e5), y: clamp(Math.round(+x.y || 0), -1e5, 1e5) }; });
+      const nodes = (Array.isArray(m.nodes) ? m.nodes : []).filter(x => x && typeof x === 'object').map(x => { const nid = safeId(x.id, 'n', nSeen); if (typeof x.id === 'string' && !nMap.has(x.id)) nMap.set(x.id, nid); return { id: nid, name: String(x.name ?? ''), role: String(x.role ?? ''), desc: String(x.desc ?? ''), color: isColor(x.color) ? x.color : FALLBACK_HEX, main: !!x.main, parent: typeof x.parent === 'string' ? x.parent : null, collapsed: !!x.collapsed, x: clamp(Math.round(+x.x || 0), -1e5, 1e5), y: clamp(Math.round(+x.y || 0), -1e5, 1e5) }; });
+      const byN = new Map(nodes.map(n => [n.id, n]));
+      nodes.forEach(n => { const pid = n.parent != null ? nMap.get(n.parent) : null; n.parent = pid && pid !== n.id && byN.has(pid) ? pid : null; });
+      nodes.forEach(n => { const seen = new Set(); let p = n.parent; while (p) { if (p === n.id) { n.parent = null; break; } if (seen.has(p)) break; seen.add(p); const pn = byN.get(p); if (!pn) break; p = pn.parent; } });   // 순환 끊기
       const edges = (Array.isArray(m.edges) ? m.edges : []).filter(e => e && typeof e === 'object' && nMap.has(e.from) && nMap.has(e.to) && nMap.get(e.from) !== nMap.get(e.to)).map(e => ({ id: safeId(e.id, 'l', eSeen), from: nMap.get(e.from), to: nMap.get(e.to), label: String(e.label ?? ''), dir: ['none', 'forward', 'both'].includes(e.dir) ? e.dir : 'forward', style: e.style === 'dashed' ? 'dashed' : 'solid' }));
       s.map = { nodes, edges }; delete s.entries; delete s.fields;
     } else {
@@ -1651,7 +1670,7 @@ function sampleBook() {
   const W = T('words'); if (W) W.entries = [newWord('아브락사스', '선과 악을 함께 품은 신. 작품 속 **중요한 상징**', '118'), newWord('회의(懷疑)', '의심을 품음. 확신하지 못하고 망설이는 마음')];
   T('comment').entries = [newEntry('읽을 때마다 *다른 문장*이 눈에 들어오는 책.\n\n> 몇 년 뒤에 다시 꺼내 읽어 보고 싶다.')];
   const cm = T('characters').map;
-  const N = (name, role, color, main = false, desc = '') => { const n = { id: uid('n'), name, role, desc, color, main, x: 0, y: 0 }; cm.nodes.push(n); return n.id; };
+  const N = (name, role, color, main = false, desc = '', parent = null) => { const n = { id: uid('n'), name, role, desc, color, main, parent, collapsed: false, x: 0, y: 0 }; cm.nodes.push(n); return n.id; };
   const sin = N('에밀 싱클레어', '주인공 · 화자', '@blue', true, '두 세계 사이에서 흔들리며 자기 자신을 찾아가는 소년');
   const dem = N('막스 데미안', '친구 · 인도자', '@teal');
   const eva = N('에바 부인', '데미안의 어머니', '@violet');
@@ -1661,6 +1680,7 @@ function sampleBook() {
   const E = (from, to, label, dir = 'forward', style = 'solid') => cm.edges.push({ id: uid('l'), from, to, label, dir, style });
   E(sin, dem, '우정', 'both'); E(kro, sin, '협박'); E(dem, kro, '떼어 놓음'); E(eva, dem, '모자', 'none');
   E(sin, eva, '동경'); E(pis, sin, '가르침'); E(sin, bea, '짝사랑', 'forward', 'dashed');
+  const fam = N('가족', '밝은 세계', '@slate', false, '', sin); N('부모님', '', '@slate', false, '', fam); N('누이들', '', '@slate', false, '', fam);
   autoLayout(cm);
   return b;
 }
@@ -2193,6 +2213,31 @@ let _rz; window.addEventListener('resize', () => { clearTimeout(_rz); _rz = setT
 /* ════════════════════════════════════════════════════════════
    5. 등장인물 맵
    ════════════════════════════════════════════════════════════ */
+/* ── 인물 맵: 부모-자식 가지 ── */
+function mapKids(m) { const k = new Map(m.nodes.map(n => [n.id, []])); m.nodes.forEach(n => { if (n.parent && k.has(n.parent) && n.parent !== n.id) k.get(n.parent).push(n); }); return k; }
+function descendants(m, id, kids = mapKids(m)) { const out = [], st = [...(kids.get(id) || [])], seen = new Set([id]); while (st.length) { const n = st.pop(); if (seen.has(n.id)) continue; seen.add(n.id); out.push(n); st.push(...(kids.get(n.id) || [])); } return out; }
+function hiddenSet(m) { const kids = mapKids(m), hid = new Set(); m.nodes.forEach(n => { if (n.collapsed) descendants(m, n.id, kids).forEach(d => hid.add(d.id)); }); return hid; }
+function treeOrder(m) {
+  const kids = mapKids(m), byId = new Map(m.nodes.map(n => [n.id, n])), out = [], seen = new Set();
+  const visit = (n, d) => { if (seen.has(n.id)) return; seen.add(n.id); out.push({ n, d }); (kids.get(n.id) || []).forEach(c => visit(c, d + 1)); };
+  m.nodes.forEach(n => { if (!n.parent || !byId.has(n.parent)) visit(n, 0); });
+  m.nodes.forEach(n => { if (!seen.has(n.id)) visit(n, 0); });
+  return out;
+}
+/** 부모 옆 빈자리 찾기: 조부모→부모 방향(맨 위 인물은 다른 인물들 반대쪽)으로 뻗고, 겹치면 15°씩 돌려 봄 */
+function childSpot(m, p) {
+  const byId = new Map(m.nodes.map(n => [n.id, n])), gp = p.parent && byId.get(p.parent);
+  let base = 0;
+  if (gp && (gp.x !== p.x || gp.y !== p.y)) base = Math.atan2(p.y - gp.y, p.x - gp.x);
+  else { const others = m.nodes.filter(n => n !== p && n.parent !== p.id); if (others.length) { const cx = others.reduce((a, n) => a + n.x, 0) / others.length, cy = others.reduce((a, n) => a + n.y, 0) / others.length; if (Math.hypot(p.x - cx, p.y - cy) > 1) base = Math.atan2(p.y - cy, p.x - cx); } }
+  const R = Math.max(150, nodeSize(p).w / 2 + 110);
+  const free = (x, y) => m.nodes.every(n => { const z = nodeSize(n); return Math.abs(n.x - x) > (z.w + 110) / 2 + 12 || Math.abs(n.y - y) > (z.h + 40) / 2 + 12; });
+  for (const r of [R, R * 1.45, R * 2]) for (let k = 0; k < 24; k++) {
+    const a = base + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * Math.PI / 12, x = p.x + Math.cos(a) * r, y = p.y + Math.sin(a) * r * .8;
+    if (free(x, y)) return { x: Math.round(x), y: Math.round(y) };
+  }
+  return { x: Math.round(p.x + Math.cos(base) * R), y: Math.round(p.y + Math.sin(base) * R * .8) };
+}
 function mapUI(id) { return ui.map[id] || (ui.map[id] = { view: null, sel: null, connect: false, from: null, listOpen: false }); }
 function nodeSize(n) {
   const nf = `${n.main ? 700 : 600} ${n.main ? 15 : 13.5}px ${FONT}`;
@@ -2205,10 +2250,11 @@ function boundary(n, sz, tx, ty, gap = 0) {
   const t = Math.min(dx ? hw / Math.abs(dx) : Infinity, dy ? hh / Math.abs(dy) : Infinity);
   return { x: +(n.x + dx * t).toFixed(1), y: +(n.y + dy * t).toFixed(1) };
 }
-function mapBBox(m, pad = 30) {
-  if (!m.nodes.length) return { x: -200, y: -120, w: 400, h: 240 };
+function mapBBox(m, pad = 30, hid = hiddenSet(m)) {
+  const vis = m.nodes.filter(n => !hid.has(n.id));
+  if (!vis.length) return { x: -200, y: -120, w: 400, h: 240 };
   let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
-  m.nodes.forEach(n => { const s = nodeSize(n); x1 = Math.min(x1, n.x - s.w / 2); y1 = Math.min(y1, n.y - s.h / 2); x2 = Math.max(x2, n.x + s.w / 2); y2 = Math.max(y2, n.y + s.h / 2); });
+  vis.forEach(n => { const s = nodeSize(n); x1 = Math.min(x1, n.x - s.w / 2); y1 = Math.min(y1, n.y - s.h / 2); x2 = Math.max(x2, n.x + s.w / 2); y2 = Math.max(y2, n.y + s.h / 2); });
   return { x: x1 - pad, y: y1 - pad, w: x2 - x1 + pad * 2, h: y2 - y1 + pad * 2 };
 }
 function fitView(m, W, H) {
@@ -2219,9 +2265,18 @@ function fitView(m, W, H) {
 function mapInner(s, o = {}) {
   const ACCENT = accentHex();
   const m = s.map, idp = (o.idp || 'm' + s.id).replace(/[^\w-]/g, '');
+  const hid = o.expandAll ? new Set() : hiddenSet(m), kidsMap = mapKids(m);
   const byId = new Map(m.nodes.map(n => [n.id, n])), sizes = new Map(m.nodes.map(n => [n.id, nodeSize(n)]));
+  let branches = '';
+  m.nodes.forEach(c => {
+    const P = c.parent && byId.get(c.parent); if (!P || hid.has(c.id) || hid.has(P.id)) return;
+    const p1 = boundary(P, sizes.get(P.id), c.x, c.y, 0), p2 = boundary(c, sizes.get(c.id), P.x, P.y, 0);
+    const mx = ((p1.x + p2.x) / 2).toFixed(1), my = ((p1.y + p2.y) / 2).toFixed(1);
+    const d = Math.abs(p2.x - p1.x) >= Math.abs(p2.y - p1.y) ? `M${p1.x} ${p1.y}C${mx} ${p1.y} ${mx} ${p2.y} ${p2.x} ${p2.y}` : `M${p1.x} ${p1.y}C${p1.x} ${my} ${p2.x} ${my} ${p2.x} ${p2.y}`;
+    branches += `<path d="${d}" fill="none" stroke="${visibleStroke(resolveColor(c.color))}" stroke-width="2.4" stroke-linecap="round" opacity=".55"/>`;
+  });
   const groups = new Map();
-  m.edges.forEach(e => { if (!byId.has(e.from) || !byId.has(e.to) || e.from === e.to) return; const key = e.from < e.to ? e.from + '|' + e.to : e.to + '|' + e.from; if (!groups.has(key)) groups.set(key, []); groups.get(key).push(e); });
+  m.edges.forEach(e => { if (!byId.has(e.from) || !byId.has(e.to) || e.from === e.to || hid.has(e.from) || hid.has(e.to)) return; const key = e.from < e.to ? e.from + '|' + e.to : e.to + '|' + e.from; if (!groups.has(key)) groups.set(key, []); groups.get(key).push(e); });
   let edges = '', labels = '';
   const fa = `font-family='${FONT}'`;
   groups.forEach((list, key) => {
@@ -2245,46 +2300,56 @@ function mapInner(s, o = {}) {
       }
     });
   });
-  const nodes = m.nodes.map(n => {
+  let extras = '';
+  const nodes = m.nodes.filter(n => !hid.has(n.id)).map(n => {
     const { w, h } = sizes.get(n.id), c = resolveColor(n.color);
+    if (!o.expandAll) {
+      const kc = (kidsMap.get(n.id) || []).length, isSel = o.sel && o.sel.kind === 'node' && o.sel.id === n.id;
+      if (kc && (n.collapsed || isSel)) {
+        const cnt = n.collapsed ? descendants(m, n.id, kidsMap).length : 0, lab = n.collapsed ? `+${cnt}` : '접기', bw = Math.round(textW(lab, `700 11px ${FONT}`) + 18);
+        extras += `<g data-togglebr="${n.id}" transform="translate(${n.x},${n.y + h / 2 + 13})" style="cursor:pointer"><rect x="${-bw / 2 - 6}" y="-15" width="${bw + 12}" height="30" fill="transparent"/><rect x="${-bw / 2}" y="-10" width="${bw}" height="20" rx="10" fill="#ffffff" stroke="${n.collapsed ? visibleStroke(c) : '#D4D4D8'}" stroke-width="1.3"/><text y="4" text-anchor="middle" font-size="11" font-weight="700" fill="${n.collapsed ? readableOn(c) : '#71717A'}" ${fa}>${lab}</text></g>`;
+      }
+      if (isSel && !o.connect) extras += `<g data-addchild="${n.id}" transform="translate(${n.x + w / 2 + 17},${n.y})" style="cursor:pointer"><circle r="19" fill="transparent"/><circle r="11.5" fill="${ACCENT}"/><path d="M-5 0H5M0 -5V5" stroke="${onColor(ACCENT)}" stroke-width="2.2" stroke-linecap="round"/><title>가지 추가</title></g>`;
+    }
     const sel = o.sel && o.sel.kind === 'node' && o.sel.id === n.id, src = o.from === n.id;
     const fill = n.main ? c : tint(c, .87), tc = n.main ? onColor(c) : '#18181B', sk = visibleStroke(c);
     return `<g data-node="${n.id}" transform="translate(${n.x},${n.y})">${(sel || src) ? `<rect x="${-w / 2 - 5}" y="${-h / 2 - 5}" width="${w + 10}" height="${h + 10}" rx="${(h + 10) / 2}" fill="none" stroke="${ACCENT}" stroke-width="2"${src ? ' stroke-dasharray="5 4"' : ''} opacity=".75"/>` : ''}<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="${h / 2}" fill="${fill}" stroke="${sk}" stroke-width="${n.main ? 0 : 1.4}"/><text text-anchor="middle" y="${n.role ? -1.5 : 5}" font-size="${n.main ? 15 : 13.5}" font-weight="${n.main ? 700 : 600}" fill="${tc}" ${fa}>${esc(n.name || '이름 없음')}</text>${n.role ? `<text text-anchor="middle" y="${n.main ? 15 : 14}" font-size="11" font-weight="500" fill="${n.main ? tc : '#71717A'}"${n.main ? ' fill-opacity=".86"' : ''} ${fa}>${esc(n.role)}</text>` : ''}</g>`;
   }).join('');
   const defs = `<defs>${['', 's'].map(x => `<marker id="${idp}-a${x}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0.5L10 5L0 9.5z" fill="${x ? ACCENT : '#A1A1AA'}"/></marker>`).join('')}</defs>`;
-  return `${defs}<g>${edges}</g><g>${labels}</g><g>${nodes}</g>`;
+  return `${defs}<g>${branches}</g><g>${edges}</g><g>${labels}</g><g>${nodes}</g><g>${extras}</g>`;
 }
 function staticMapSVG(s) {
   if (!s.map.nodes.length) return '';
-  const bb = mapBBox(s.map, 24);
+  const bb = mapBBox(s.map, 24, new Set());
   const h = Math.round(Math.min(bb.h * (650 / Math.max(bb.w, 1)), 470));
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${bb.x.toFixed(1)} ${bb.y.toFixed(1)} ${bb.w.toFixed(1)} ${bb.h.toFixed(1)}" width="100%" height="${h}" preserveAspectRatio="xMidYMid meet" style="display:block">${mapInner(s, { idp: 'p' + s.id })}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${bb.x.toFixed(1)} ${bb.y.toFixed(1)} ${bb.w.toFixed(1)} ${bb.h.toFixed(1)}" width="100%" height="${h}" preserveAspectRatio="xMidYMid meet" style="display:block">${mapInner(s, { idp: 'p' + s.id, expandAll: true })}</svg>`;
 }
 function autoLayout(m) {
   const N = m.nodes; if (!N.length) return;
-  const adj = new Map(N.map(n => [n.id, new Set()]));
-  m.edges.forEach(e => { if (adj.has(e.from) && adj.has(e.to) && e.from !== e.to) { adj.get(e.from).add(e.to); adj.get(e.to).add(e.from); } });
-  let centers = N.filter(n => n.main);
-  if (!centers.length) centers = [N.slice().sort((a, b) => adj.get(b.id).size - adj.get(a.id).size)[0]];
-  const pos = new Map(), level = new Map();
-  if (centers.length === 1) pos.set(centers[0].id, { x: 0, y: 0, a: 0 });
-  else centers.forEach((c, i) => { const a = i / centers.length * Math.PI * 2 - Math.PI / 2; pos.set(c.id, { x: Math.cos(a) * 120, y: Math.sin(a) * 90, a }); });
-  centers.forEach(c => level.set(c.id, 0));
-  const q = centers.map(c => c.id);
-  while (q.length) { const id = q.shift(); for (const nb of adj.get(id)) if (!level.has(nb)) { level.set(nb, level.get(id) + 1); q.push(nb); } }
-  const maxL = Math.max(0, ...level.values());
-  N.forEach(n => { if (!level.has(n.id)) level.set(n.id, maxL + 1); });
-  const byL = {}; N.forEach((n, i) => { const l = level.get(n.id); if (l > 0) (byL[l] = byL[l] || []).push({ n, i }); });
-  const TAU = Math.PI * 2;
-  Object.keys(byL).map(Number).sort((a, b) => a - b).forEach(l => {
-    const arr = byL[l];
-    arr.forEach((o, k) => { const angs = [...adj.get(o.n.id)].filter(id => pos.has(id)).map(id => pos.get(id).a); if (angs.length) { const sx = angs.reduce((s, a) => s + Math.cos(a), 0), sy = angs.reduce((s, a) => s + Math.sin(a), 0); o.o = (Math.atan2(sy, sx) + TAU) % TAU; } else o.o = k / arr.length * TAU; });
-    arr.sort((a, b) => a.o - b.o || a.i - b.i);
-    const R = Math.max(l * 210 + (centers.length > 1 ? 70 : 0), arr.length * 150 / TAU);
-    const start = arr[0].o;
-    arr.forEach((o, k) => { const a = start + k / arr.length * TAU; pos.set(o.n.id, { x: Math.cos(a) * R, y: Math.sin(a) * R * .72, a }); });
-  });
-  N.forEach(n => { const p = pos.get(n.id); n.x = p.x; n.y = p.y; });
+  const byId = new Map(N.map(n => [n.id, n])), isRoot = n => !n.parent || !byId.has(n.parent) || n.parent === n.id;
+  const roots = N.filter(isRoot), rootIds = new Set(roots.map(n => n.id));
+  // 1) 맨 위 인물들: 관계(선)를 따라 중심에서 바깥으로 동심원 배치
+  ringLayout(roots, m.edges.filter(e => rootIds.has(e.from) && rootIds.has(e.to) && e.from !== e.to));
+  // 2) 가지: 부모에서 바깥쪽(빈 쪽)으로 부채꼴로 뻗기
+  if (N.length > roots.length) {
+    const kids = mapKids(m), TAU = Math.PI * 2, done = new Set();
+    const place = (p, base, depth) => {
+      if (done.has(p.id)) return; done.add(p.id);
+      const ks = (kids.get(p.id) || []).filter(c => !done.has(c.id)); if (!ks.length) return;
+      const R = depth === 0 ? 180 : 160, arcs = ks.map(c => (nodeSize(c).w + 28) / R), total = arcs.reduce((x, y) => x + y, 0);
+      const fan = Math.min(total, TAU * .85), sc = total > fan ? fan / total : 1;
+      let a = base - fan / 2;
+      ks.forEach((c, i) => { const w = arcs[i] * sc, ang = a + w / 2; a += w; c.x = p.x + Math.cos(ang) * R; c.y = p.y + Math.sin(ang) * R * .8; place(c, ang, depth + 1); });
+    };
+    roots.forEach(r => {
+      if (!(kids.get(r.id) || []).length) return;
+      const dirs = roots.filter(o => o !== r && (o.x !== r.x || o.y !== r.y)).map(o => Math.atan2(o.y - r.y, o.x - r.x)).sort((x, y) => x - y);
+      let base = -Math.PI / 2;
+      if (dirs.length) { let gap = -1; dirs.forEach((d, i) => { const nx = i + 1 < dirs.length ? dirs[i + 1] : dirs[0] + TAU, g = nx - d; if (g > gap) { gap = g; base = d + g / 2; } }); }
+      place(r, base, 0);
+    });
+  }
+  // 3) 겹친 인물 살짝 밀어내기
   const sz = new Map(N.map(n => [n.id, nodeSize(n)]));
   for (let it = 0; it < 80; it++) {
     let moved = false;
@@ -2301,6 +2366,36 @@ function autoLayout(m) {
     if (!moved) break;
   }
   N.forEach(n => { n.x = Math.round(n.x); n.y = Math.round(n.y); });
+}
+/** 관계 그래프 동심원 배치 (중심 인물 → 관계 단계별 원) */
+function ringLayout(N, E) {
+  if (!N.length) return;
+  const adj = new Map(N.map(n => [n.id, new Set()]));
+  E.forEach(e => { if (adj.has(e.from) && adj.has(e.to) && e.from !== e.to) { adj.get(e.from).add(e.to); adj.get(e.to).add(e.from); } });
+  let centers = N.filter(n => n.main);
+  if (!centers.length) centers = [N.slice().sort((a, b) => adj.get(b.id).size - adj.get(a.id).size)[0]];
+  const pos = new Map(), level = new Map();
+  if (centers.length === 1) pos.set(centers[0].id, { x: 0, y: 0, a: 0 });
+  else centers.forEach((c, i) => { const a = i / centers.length * Math.PI * 2 - Math.PI / 2; pos.set(c.id, { x: Math.cos(a) * 120, y: Math.sin(a) * 90, a }); });
+  centers.forEach(c => level.set(c.id, 0));
+  const q = centers.map(c => c.id);
+  const bfs = () => { while (q.length) { const id = q.shift(); for (const nb of adj.get(id)) if (!level.has(nb)) { level.set(nb, level.get(id) + 1); q.push(nb); } } };
+  bfs();
+  for (let guard = 0; level.size < N.length && guard < N.length; guard++) {   // 떨어져 있는 묶음은 바깥 원에서 시작
+    const rest = N.filter(n => !level.has(n.id)), seed = rest.sort((a, b) => adj.get(b.id).size - adj.get(a.id).size)[0];
+    level.set(seed.id, Math.max(0, ...level.values()) + 1); q.push(seed.id); bfs();
+  }
+  const byL = {}; N.forEach((n, i) => { const l = level.get(n.id); if (l > 0) (byL[l] = byL[l] || []).push({ n, i }); });
+  const TAU = Math.PI * 2;
+  Object.keys(byL).map(Number).sort((a, b) => a - b).forEach(l => {
+    const arr = byL[l];
+    arr.forEach((o, k) => { const angs = [...adj.get(o.n.id)].filter(id => pos.has(id)).map(id => pos.get(id).a); if (angs.length) { const sx = angs.reduce((s, a) => s + Math.cos(a), 0), sy = angs.reduce((s, a) => s + Math.sin(a), 0); o.o = (Math.atan2(sy, sx) + TAU) % TAU; } else o.o = k / arr.length * TAU; });
+    arr.sort((a, b) => a.o - b.o || a.i - b.i);
+    const R = Math.max(l * 210 + (centers.length > 1 ? 70 : 0), arr.length * 150 / TAU);
+    const start = arr[0].o;
+    arr.forEach((o, k) => { const a = start + k / arr.length * TAU; pos.set(o.n.id, { x: Math.cos(a) * R, y: Math.sin(a) * R * .72, a }); });
+  });
+  N.forEach(n => { const p = pos.get(n.id); n.x = p.x; n.y = p.y; });
 }
 function freeSpot(m, cx, cy) {
   const sz = { w: 120, h: 40 };
@@ -2350,7 +2445,7 @@ function drawMap(root) {
   if (!mu.view) mu.view = fitView(s.map, W, H);
   const { cx, cy, k } = mu.view, vw = W / k, vh = H / k;
   svg.setAttribute('viewBox', `${(cx - vw / 2).toFixed(2)} ${(cy - vh / 2).toFixed(2)} ${vw.toFixed(2)} ${vh.toFixed(2)}`);
-  svg.innerHTML = mapInner(s, { sel: mu.sel, from: mu.from });
+  svg.innerHTML = mapInner(s, { sel: mu.sel, from: mu.from, connect: mu.connect });
 }
 function scheduleDraw(root) { if (root._raf) return; root._raf = requestAnimationFrame(() => { root._raf = 0; drawMap(root); }); }
 function updateHint(root) {
@@ -2358,7 +2453,7 @@ function updateHint(root) {
   root.classList.toggle('connecting', mu.connect);
   if (!s.map.nodes.length) { h.hidden = true; return; } h.hidden = false;
   if (mu.connect) { const f = mu.from && s.map.nodes.find(n => n.id === mu.from); h.textContent = f ? `‘${f.name || '이름 없음'}’과(와) 연결할 인물을 누르세요` : '관계를 시작할 인물을 누르세요'; }
-  else h.textContent = IS_TOUCH ? '끌어서 이동 · 두 손가락으로 확대' : '끌어서 이동 · 빈 곳 더블클릭으로 인물 추가 · Ctrl+휠로 확대';
+  else h.textContent = IS_TOUCH ? '인물을 누르고 ＋로 가지 추가 · 두 손가락으로 확대' : '인물을 누르고 ＋로 가지 추가 · 빈 곳 더블클릭으로 인물 추가 · Ctrl+휠로 확대';
 }
 function bindMap(root) {
   const svg = $('.cmap-svg', root);
@@ -2371,8 +2466,11 @@ function bindMap(root) {
     try { svg.setPointerCapture(e.pointerId); } catch (err) { }
     pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, k: mu.view.k, mid: toSvg((a.x + b.x) / 2, (a.y + b.y) / 2) }; drag = null; return; }
+    const aEl = e.target.closest('[data-addchild]'), tEl = e.target.closest('[data-togglebr]');
+    if (aEl) { drag = { kind: 'add', id: aEl.dataset.addchild, sx: e.clientX, sy: e.clientY, moved: false }; return; }
+    if (tEl) { drag = { kind: 'toggle', id: tEl.dataset.togglebr, sx: e.clientX, sy: e.clientY, moved: false }; return; }
     const nEl = e.target.closest('[data-node]'), eEl = e.target.closest('[data-edge]');
-    if (nEl) { const n = s.map.nodes.find(x => x.id === nEl.dataset.node); if (n) drag = { kind: 'node', id: n.id, sx: e.clientX, sy: e.clientY, ox: n.x, oy: n.y, moved: false }; }
+    if (nEl) { const n = s.map.nodes.find(x => x.id === nEl.dataset.node); if (n) drag = { kind: 'node', id: n.id, sx: e.clientX, sy: e.clientY, ox: n.x, oy: n.y, moved: false, sub: e.altKey ? [] : descendants(s.map, n.id).map(d => ({ n: d, ox: d.x, oy: d.y })) }; }
     else if (eEl) drag = { kind: 'edge', id: eEl.dataset.edge, sx: e.clientX, sy: e.clientY, moved: false };
     else drag = { kind: 'pan', sx: e.clientX, sy: e.clientY, ocx: mu.view.cx, ocy: mu.view.cy, moved: false };
   });
@@ -2389,7 +2487,7 @@ function bindMap(root) {
     if (!drag) return;
     const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
     if (!drag.moved && Math.hypot(dx, dy) < 5) return; drag.moved = true;
-    if (drag.kind === 'node') { const n = s.map.nodes.find(x => x.id === drag.id); if (n) { n.x = drag.ox + dx / mu.view.k; n.y = drag.oy + dy / mu.view.k; scheduleDraw(root); } }
+    if (drag.kind === 'node') { const n = s.map.nodes.find(x => x.id === drag.id); if (n) { const ddx = dx / mu.view.k, ddy = dy / mu.view.k; n.x = drag.ox + ddx; n.y = drag.oy + ddy; drag.sub.forEach(o => { o.n.x = o.ox + ddx; o.n.y = o.oy + ddy; }); scheduleDraw(root); } }
     else if (drag.kind === 'pan') { mu.view.cx = drag.ocx - dx / mu.view.k; mu.view.cy = drag.ocy - dy / mu.view.k; scheduleDraw(root); }
   });
   const end = e => {
@@ -2398,8 +2496,10 @@ function bindMap(root) {
     if (!drag) return; const d = drag; drag = null;
     const { b, s, mu } = ctx(); if (!s) return;
     if (d.kind === 'node') {
-      if (d.moved) { const n = s.map.nodes.find(x => x.id === d.id); if (n) { n.x = Math.round(n.x); n.y = Math.round(n.y); } commit('인물 위치 이동', b); }
+      if (d.moved) { const n = s.map.nodes.find(x => x.id === d.id); if (n) { n.x = Math.round(n.x); n.y = Math.round(n.y); } d.sub.forEach(o => { o.n.x = Math.round(o.n.x); o.n.y = Math.round(o.n.y); }); commit(d.sub.length ? '가지 위치 이동' : '인물 위치 이동', b); }
       else tapNode(root, d.id);
+    } else if (d.kind === 'add') { if (!d.moved) addChild(root, d.id);
+    } else if (d.kind === 'toggle') { if (!d.moved) toggleBranch(root, d.id);
     } else if (d.kind === 'edge' && !d.moved) { mu.sel = { kind: 'edge', id: d.id }; drawMap(root); renderInsp(root); renderLists(root); }
     else if (d.kind === 'pan' && !d.moved) { if (mu.connect && mu.from) mu.from = null; else mu.sel = null; drawMap(root); renderInsp(root); renderLists(root); }
   };
@@ -2412,6 +2512,7 @@ function bindMap(root) {
   }, { passive: false });
   svg.addEventListener('dblclick', e => {
     const { mu } = ctx();
+    if (e.target.closest('[data-addchild]') || e.target.closest('[data-togglebr]')) return;
     if (e.target.closest('[data-node]')) { const i = $('[data-mi="name"]', root); if (i) { i.focus(); i.select(); } return; }
     if (e.target.closest('[data-edge]')) { const i = $('[data-me="label"]', root); if (i) { i.focus(); i.select(); } return; }
     if (mu.connect) return;
@@ -2435,13 +2536,38 @@ function tapNode(root, id) {
   }
   mu.sel = { kind: 'node', id }; drawMap(root); renderInsp(root); renderLists(root);
 }
+function ensureInView(root, n) {
+  const { s, mu } = mapCtx(root), svg = $('.cmap-svg', root), W = svg.clientWidth, H = svg.clientHeight;
+  if (!W || !H || !mu.view) return;
+  const k = mu.view.k; if (Math.abs(n.x - mu.view.cx) > W / k / 2 - 70 || Math.abs(n.y - mu.view.cy) > H / k / 2 - 40) mu.view = fitView(s.map, W, H);
+}
+function addChild(root, pid, sibling = false) {
+  const { b, s, mu } = mapCtx(root); const m = s.map, byId = new Map(m.nodes.map(n => [n.id, n]));
+  let p = byId.get(pid); if (!p) return;
+  if (sibling) { p = p.parent && byId.get(p.parent); if (!p) return addNode(root); }
+  p.collapsed = false;
+  const q = childSpot(m, p);
+  const n = { id: uid('n'), name: '새 가지', role: '', desc: '', color: p.color, main: false, parent: p.id, collapsed: false, x: q.x, y: q.y };
+  m.nodes.push(n); mu.sel = { kind: 'node', id: n.id }; ensureInView(root, n);
+  commit('가지 추가', b); drawMap(root); renderInsp(root); renderLists(root);
+  const inp = $('[data-mi="name"]', root); if (inp && !IS_TOUCH) { inp.focus(); inp.select(); }
+}
+function toggleBranch(root, id) {
+  const { b, s, mu } = mapCtx(root), n = s.map.nodes.find(x => x.id === id); if (!n) return;
+  if (!s.map.nodes.some(x => x.parent === id)) { n.collapsed = false; return; }
+  n.collapsed = !n.collapsed;
+  if (n.collapsed && mu.sel && mu.sel.kind === 'node' && descendants(s.map, id).some(d => d.id === mu.sel.id)) mu.sel = { kind: 'node', id };
+  if (!n.collapsed) ensureInView(root, n);
+  commit(n.collapsed ? '가지 접기' : '가지 펼치기', b); drawMap(root); renderInsp(root); renderLists(root);
+}
+function revealNode(m, id) { const byId = new Map(m.nodes.map(n => [n.id, n])); let ch = false, p = byId.get(id), g = 0; while (p && p.parent && g++ < 500) { p = byId.get(p.parent); if (p && p.collapsed) { p.collapsed = false; ch = true; } } return ch; }
 function addNode(root, x, y) {
   const { b, s, mu } = mapCtx(root);
   const svg = $('.cmap-svg', root);
   if (!mu.view) mu.view = fitView(s.map, svg.clientWidth || 600, svg.clientHeight || 400);
   const p = (x == null) ? freeSpot(s.map, mu.view.cx, mu.view.cy) : { x: Math.round(x), y: Math.round(y) };
   const i = s.map.nodes.length;
-  const n = { id: uid('n'), name: `인물 ${i + 1}`, role: '', desc: '', color: '@' + palette()[i % palette().length].id, main: i === 0, x: p.x, y: p.y };
+  const n = { id: uid('n'), name: `인물 ${i + 1}`, role: '', desc: '', color: '@' + palette()[i % palette().length].id, main: i === 0, parent: null, collapsed: false, x: p.x, y: p.y };
   s.map.nodes.push(n); mu.sel = { kind: 'node', id: n.id };
   const W = svg.clientWidth, H = svg.clientHeight;
   if (W && H) { const k = mu.view.k; if (Math.abs(n.x - mu.view.cx) > W / k / 2 - 60 || Math.abs(n.y - mu.view.cy) > H / k / 2 - 30) mu.view = fitView(s.map, W, H); }
@@ -2455,16 +2581,23 @@ function renderInsp(root) {
   if (sel && sel.kind === 'node' && byId.has(sel.id)) {
     const n = byId.get(sel.id), others = s.map.nodes.filter(x => x.id !== n.id);
     const rels = s.map.edges.filter(e => e.from === n.id || e.to === n.id).length;
+    const kids = mapKids(s.map), kc = (kids.get(n.id) || []).length, desc = new Set(descendants(s.map, n.id, kids).map(d => d.id));
+    const pOpts = treeOrder(s.map).filter(o => o.n.id !== n.id && !desc.has(o.n.id)).map(o => `<option value="${o.n.id}" ${n.parent === o.n.id ? 'selected' : ''}>${'　'.repeat(Math.min(o.d, 6))}${o.d ? '└ ' : ''}${esc(o.n.name || '이름 없음')}</option>`).join('');
     box.innerHTML = `<div class="insp-head"><span class="insp-kind">인물</span><span class="spacer"></span><button type="button" class="icon-btn sm" data-act="mapDeselect" title="닫기" aria-label="닫기">${icon('x', 16)}</button></div>
       <div class="insp-grid">
         <label class="ifield"><span>이름</span><input data-mi="name" value="${esc(n.name)}" placeholder="이름"></label>
         <label class="ifield"><span>역할</span><input data-mi="role" value="${esc(n.role)}" placeholder="예: 주인공, 형사"></label>
         <label class="ifield wide"><span>설명</span><textarea data-mi="desc" rows="2" placeholder="인물에 대한 메모">${esc(n.desc)}</textarea></label>
       </div>
+      <div class="insp-row br-row"><span class="ilabel">가지</span>
+        <button type="button" class="btn sm" data-act="mapAddChild">${icon('branch', 15)}가지 추가</button>
+        ${n.parent ? `<button type="button" class="btn sm ghost" data-act="mapAddSibling">${icon('plus', 15)}같은 부모에 추가</button>` : ''}
+        ${kc ? `<button type="button" class="btn sm ghost" data-act="mapToggleBr">${icon('chevron', 15)}${n.collapsed ? '가지 펼치기' : '가지 접기'} (${desc.size})</button>` : ''}</div>
+      <div class="insp-row quick"><span class="ilabel">부모</span><select data-mparent aria-label="부모 인물"><option value="">없음 (맨 위 인물)</option>${pOpts}</select></div>
       <div class="insp-row"><span class="ilabel">색상</span>${cpHTML('node', n.color)}
         <label class="check"><input type="checkbox" data-mi="main" ${n.main ? 'checked' : ''}> 중심 인물</label></div>
       ${others.length ? `<div class="insp-row quick"><span class="ilabel">관계 추가</span><select data-mq="to" aria-label="연결할 인물">${others.map(o => `<option value="${o.id}">${esc(o.name || '이름 없음')}</option>`).join('')}</select><input data-mq="label" placeholder="관계 (예: 친구)"><button type="button" class="btn sm" data-act="mapQuickEdge">잇기</button></div>` : ''}
-      <div class="insp-foot"><span class="muted small">연결된 관계 ${rels}개</span><button type="button" class="btn sm danger-ghost" data-act="mapDelNode">${icon('trash', 15)} 인물 삭제</button></div>`;
+      <div class="insp-foot"><span class="muted small">연결된 관계 ${rels}개${kc ? ` · 가지 ${desc.size}개` : ''}</span><button type="button" class="btn sm danger-ghost" data-act="mapDelNode">${icon('trash', 15)} 인물 삭제</button></div>`;
     box.hidden = false;
   } else if (sel && sel.kind === 'edge' && s.map.edges.some(e => e.id === sel.id)) {
     const e = s.map.edges.find(x => x.id === sel.id), a = byId.get(e.from), b = byId.get(e.to);
@@ -2483,11 +2616,12 @@ function renderLists(root) {
   const byId = new Map(s.map.nodes.map(n => [n.id, n]));
   $('.cmap-lists .cnt', root).textContent = `(${s.map.nodes.length} · ${s.map.edges.length})`;
   const on = (k, id) => mu.sel && mu.sel.kind === k && mu.sel.id === id ? 'on' : '';
-  box.innerHTML = `<div><h4>등장인물</h4><ul class="cl-list" data-list="nodes">${s.map.nodes.map(n => `<li class="cl-item ${on('node', n.id)}" data-id="${n.id}"><span class="grip cl-handle">${icon('grip', 14)}</span><span class="cdot" style="background:${resolveColor(n.color)}"></span><button type="button" class="cl-main" data-act="mapSelNode" data-id="${n.id}">${esc(n.name || '이름 없음')}<small>${esc(n.role)}</small></button><button type="button" class="icon-btn xs" data-act="mapDelNode" data-id="${n.id}" title="삭제" aria-label="인물 삭제">${icon('x', 14)}</button></li>`).join('')}</ul>${s.map.nodes.length ? '' : '<p class="muted small">아직 인물이 없어요</p>'}</div>
+  const hidL = hiddenSet(s.map), kidsL = mapKids(s.map);
+  box.innerHTML = `<div><h4>등장인물</h4><ul class="cl-list" data-list="nodes">${treeOrder(s.map).map(({ n, d }) => `<li class="cl-item ${on('node', n.id)}${hidL.has(n.id) ? ' cl-hidden' : ''}" data-id="${n.id}" style="--d:${Math.min(d, 6)}"><span class="grip cl-handle">${icon('grip', 14)}</span>${d ? '<span class="cl-tree">└</span>' : ''}<span class="cdot" style="background:${resolveColor(n.color)}"></span><button type="button" class="cl-main" data-act="mapSelNode" data-id="${n.id}">${esc(n.name || '이름 없음')}<small>${esc(n.role)}${n.collapsed && (kidsL.get(n.id) || []).length ? ` · 접힘 +${descendants(s.map, n.id, kidsL).length}` : ''}</small></button><button type="button" class="icon-btn xs" data-act="mapDelNode" data-id="${n.id}" title="삭제" aria-label="인물 삭제">${icon('x', 14)}</button></li>`).join('')}</ul>${s.map.nodes.length ? '' : '<p class="muted small">아직 인물이 없어요</p>'}</div>
     <div><h4>관계</h4><ul class="cl-list" data-list="edges">${s.map.edges.map(e => { const a = byId.get(e.from), b = byId.get(e.to); if (!a || !b) return ''; const sym = e.dir === 'both' ? '↔' : e.dir === 'none' ? '—' : '→'; return `<li class="cl-item ${on('edge', e.id)}" data-id="${e.id}"><span class="grip cl-handle">${icon('grip', 14)}</span><button type="button" class="cl-main" data-act="mapSelEdge" data-id="${e.id}">${esc(a.name || '이름 없음')} <span class="arr">${sym}</span> ${esc(b.name || '이름 없음')}<small>${esc(e.label)}</small></button><button type="button" class="icon-btn xs" data-act="mapDelEdge" data-id="${e.id}" title="삭제" aria-label="관계 삭제">${icon('x', 14)}</button></li>`; }).join('')}</ul>${s.map.edges.length ? '' : '<p class="muted small">아직 관계가 없어요</p>'}</div>`;
   $$('.cl-list', box).forEach(ul => sortable(ul, {
     handle: '.cl-handle', draggable: '.cl-item',
-    onEnd: () => { const { b, s: s2 } = mapCtx(root); const ids = $$('.cl-item', ul).map(li => li.dataset.id); const key = ul.dataset.list; s2.map[key].sort((x, y) => ids.indexOf(x.id) - ids.indexOf(y.id)); commit(key === 'nodes' ? '인물 순서 변경' : '관계 순서 변경', b); }
+    onEnd: () => { const { b, s: s2 } = mapCtx(root); const ids = $$('.cl-item', ul).map(li => li.dataset.id); const key = ul.dataset.list; s2.map[key].sort((x, y) => ids.indexOf(x.id) - ids.indexOf(y.id)); commit(key === 'nodes' ? '인물 순서 변경' : '관계 순서 변경', b); if (key === 'nodes') setTimeout(() => renderLists(root), 0); }
   }));
 }
 function redrawMapParts(root) { drawMap(root); renderLists(root); }
@@ -2600,6 +2734,12 @@ document.addEventListener('change', e => {
   const b = curBook(); if (!b) return;
   if (t.classList.contains('entry-done')) { const s = b.sections[t.closest('[data-sec]').dataset.sec]; const loc = s && findNode(s, t.closest('[data-entry]').dataset.entry); const en = loc && loc.node; if (en) { en.done = t.checked; t.closest('.entry').classList.toggle('done', t.checked); commit('실천 체크', b); } return; }
   if (t.classList.contains('ratio-sel')) { const r = b.rows.find(x => x.id === t.closest('.row').dataset.row); if (r) { r.ratio = t.value.split(':').map(Number); commit('행 비율 변경', b); renderBook(b); } return; }
+  if (t.matches('[data-mparent]')) {
+    const { root, s, mu } = mapCtx(t); const n = s && mu.sel && s.map.nodes.find(x => x.id === mu.sel.id); if (!n) return;
+    const v = t.value || null; if (v && (v === n.id || descendants(s.map, n.id).some(d => d.id === v))) { renderInsp(root); return; }
+    n.parent = v; if (v) { const p = s.map.nodes.find(x => x.id === v); if (p) p.collapsed = false; }
+    commit(v ? '부모 바꾸기' : '가지 떼어내기', b); drawMap(root); renderInsp(root); renderLists(root); return;
+  }
   if (t.matches('[data-mi="main"]')) { const { root, s, mu } = mapCtx(t); const n = s.map.nodes.find(x => x.id === mu.sel.id); if (n) { n.main = t.checked; commit('인물 수정', b); redrawMapParts(root); } return; }
   if (t.classList.contains('fin') && t.type === 'url') {
     const wrap = t.closest('.linkf'); if (!wrap) return; const a = $('a', wrap), okUrl = /^https?:\/\//i.test(t.value.trim());
@@ -2801,7 +2941,10 @@ Object.assign(ACT, {
   mapZoom: (el) => { const { root, mu } = mapCtx(el); if (!mu.view) return; mu.view.k = clamp(mu.view.k * (+el.dataset.z > 0 ? 1.25 : 0.8), .25, 3); drawMap(root); },
   mapFit: (el) => { const { root, s, mu } = mapCtx(el); const svg = $('.cmap-svg', root); mu.view = fitView(s.map, svg.clientWidth, svg.clientHeight); drawMap(root); },
   mapDeselect: (el) => { const { root, mu } = mapCtx(el); mu.sel = null; drawMap(root); renderInsp(root); renderLists(root); },
-  mapSelNode: (el) => { const { root, s, mu } = mapCtx(el); const n = s.map.nodes.find(x => x.id === el.dataset.id); if (!n) return; mu.sel = { kind: 'node', id: n.id }; if (mu.view) { mu.view.cx = n.x; mu.view.cy = n.y; } drawMap(root); renderInsp(root); renderLists(root); },
+  mapAddChild: (el) => { const { root, mu } = mapCtx(el); if (mu.sel && mu.sel.kind === 'node') addChild(root, mu.sel.id); },
+  mapAddSibling: (el) => { const { root, mu } = mapCtx(el); if (mu.sel && mu.sel.kind === 'node') addChild(root, mu.sel.id, true); },
+  mapToggleBr: (el) => { const { root, mu } = mapCtx(el); if (mu.sel && mu.sel.kind === 'node') toggleBranch(root, mu.sel.id); },
+  mapSelNode: (el) => { const { root, b, s, mu } = mapCtx(el); const n = s.map.nodes.find(x => x.id === el.dataset.id); if (!n) return; if (revealNode(s.map, n.id)) commit('가지 펼치기', b); mu.sel = { kind: 'node', id: n.id }; if (mu.view) { mu.view.cx = n.x; mu.view.cy = n.y; } drawMap(root); renderInsp(root); renderLists(root); },
   mapSelEdge: (el) => { const { root, s, mu } = mapCtx(el); const e = s.map.edges.find(x => x.id === el.dataset.id); if (!e) return; mu.sel = { kind: 'edge', id: e.id }; const a = s.map.nodes.find(n => n.id === e.from), c = s.map.nodes.find(n => n.id === e.to); if (mu.view && a && c) { mu.view.cx = (a.x + c.x) / 2; mu.view.cy = (a.y + c.y) / 2; } drawMap(root); renderInsp(root); renderLists(root); },
   mapQuickEdge: (el) => {
     const { root, b, s, mu } = mapCtx(el); const to = $('[data-mq="to"]', root).value, label = $('[data-mq="label"]', root).value.trim();
@@ -2810,11 +2953,24 @@ Object.assign(ACT, {
   },
   mapDelNode: async (el) => {
     const { root, b, s, mu } = mapCtx(el); const id = el.dataset.id || (mu.sel && mu.sel.id); const n = s.map.nodes.find(x => x.id === id); if (!n) return;
-    const rel = s.map.edges.filter(e => e.from === id || e.to === id).length;
-    if (!await confirmDialog({ title: `‘${esc(n.name || '이름 없음')}’ 인물을 삭제할까요?`, message: rel ? `연결된 관계 ${rel}개도 함께 삭제돼요.` : '' })) return;
-    s.map.nodes = s.map.nodes.filter(x => x.id !== id); s.map.edges = s.map.edges.filter(e => e.from !== id && e.to !== id);
-    if (mu.sel && mu.sel.id === id) mu.sel = null; if (mu.from === id) mu.from = null;
-    commit('인물 삭제', b); drawMap(root); renderInsp(root); renderLists(root);
+    const sub = descendants(s.map, id), name = esc(n.name || '이름 없음');
+    const remove = (ids, msg) => {
+      const del = new Set(ids);
+      s.map.nodes.forEach(x => { if (!del.has(x.id) && del.has(x.parent)) x.parent = n.parent && !del.has(n.parent) ? n.parent : null; });
+      s.map.nodes = s.map.nodes.filter(x => !del.has(x.id)); s.map.edges = s.map.edges.filter(e => !del.has(e.from) && !del.has(e.to));
+      if (mu.sel && del.has(mu.sel.id)) mu.sel = null; if (mu.from && del.has(mu.from)) mu.from = null;
+      commit(msg, b); drawMap(root); renderInsp(root); renderLists(root);
+    };
+    if (!sub.length) {
+      const rel = s.map.edges.filter(e => e.from === id || e.to === id).length;
+      if (await confirmDialog({ title: `‘${name}’ 인물을 삭제할까요?`, message: rel ? `연결된 관계 ${rel}개도 함께 삭제돼요.` : '' })) remove([id], '인물 삭제');
+      return;
+    }
+    modal({
+      title: `‘${name}’ 인물을 삭제할까요?`, width: 470, className: 'confirm',
+      body: `<p class="confirm-msg">이 인물에서 뻗어 나간 가지가 ${sub.length}개 있어요. 어떻게 할까요?\n‘이 인물만 삭제’를 고르면 가지는 ${n.parent ? '한 단계 위 인물에' : '맨 위 인물로'} 그대로 남아요.</p>`,
+      actions: [{ label: '취소', focus: true }, { label: '이 인물만 삭제', onClick: () => remove([id], '인물 삭제 (가지는 남김)') }, { label: `가지까지 모두 삭제 (${sub.length + 1}명)`, danger: true, onClick: () => remove([id, ...sub.map(x => x.id)], '인물과 가지 삭제') }]
+    });
   },
   mapDelEdge: async (el) => {
     const { root, b, s, mu } = mapCtx(el); const id = el.dataset.id || (mu.sel && mu.sel.id); const e = s.map.edges.find(x => x.id === id); if (!e) return;
@@ -3232,7 +3388,7 @@ function printSecHTML(b, s) {
     if (!s.map.nodes.length) return '';
     const byId = new Map(s.map.nodes.map(n => [n.id, n]));
     return `<section class="p-sec">${head}<div class="p-map">${staticMapSVG(s)}</div><div class="p-chars">
-      <div><h5>등장인물</h5><ul>${s.map.nodes.map(n => `<li><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${resolveColor(n.color)};margin-right:6px"></span><b>${esc(n.name || '이름 없음')}</b>${n.role ? ` <span class="r">· ${esc(n.role)}</span>` : ''}${n.desc ? `<div class="r" style="padding-left:13px;white-space:pre-wrap">${esc(n.desc)}</div>` : ''}</li>`).join('')}</ul></div>
+      <div><h5>등장인물</h5><ul>${treeOrder(s.map).map(({ n, d }) => `<li style="padding-left:${Math.min(d, 6) * 12}px">${d ? '<span class="r">└ </span>' : ''}<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${resolveColor(n.color)};margin-right:6px"></span><b>${esc(n.name || '이름 없음')}</b>${n.role ? ` <span class="r">· ${esc(n.role)}</span>` : ''}${n.desc ? `<div class="r" style="padding-left:13px;white-space:pre-wrap">${esc(n.desc)}</div>` : ''}</li>`).join('')}</ul></div>
       <div><h5>관계</h5><ul>${s.map.edges.map(e => { const a = byId.get(e.from), c = byId.get(e.to); if (!a || !c) return ''; return `<li>${esc(a.name)} <span class="r">${e.dir === 'both' ? '↔' : e.dir === 'none' ? '—' : '→'}</span> ${esc(c.name)}${e.label ? ` <span class="r">· ${esc(e.label)}</span>` : ''}</li>`; }).join('') || '<li class="r">없음</li>'}</ul></div></div></section>`;
   }
   if (!allItems(s).some(e => itemFilled(s, e))) return '';
