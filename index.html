@@ -18,7 +18,7 @@
      새로고침 후에는 "업데이트 완료" 팝업으로 변경 내역을 보여줍니다.
   ─────────────────────────────────────────────────────────────
 -->
-<meta name="app-version" content="1.6.0">
+<meta name="app-version" content="1.7.0">
 <title>독서노트</title>
 <meta name="theme-color" content="#ffffff">
 <meta name="description" content="레이아웃을 자유롭게 꾸미는 독서노트 · 등장인물 맵 · 자동 저장 · PDF 내보내기">
@@ -29,6 +29,17 @@
 
 <script type="application/json" id="changelog">
 [
+  {
+    "version": "1.7.0",
+    "date": "2026-10-29",
+    "notes": [
+      "저장소를 잠깐 읽지 못했을 때 기록이 예시 책으로 덮어써지던 문제를 고쳤어요. 이제는 아무것도 바꾸지 않고 다시 시도하게 해요",
+      "저장이 실패하면 자동으로 다시 시도하고, 앱을 닫거나 다른 앱으로 넘어갈 때 마지막 입력을 비상 사본으로 한 번 더 남겨요",
+      "복원 지점: 하루 한 번, 그리고 책 삭제·가져오기·모든 데이터 삭제 직전에 서재 전체를 자동 보관해요 (설정에서 복원·내려받기)",
+      "메모·단어·섹션·행·카테고리·인물·관계·필드·표지·책을 지운 직후 알림에서 ‘되돌리기’를 누를 수 있어요",
+      "7일 넘게 백업하지 않으면 서재 위에 백업 알림을 띄워요"
+    ]
+  },
   {
     "version": "1.6.0",
     "date": "2026-10-25",
@@ -512,7 +523,7 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
 #toasts{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:600;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:max-content;max-width:calc(100vw - 28px)}
 .toast{pointer-events:auto;background:var(--ink);color:#fff;padding:11px 16px;border-radius:12px;font-size:14px;font-weight:500;box-shadow:0 12px 30px -8px rgba(0,0,0,.35);display:flex;align-items:center;gap:14px;animation:tin .2s ease-out;transition:opacity .25s,transform .25s}
 .toast.out{opacity:0;transform:translateY(6px)}
-.toast button{border:0;background:transparent;color:#8FDAB9;font-weight:700;padding:0;white-space:nowrap}
+.toast button{border:0;background:transparent;color:#8FDAB9;font-weight:700;padding:8px 4px;margin:-8px -4px;white-space:nowrap;cursor:pointer}
 @keyframes tin{from{opacity:0;transform:translateY(8px)}}
 .busy{position:fixed;inset:0;z-index:5000;background:rgba(255,255,255,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-weight:600;color:var(--ink2)}
 .spinner{width:30px;height:30px;border-radius:50%;border:3px solid var(--line2);border-top-color:var(--accent);animation:spin .8s linear infinite}
@@ -553,6 +564,21 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
 .log time{color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;flex:none}
 .log span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .danger-zone h3{color:var(--danger)}
+.warn-note{display:flex;gap:8px;align-items:flex-start;background:#FFF8EB;border:1px solid #F5E1B8;color:#7A5410 !important;border-radius:12px;padding:10px 12px}
+.warn-note svg{flex:none;margin-top:3px}
+.snaps{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:12px;max-height:320px;overflow:auto}
+.snaps li{display:flex;align-items:center;gap:10px;padding:9px 10px 9px 12px;border-top:1px solid var(--line)}
+.snaps li:first-child{border-top:0}
+.snap-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.snap-info b{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.snap-info span{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.snap-ops{display:flex;align-items:center;gap:2px;flex:none}
+.note-bar{display:flex;align-items:center;gap:12px;margin:0 0 18px;padding:12px 14px;border:1px solid var(--accent-line);background:var(--accent-soft);border-radius:14px}
+.note-bar>svg{flex:none;color:var(--accent-ink)}
+.nb-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-size:13px;color:var(--ink2);line-height:1.5}
+.nb-txt b{font-size:14px;color:var(--ink)}
+.nb-ops{display:flex;gap:6px;flex:none}
+@media (max-width:560px){.note-bar{flex-wrap:wrap}.nb-ops{width:100%;justify-content:flex-end}}
 
 /* ── Markdown ── */
 .mdx{flex:1;min-width:0;position:relative}
@@ -831,6 +857,7 @@ const FONT = '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFo
 const TAB_ID = Math.random().toString(36).slice(2);
 const IS_TOUCH = matchMedia('(hover: none)').matches;
 const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const IS_STANDALONE = (() => { try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) { return false; } })();
 ['app', 'layer', 'toasts'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('click', () => { }); });
 /* 아이폰은 16px보다 작은 입력칸을 누르면 화면을 확대함 → 입력할 때 확대되지 않게 (두 손가락 확대는 그대로 가능) */
 if (IS_IOS) { const vp = document.querySelector('meta[name="viewport"]'); if (vp && !/maximum-scale/.test(vp.content)) vp.content += ', maximum-scale=1'; }
@@ -852,7 +879,7 @@ function fmtDT(iso, o = {}) {
   return `${d.getFullYear()}.${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}${wd} ${pad2(d.getHours())}:${pad2(d.getMinutes())}${sec}`;
 }
 function fmtDay(v) { if (!v) return ''; const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[1]}.${m[2]}.${m[3]}` : String(v); }
-function fileStamp() { const d = new Date(); return `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}_${pad2(d.getHours())}${pad2(d.getMinutes())}`; }
+function fileStamp(d = new Date()) { return `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}_${pad2(d.getHours())}${pad2(d.getMinutes())}`; }
 function safeName(s) { return String(s || '').replace(/[\\/:*?"<>|\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) || '독서노트'; }
 function semver(a, b) { const pa = String(a).split('.').map(n => parseInt(n, 10) || 0), pb = String(b).split('.').map(n => parseInt(n, 10) || 0); for (let i = 0; i < 3; i++) { if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) > (pb[i] || 0) ? 1 : -1; } return 0; }
 function hashHue(s) { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h % 360; }
@@ -1602,6 +1629,8 @@ function migrate(s) {
   if (!Array.isArray(st.saveLog)) st.saveLog = [];
   st.flags = (st.flags && typeof st.flags === 'object' && !Array.isArray(st.flags)) ? st.flags : {};
   if (!st.flags.wordsTpl) { addWordsToTemplate(st.template); st.flags.wordsTpl = true; }
+  if (!(Date.parse(st.firstUseAt) > 0)) st.firstUseAt = st.books.map(b => b.createdAt).filter(x => Date.parse(x) > 0).sort()[0] || nowISO();
+  if (st.backupSnoozeUntil && !(Date.parse(st.backupSnoozeUntil) > 0)) st.backupSnoozeUntil = null;
   return st;
 }
 /** (한 번만) 기본 템플릿에 Words 섹션 추가 — 이미 있으면 그대로 */
@@ -1686,90 +1715,235 @@ function sampleBook() {
 }
 
 /* ════════════════════════════════════════════════════════════
-   2. 저장소 (IndexedDB, 실패 시 localStorage)
+   2. 저장소 (IndexedDB 기본, 쓸 수 없을 때만 localStorage)
+   - '읽기 실패'와 '저장된 기록 없음'을 구분 → 읽지 못했을 때는 절대 새로 만들거나 덮어쓰지 않음
+   - 저장이 실패하면 자동으로 다시 시도, 화면을 벗어날 때는 비상 사본(localStorage)도 남김
+   - 복원 지점: 하루 한 번 + 큰 삭제 직전에 IndexedDB 안에 통째로 보관
    ════════════════════════════════════════════════════════════ */
-let _db = null;
+const LS = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) { } },
+};
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const COVER_KEEP = 'rn:keep-cover';          // 비상 사본에서 '저장된 표지 그대로'를 뜻하는 표시
+let _db = null, idbDead = false;             // idbDead: 이 브라우저에는 IndexedDB가 아예 없음
+function hasIDB() { try { return !!window.indexedDB; } catch (e) { return false; } }
+function dropDb() { const p = _db; _db = null; if (p) p.then(db => { try { db.close(); } catch (e) { } }, () => { }); }
 function idb() {
-  if (!_db) _db = new Promise((res, rej) => {
-    if (!('indexedDB' in window)) return rej(new Error('no-idb'));
-    const r = indexedDB.open('reading-note', 1);
-    r.onupgradeneeded = () => r.result.createObjectStore('kv');
-    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); r.onblocked = () => rej(new Error('blocked'));
+  if (_db) return _db;
+  const p = new Promise((res, rej) => {
+    if (!hasIDB()) { idbDead = true; return rej(new Error('no-idb')); }
+    let r, done = false, to = 0;
+    const fail = e => { if (done) return; done = true; clearTimeout(to); rej(e); };
+    to = setTimeout(() => fail(new Error('idb-timeout')), 5000);      // 사파리에서 가끔 응답 없이 멈추는 경우
+    try { r = indexedDB.open('reading-note', 1); } catch (e) { return fail(e); }
+    r.onupgradeneeded = () => { try { if (!r.result.objectStoreNames.contains('kv')) r.result.createObjectStore('kv'); } catch (e) { } };
+    r.onsuccess = () => {
+      const db = r.result;
+      if (done) { try { db.close(); } catch (e) { } return; }
+      done = true; clearTimeout(to);
+      db.onversionchange = () => { try { db.close(); } catch (e) { } if (_db === p) _db = null; };
+      db.onclose = () => { if (_db === p) _db = null; };            // 연결이 끊기면 다음 번에 새로 연결
+      res(db);
+    };
+    r.onerror = () => fail(r.error || new Error('idb-open'));
   });
-  return _db;
+  _db = p; p.catch(() => { if (_db === p) _db = null; });
+  return p;
 }
-async function kvGet(k) {
-  let a, b;
-  try { const db = await idb(); a = await new Promise((res, rej) => { const q = db.transaction('kv', 'readonly').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); } catch (e) { a = undefined; }
-  try { const v = localStorage.getItem('rn:' + k); b = v ? JSON.parse(v) : undefined; } catch (e) { b = undefined; }
-  if (a === undefined || a === null) return b;
-  if (b === undefined || b === null) return a;
-  const t = x => Date.parse(x && x.savedAt) || 0;
-  return t(b) > t(a) ? b : a;   // 비상 저장본(localStorage)이 더 최신이면 그쪽을 사용
+/** 트랜잭션 하나를 실행하고, 끝까지 기록된 뒤에 fn이 돌려준 요청의 결과로 끝남 */
+function idbRun(mode, fn, opts) {
+  return idb().then(db => new Promise((res, rej) => {
+    let tx, req;
+    try { tx = opts ? db.transaction('kv', mode, opts) : db.transaction('kv', mode); req = fn(tx.objectStore('kv')); }
+    catch (e) { try { if (tx) tx.abort(); } catch (_) { } return rej(e); }
+    tx.oncomplete = () => res(req ? req.result : undefined);
+    tx.onerror = () => rej(tx.error || (req && req.error) || new Error('tx-error'));
+    tx.onabort = () => rej(tx.error || new Error('tx-abort'));
+  })).catch(e => { if (!idbDead) dropDb(); throw e; });
 }
-async function kvSet(k, v) {
-  let ok = false;
-  try { const db = await idb(); await new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error); }); ok = true; } catch (e) { ok = false; }
-  if (ok) { try { localStorage.removeItem('rn:' + k); } catch (e) { } return; }
-  localStorage.setItem('rn:' + k, JSON.stringify(v));
+async function idbGetRetry(k, tries = 3) {
+  let err;
+  for (let i = 0; i < tries; i++) {
+    try { return { ok: true, val: await idbRun('readonly', s => s.get(k)) }; }
+    catch (e) { err = e; if (idbDead) break; await sleep(300 * (i + 1)); }
+  }
+  return { ok: false, err };
+}
+function lsJSON(k) { const raw = LS.get(k); if (raw == null) return { val: null }; try { return { val: JSON.parse(raw) }; } catch (e) { return { val: null, bad: raw }; } }
+const isObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+const tsOf = x => Date.parse(x && x.savedAt) || 0;
+function coversOf(s) { return new Map((s && Array.isArray(s.books) ? s.books : []).filter(isObj).map(b => [b.id, b.cover])); }
+function withCovers(em, base) {   // 비상 사본의 '표지 그대로' 표시를 저장본의 표지로 채움
+  const cv = coversOf(base);
+  return Object.assign({}, em, { books: em.books.map(b => isObj(b) && b.cover === COVER_KEEP ? Object.assign({}, b, { cover: cv.get(b.id) || null }) : b) });
+}
+/**
+ * 저장된 기록 읽기
+ *  ok    → { data, from, dirty(다시 저장 필요), usedEm(비상 사본 복구), baseCovers }
+ *  empty → 저장된 기록 없음 (missing: 저장한 적은 있는데 비어 있음)
+ *  error → 읽지 못함 (이때는 아무것도 쓰지 않음)
+ */
+async function loadState() {
+  const r = await idbGetRetry('state');
+  const mark = LS.get('rn:where'), ls = lsJSON('rn:state'), em = lsJSON('rn:emergency');
+  const local = [ls.val || ls.bad, em.val || em.bad].filter(Boolean);
+  let base = null, from = null;
+  if (r.ok) {
+    const a = isObj(r.val) ? r.val : null, b = isObj(ls.val) ? ls.val : null;
+    base = a; from = 'idb';
+    if (b && (!a || tsOf(b) > tsOf(a))) { base = b; from = 'ls'; }          // IndexedDB가 잠깐 안 될 때 localStorage에 저장된 더 최신본
+  } else if (idbDead || mark === 'ls') {
+    if (!isObj(ls.val) && ls.bad) return { kind: 'error', err: new Error('ls-corrupt'), local };
+    base = isObj(ls.val) ? ls.val : null; from = 'ls';
+  } else return { kind: 'error', err: r.err, local };
+  let data = base, dirty = r.ok && from === 'ls', usedEm = false;
+  const e = isObj(em.val) && Array.isArray(em.val.books) ? em.val : null;
+  if (e && (!base || tsOf(e) > tsOf(base))) { data = withCovers(e, base); dirty = true; usedEm = true; }
+  else if (em.val || em.bad) LS.del('rn:emergency');                      // 이미 저장본에 반영된 오래된 비상 사본
+  if (!data) return { kind: 'empty', missing: !!mark, local };
+  return { kind: 'ok', data, from, dirty, usedEm, baseCovers: coversOf(base) };
 }
 
 let state = null;
 const ui = { route: { name: 'library' }, layoutEdit: false, search: '', filter: 'all', focusTitle: false, map: {} };
 let saveTimer = null, pendingMsg = null, saveStatus = 'saved';
 let otherTabNewer = false, conflictOpen = false, staleToast = false;
+let changeSeq = 0, savedSeq = 0;             // 변경 번호 / 마지막으로 저장에 성공한 변경 번호
+let saving = null, saveAgain = false, flushReq = false, saveFails = 0, retryTimer = null;
+let emSeq = null;                            // 비상 사본에 담긴 변경 번호 (없으면 null)
+let savedCovers = new Map(), lastSavedAt = null, whereMark = null, _lastStamp = 0;
 let bc = null; try { bc = new BroadcastChannel('reading-note'); } catch (e) { }
+const isDirty = () => changeSeq !== savedSeq;
+function stamp() { const t = Math.max(Date.now(), _lastStamp + 1); _lastStamp = t; return new Date(t).toISOString(); }   // 항상 앞선 시각보다 큼
+function setWhere(w) { if (whereMark !== w) { whereMark = w; LS.set('rn:where', w); } }
 
 function commit(what, b) {
+  if (!state) return;
   if (b) {
     b.updatedAt = nowISO();
     const el = $('#bookUpdated'); if (el && ui.route.id === b.id) el.textContent = fmtDT(b.updatedAt);
   }
+  changeSeq++;
   pendingMsg = b ? `『${bookTitle(b)}』 ${what}` : what;
   setSaveStatus('saving');
   clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 450);
 }
-async function saveNow() {
+/** 저장 (이미 저장 중이면 끝난 뒤 이어서 한 번 더). 성공하면 true */
+function saveNow(opt) {
   clearTimeout(saveTimer); saveTimer = null;
-  if (!state) return;
-  if (otherTabNewer) { setSaveStatus('conflict'); showConflict(); return; }
-  const at = nowISO(); state.savedAt = at;
-  if (pendingMsg) {
-    const last = state.saveLog[0];
-    if (last && last.msg === pendingMsg && Date.parse(at) - Date.parse(last.at) < 60000) last.at = at;
-    else state.saveLog.unshift({ at, msg: pendingMsg });
-    if (state.saveLog.length > 60) state.saveLog.length = 60;
-    pendingMsg = null;
+  if (!state) return Promise.resolve(false);
+  if (opt && opt.flush) flushReq = true;
+  if (saving) { saveAgain = true; return saving; }
+  saving = (async () => {
+    let ok;
+    try { do { saveAgain = false; ok = await saveOnce(opt && opt.force); } while (ok && saveAgain); }
+    finally { saving = null; }
+    return ok;
+  })();
+  return saving;
+}
+async function saveOnce(force) {
+  if (!state) return false;
+  if (otherTabNewer) { setSaveStatus('conflict'); showConflict(); return false; }
+  if (!isDirty() && !force) { setSaveStatus('saved'); return true; }
+  const flush = flushReq; flushReq = false;
+  let seq = changeSeq, at = null, covers = null; const prevAt = state.savedAt;
+  const prepare = () => {     // 실제로 기록하기 바로 전에(같은 순간에) 호출됨
+    seq = changeSeq; at = stamp(); state.savedAt = at;
+    if (pendingMsg) {
+      const last = state.saveLog[0];
+      if (last && last.msg === pendingMsg && Date.parse(at) - Date.parse(last.at) < 60000) last.at = at;
+      else state.saveLog.unshift({ at, msg: pendingMsg });
+      if (state.saveLog.length > 60) state.saveLog.length = 60;
+      pendingMsg = null;
+    }
+    covers = coversOf(state);
+    return state;
+  };
+  try {
+    const where = await storePut('state', prepare, flush);
+    savedSeq = seq; lastSavedAt = at; savedCovers = covers; setWhere(where);
+    if (saveFails) { saveFails = 0; toast('다시 저장됐어요'); }
+    clearTimeout(retryTimer); retryTimer = null;
+    if (emSeq !== null && seq >= emSeq) { LS.del('rn:emergency'); emSeq = null; }
+    notifyOthers(at);
+    if (isDirty()) { setSaveStatus('saving'); if (!saveTimer && !saveAgain) saveTimer = setTimeout(saveNow, 450); }
+    else setSaveStatus('saved');
+    return true;
+  } catch (e) {
+    console.error('저장 실패', e);
+    if (state.savedAt === at) state.savedAt = prevAt;
+    saveFails++; setSaveStatus('error');
+    if (saveFails === 1 || saveFails % 6 === 0) toast('저장하지 못했어요. 자동으로 다시 시도하고 있어요 — 걱정되면 JSON 백업을 해 두세요.', { ms: 6000, action: 'JSON 백업', onAction: () => exportAllJSON() });
+    clearTimeout(retryTimer); retryTimer = setTimeout(() => { retryTimer = null; saveNow(); }, Math.min(60000, 2000 * 2 ** Math.min(saveFails - 1, 5)));
+    return false;
   }
-  try { await kvSet('state', state); setSaveStatus('saved'); if (bc) bc.postMessage({ type: 'saved', tab: TAB_ID, at }); }
-  catch (e) { console.error(e); setSaveStatus('error'); toast('저장하지 못했어요. 저장 공간을 확인하고 JSON으로 백업해 주세요.', { ms: 6000 }); }
+}
+async function storePut(k, prepare, flush) {
+  if (!idbDead) {
+    const put = () => idbRun('readwrite', s => s.put(prepare(), k), flush ? { durability: 'strict' } : null);
+    try { await put(); LS.del('rn:' + k); return 'idb'; }
+    catch (e) {
+      console.warn('IndexedDB 저장 실패 — 다시 시도', e);
+      if (e && e.name === 'QuotaExceededError') await pruneSnaps(1).catch(() => { });   // 공간 부족 → 오래된 복원 지점부터 정리
+      try { await put(); LS.del('rn:' + k); return 'idb'; } catch (e2) { console.warn(e2); }
+    }
+  }
+  localStorage.setItem('rn:' + k, JSON.stringify(prepare()));             // 마지막 수단. 이것도 실패하면 예외
+  return 'ls';
 }
 function setSaveStatus(s) {
   saveStatus = s; const el = $('#saveStat'); if (!el) return;
-  el.classList.toggle('saving', s === 'saving'); el.classList.toggle('error', s === 'error');
+  el.classList.toggle('saving', s === 'saving'); el.classList.toggle('error', s === 'error' || s === 'conflict' || s === 'blocked');
   const txt = $('.st-txt', el);
   if (s === 'saving') txt.innerHTML = '저장 중…';
-  else if (s === 'error') txt.innerHTML = '저장 실패';
-  else if (s === 'conflict') { el.classList.add('error'); txt.innerHTML = '저장 보류'; }
+  else if (s === 'error') txt.innerHTML = '저장 실패 · 다시 시도 중';
+  else if (s === 'conflict') txt.innerHTML = '저장 보류';
+  else if (s === 'blocked') txt.innerHTML = '불러오기 실패';
   else {
-    const d = state && state.savedAt ? new Date(state.savedAt) : null;
+    const d = lastSavedAt ? new Date(lastSavedAt) : null;
     txt.innerHTML = d ? `<span class="st-label">자동 저장됨 · </span><span class="st-date">${d.getFullYear()}.${pad2(d.getMonth() + 1)}.${pad2(d.getDate())} (${WD[d.getDay()]}) </span>${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}` : '자동 저장 대기';
   }
 }
-
-function emergencySave() {
-  if (!state || otherTabNewer || (!saveTimer && !pendingMsg)) return;
-  try { localStorage.setItem('rn:state', JSON.stringify(Object.assign({}, state, { savedAt: nowISO() }))); } catch (e) { }
-  saveNow();
+/** 비상 사본: localStorage에 바로(동기) 기록. 저장된 표지는 표시로 바꿔 용량을 줄임 */
+function writeEmergency() {
+  if (!state) return false;
+  const at = stamp();
+  const pack = all => JSON.stringify(Object.assign({}, state, { savedAt: at, books: state.books.map(b => b.cover && (all || savedCovers.get(b.id) === b.cover) ? Object.assign({}, b, { cover: COVER_KEEP }) : b) }));
+  try { if (LS.set('rn:emergency', pack(false)) || LS.set('rn:emergency', pack(true))) { emSeq = changeSeq; return true; } } catch (e) { }
+  return false;
 }
+function emergencySave() {
+  if (!state || otherTabNewer || !isDirty()) return;
+  writeEmergency();
+  saveNow({ flush: true });
+}
+function notifyOthers(at) {
+  if (bc) { try { bc.postMessage({ type: 'saved', tab: TAB_ID, at }); return; } catch (e) { } }
+  LS.set('rn:ping', JSON.stringify({ tab: TAB_ID, at }));               // BroadcastChannel이 없는 브라우저용
+}
+function onOtherSaved(d) {
+  if (!state || !d || d.tab === TAB_ID) return;
+  otherTabNewer = true;
+  if (isDirty()) return;                     // 이 탭에도 저장 안 된 변경이 있으면 저장 시점에 선택하게 함
+  if (document.visibilityState === 'hidden') { reloadFromStore(); return; }
+  if (!staleToast) { staleToast = true; toast('다른 탭에서 내용이 바뀌었어요', { action: '불러오기', ms: 9000, onAction: () => reloadFromStore('최신 내용을 불러왔어요') }); }
+}
+/** 저장소에서 다시 읽어 이 탭을 바꿈 (읽지 못하면 지금 내용을 그대로 둠) */
 async function reloadFromStore(msg) {
-  let s; try { s = await kvGet('state'); } catch (e) { s = null; }
-  if (!s) return;
-  let next; try { next = migrate(s); } catch (e) { return; }
+  const L = await loadState();
+  if (L.kind !== 'ok') { if (msg) toast('최신 내용을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.', { ms: 4000 }); return false; }
+  let next; try { next = migrate(deep(L.data)); } catch (e) { return false; }
   modalStack.slice().forEach(m => m.close()); closeMenu();
   clearTimeout(saveTimer); saveTimer = null; pendingMsg = null; otherTabNewer = false; staleToast = false;
-  state = next; ui.map = {}; ui.route = parseHash(); render(); setSaveStatus('saved');
+  if (emSeq !== null) { LS.del('rn:emergency'); emSeq = null; }
+  state = next; savedSeq = changeSeq; savedCovers = L.baseCovers; lastSavedAt = state.savedAt;
+  if (L.dirty) { changeSeq++; emSeq = L.usedEm ? changeSeq : null; saveTimer = setTimeout(saveNow, 450); }
+  ui.map = {}; ui.route = parseHash(); render(); setSaveStatus(isDirty() ? 'saving' : 'saved');
   if (msg) toast(msg);
+  return true;
 }
 function showConflict() {
   if (conflictOpen) return; conflictOpen = true;
@@ -1777,10 +1951,85 @@ function showConflict() {
     title: '다른 탭에서 내용이 바뀌었어요', width: 460, focusDialog: true,
     body: `<p class="confirm-msg">같은 독서노트가 다른 탭(창)에서도 열려 있고, 그쪽에서 더 최근에 저장했어요.<br>이 탭의 내용으로 저장하면 다른 탭에서 바꾼 내용이 사라져요.</p>`,
     actions: [
-      { label: '이 탭 내용으로 저장', onClick: () => { otherTabNewer = false; pendingMsg = pendingMsg || '이 탭 내용으로 저장'; saveNow(); } },
+      { label: '이 탭 내용으로 저장', onClick: () => { otherTabNewer = false; pendingMsg = pendingMsg || '이 탭 내용으로 저장'; saveNow({ force: true }); } },
       { label: '최신 내용 불러오기', primary: true, onClick: () => { reloadFromStore('최신 내용을 불러왔어요'); } },
     ],
     onClose: () => { conflictOpen = false; }
+  });
+}
+
+/* ── 복원 지점 ── */
+const SNAP_MAX = 10, SNAP_BYTES = 30 * 1048576, SNAP_KEEP_MIN = 2;
+const SNAP_REASON = { auto: '자동 (하루 한 번)', manual: '직접 만듦', delBook: '책 삭제 직전', import: '가져오기 직전', reset: '모든 데이터 삭제 직전', restore: '복원 직전' };
+let snapIdx = null;
+/** 지금 상태를 그 자리에서 글자로 굳혀 둠 (이후 변경과 무관) */
+function captureState() { return { txt: JSON.stringify(state), books: state.books.length }; }
+async function makeSnap(reason, cap) {
+  if (idbDead || !state) return false;
+  try { cap = cap || captureState(); } catch (e) { return false; }
+  const id = uid('p'), at = stamp(), meta = { id, at, reason, books: cap.books, size: cap.txt.length };
+  let out = null;
+  try {
+    await idbRun('readwrite', st => {
+      st.put({ id, at, reason, json: cap.txt }, 'snap:' + id);
+      const g = st.get('snaps');
+      g.onsuccess = () => {
+        const all = [meta, ...(Array.isArray(g.result) ? g.result : []).filter(x => isObj(x) && x.id && x.id !== id)].sort((a, b) => String(b.at).localeCompare(String(a.at)));
+        const keep = []; let total = 0;
+        all.forEach((x, i) => { if (keep.length < SNAP_MAX && (i < SNAP_KEEP_MIN || total + (+x.size || 0) <= SNAP_BYTES)) { keep.push(x); total += +x.size || 0; } else st.delete('snap:' + x.id); });
+        st.put(keep, 'snaps'); out = keep;
+      };
+      return g;
+    });
+    snapIdx = out; return true;
+  } catch (e) { console.warn('복원 지점을 만들지 못함', e); return false; }
+}
+async function listSnaps() {
+  if (idbDead) return null;
+  try { const v = await idbRun('readonly', s => s.get('snaps')); snapIdx = Array.isArray(v) ? v.filter(x => isObj(x) && x.id) : []; } catch (e) { return null; }
+  return snapIdx;
+}
+async function deleteSnaps(ids) {
+  const del = new Set(ids); let out = null;
+  await idbRun('readwrite', st => {
+    ids.forEach(id => st.delete('snap:' + id));
+    const g = st.get('snaps');
+    g.onsuccess = () => { out = (Array.isArray(g.result) ? g.result : []).filter(x => isObj(x) && !del.has(x.id)); st.put(out, 'snaps'); };
+    return g;
+  });
+  snapIdx = out;
+}
+async function pruneSnaps(keepN) { const l = await listSnaps(); if (l && l.length > keepN) await deleteSnaps(l.slice(keepN).map(x => x.id)); }
+async function readSnap(id) {
+  const rec = await idbRun('readonly', s => s.get('snap:' + id));
+  if (!rec || typeof rec.json !== 'string') throw new Error('missing');
+  return { rec, data: JSON.parse(rec.json) };
+}
+/** 하루 한 번 자동으로 (지난 복원 지점 뒤로 바뀐 게 있을 때만) */
+async function maybeAutoSnap() {
+  if (idbDead || !state || !state.books.length) return;
+  const list = await listSnaps(); if (!list) return;
+  const lastAuto = list.find(x => x.reason === 'auto');
+  if (lastAuto && Date.now() - Date.parse(lastAuto.at) < 20 * 3600e3) return;
+  if (list[0] && tsOf(state) && tsOf(state) <= Date.parse(list[0].at)) return;
+  await makeSnap('auto');
+}
+
+/* ── 삭제 되돌리기 (책 단위) ── */
+function holdBook(b) { return { copy: deep(b), index: state.books.indexOf(b) }; }
+function offerUndo(hold, msg) {
+  const seq = changeSeq;
+  toast(msg, {
+    action: '되돌리기', ms: 7000, onAction: () => {
+      if (!state || changeSeq !== seq) { toast('그 뒤에 다른 변경이 있어서 되돌릴 수 없어요', { ms: 3200 }); return; }
+      modalStack.slice().forEach(m => m.close()); closeMenu();
+      const b = hold.copy, i = state.books.findIndex(x => x.id === b.id);
+      if (i >= 0) state.books[i] = b; else state.books.splice(clamp(hold.index, 0, state.books.length), 0, b);
+      Object.values(ui.map).forEach(mu => { if (mu) { mu.sel = null; mu.from = null; } });
+      commit('삭제 되돌리기', b);
+      if (ui.route.name === 'book' && ui.route.id === b.id) renderBook(b); else render();
+      toast('되돌렸어요');
+    }
   });
 }
 
@@ -1923,13 +2172,14 @@ function bookSearchText(b) {
 }
 function renderLibrary() {
   document.title = '독서노트';
-  $('#abLeft').innerHTML = `<a class="brand" href="#/"><span class="brand-mark">${icon('book', 16)}</span><span>독서노트</span></a>`;
+  $('#abLeft').innerHTML = BRAND_HTML();
   const cnt = st => state.books.filter(b => roleVal(b, 'status') === st).length;
   view.innerHTML = `<div class="wrap lib">
     <div class="lib-head">
       <div><h1>내 서재</h1><p class="lib-stats">총 ${state.books.length}권 · 완독 ${cnt('완독')}권 · 읽는 중 ${cnt('읽는 중')}권</p></div>
       <button class="btn primary" data-act="newBook">${icon('plus', 17)}<span>새 책</span></button>
     </div>
+    ${backupNoteHTML()}
     <div class="lib-tools">
       <label class="search">${icon('search', 17)}<input id="libSearch" type="search" placeholder="제목, 작가, 메모, 인물 검색" value="${esc(ui.search)}" autocomplete="off"></label>
       <div class="chips">${statusFilters().map(f => `<button class="chip ${ui.filter === f.v ? 'on' : ''}" data-act="filter" data-v="${esc(f.v)}">${esc(f.l)}</button>`).join('')}</div>
@@ -1938,6 +2188,20 @@ function renderLibrary() {
     <div id="libGrid"></div>
   </div>`;
   renderGrid();
+}
+/** 백업 알림: 마지막 백업(없으면 처음 쓴 날)에서 7일이 지났고 그 뒤로 책이 바뀌었을 때 */
+function backupDueDays() {
+  if (!state.books.length) return 0;
+  const ref = Date.parse(state.lastBackupAt || state.firstUseAt) || 0; if (!ref) return 0;
+  const days = Math.floor((Date.now() - ref) / 864e5); if (days < 7) return 0;
+  const latest = Math.max(0, ...state.books.map(b => Date.parse(b.updatedAt) || 0));
+  if (latest <= ref + 60000) return 0;
+  if (state.backupSnoozeUntil && Date.now() < Date.parse(state.backupSnoozeUntil)) return 0;
+  return days;
+}
+function backupNoteHTML() {
+  const d = backupDueDays(); if (!d) return '';
+  return `<div class="note-bar" data-backup-note role="status">${icon('database', 18)}<div class="nb-txt"><b>${state.lastBackupAt ? `마지막 백업이 ${d}일 전이에요` : '아직 백업한 적이 없어요'}</b><span>기록은 이 브라우저 안에만 저장돼요. 기기를 바꾸거나 브라우저 데이터가 지워질 때를 대비해 JSON으로 백업해 두세요.</span></div><div class="nb-ops"><button type="button" class="btn sm primary" data-act="exportAll">백업하기</button><button type="button" class="btn sm" data-act="snoozeBackup">나중에</button></div></div>`;
 }
 function coverHTML(b) {
   if (b.cover) return `<img src="${esc(b.cover)}" alt="" loading="lazy">`;
@@ -2193,10 +2457,10 @@ function setAllCollapsed(b, s, v) {
 async function deleteGroup(b, s, g) {
   const unit = s.type === 'words' ? '단어' : '메모', n = g.items.filter(e => itemFilled(s, e)).length, name = g.title.trim() || '이름 없는 카테고리';
   const remove = keep => {
-    const loc = findNode(s, g.id); if (!loc) return;
+    const loc = findNode(s, g.id); if (!loc) return; const hold = holdBook(b);
     loc.list.splice(loc.index, 1, ...(keep ? g.items : []));
     commit(keep ? '카테고리 풀기' : '카테고리 삭제', b); refreshSection(b, s.id);
-    toast(keep ? `카테고리를 지우고 ${unit}는 그대로 남겼어요` : '카테고리를 삭제했어요');
+    offerUndo(hold, keep ? `카테고리를 지우고 ${unit}는 그대로 남겼어요` : '카테고리를 삭제했어요');
   };
   if (!n) {
     if (await confirmDialog({ title: `‘${esc(name)}’ 카테고리를 삭제할까요?`, message: g.items.length ? `내용이 없는 빈 ${unit} ${g.items.length}개도 함께 지워져요.` : '' })) remove(false);
@@ -2660,7 +2924,7 @@ document.addEventListener('keydown', e => {
     if (e.target.matches && e.target.matches('.mdx > textarea')) { e.preventDefault(); e.target.blur(); return; }
   }
   if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.code === 'KeyS' || e.key === 's' || e.key === 'S')) {
-    if (!state) { e.preventDefault(); return; } e.preventDefault(); pendingMsg = pendingMsg || '직접 저장'; saveNow().then(() => toast('저장했어요')); return; }
+    if (!state) { e.preventDefault(); return; } e.preventDefault(); pendingMsg = pendingMsg || '직접 저장'; saveNow({ force: true, flush: true }).then(ok => { if (ok) toast('저장했어요'); else if (!otherTabNewer) toast('지금은 저장하지 못했어요. 자동으로 다시 시도할게요.'); }); return; }
   const t = e.target;
   if (t.classList && t.classList.contains('sec-title') && e.key === 'Enter') { if (e.isComposing || e.keyCode === 229) return; e.preventDefault(); t.blur(); return; }
   if (t.classList && t.classList.contains('grp-title') && (e.key === 'Enter' || e.key === 'Escape')) { if (e.isComposing || e.keyCode === 229) return; e.preventDefault(); t.blur(); return; }
@@ -2867,7 +3131,7 @@ Object.assign(ACT, {
     const b = curBook(); const r = b.rows.find(x => x.id === el.closest('.row').dataset.row); if (!r) return;
     const ids = r.cols.flat();
     const ok = await confirmDialog({ title: '이 행을 삭제할까요?', message: ids.length ? `행 안에 있는 섹션 ${ids.length}개(${ids.map(id => esc(b.sections[id].title || '이름 없음')).join(', ')})와 그 내용이 함께 삭제돼요.` : '빈 행이 삭제돼요.' });
-    if (!ok) return; ids.forEach(id => delete b.sections[id]); b.rows = b.rows.filter(x => x !== r); commit('행 삭제', b); renderBook(b); toast('행을 삭제했어요');
+    if (!ok || !b.rows.includes(r)) return; const hold = holdBook(b); ids.forEach(id => delete b.sections[id]); b.rows = b.rows.filter(x => x !== r); commit('행 삭제', b); renderBook(b); offerUndo(hold, '행을 삭제했어요');
   },
   secMenu: (el) => {
     const { b, s } = ctxSec(el); if (!s) return;
@@ -2892,7 +3156,7 @@ Object.assign(ACT, {
   coverDel: async () => {
     const b = curBook(); if (!b) return;
     if (!await confirmDialog({ title: '표지 이미지를 삭제할까요?', message: '이미지만 지워지고 책 정보와 메모는 그대로 남아요.' })) return;
-    b.cover = null; commit('표지 삭제', b); render();
+    const hold = holdBook(b); b.cover = null; commit('표지 삭제', b); render(); offerUndo(hold, '표지를 삭제했어요');
   },
   addGroup: (el) => { const { b, s } = ctxSec(el); if (s && s.entries) addGroupTo(b, s); },
   grpToggle: (el) => {
@@ -2924,11 +3188,11 @@ Object.assign(ACT, {
     if (s.type === 'words') {
       const w = (en.word || '').trim(), m = en.text.trim();
       if (!await confirmDialog({ title: '이 단어를 삭제할까요?', message: (w || m) ? `<b>${esc(cut(w || '(단어 없음)', 40))}</b>${m ? ` — ${esc(cut(m, 60))}` : ''}` : '내용이 비어 있는 줄이에요.' })) return;
-      removeIt(); commit('단어 삭제', b); refreshSection(b, s.id); return;
+      const hold = holdBook(b); removeIt(); commit('단어 삭제', b); refreshSection(b, s.id); offerUndo(hold, '단어를 삭제했어요'); return;
     }
     const prev = en.text.trim(); const short = cut(prev, 70);
     if (!await confirmDialog({ title: '이 메모를 삭제할까요?', message: prev ? `“${esc(short)}”` : '내용이 비어 있는 메모예요.' })) return;
-    removeIt(); commit('메모 삭제', b); refreshSection(b, s.id);
+    const hold = holdBook(b); removeIt(); commit('메모 삭제', b); refreshSection(b, s.id); offerUndo(hold, '메모를 삭제했어요');
   },
   /* 맵 */
   mapAdd: (el) => { const { root } = mapCtx(el); addNode(root); },
@@ -2955,11 +3219,13 @@ Object.assign(ACT, {
     const { root, b, s, mu } = mapCtx(el); const id = el.dataset.id || (mu.sel && mu.sel.id); const n = s.map.nodes.find(x => x.id === id); if (!n) return;
     const sub = descendants(s.map, id), name = esc(n.name || '이름 없음');
     const remove = (ids, msg) => {
+      if (!s.map.nodes.includes(n)) return; const hold = holdBook(b);
       const del = new Set(ids);
       s.map.nodes.forEach(x => { if (!del.has(x.id) && del.has(x.parent)) x.parent = n.parent && !del.has(n.parent) ? n.parent : null; });
       s.map.nodes = s.map.nodes.filter(x => !del.has(x.id)); s.map.edges = s.map.edges.filter(e => !del.has(e.from) && !del.has(e.to));
       if (mu.sel && del.has(mu.sel.id)) mu.sel = null; if (mu.from && del.has(mu.from)) mu.from = null;
       commit(msg, b); drawMap(root); renderInsp(root); renderLists(root);
+      offerUndo(hold, ids.length > 1 ? `인물 ${ids.length}명을 삭제했어요` : '인물을 삭제했어요');
     };
     if (!sub.length) {
       const rel = s.map.edges.filter(e => e.from === id || e.to === id).length;
@@ -2976,14 +3242,16 @@ Object.assign(ACT, {
     const { root, b, s, mu } = mapCtx(el); const id = el.dataset.id || (mu.sel && mu.sel.id); const e = s.map.edges.find(x => x.id === id); if (!e) return;
     const nm = x => esc((s.map.nodes.find(n => n.id === x) || {}).name || '이름 없음');
     if (!await confirmDialog({ title: '이 관계를 삭제할까요?', message: `${nm(e.from)} → ${nm(e.to)}${e.label ? ` · ${esc(e.label)}` : ''}` })) return;
+    if (!s.map.edges.includes(e)) return; const hold = holdBook(b);
     s.map.edges = s.map.edges.filter(x => x.id !== id); if (mu.sel && mu.sel.id === id) mu.sel = null;
-    commit('관계 삭제', b); drawMap(root); renderInsp(root); renderLists(root);
+    commit('관계 삭제', b); drawMap(root); renderInsp(root); renderLists(root); offerUndo(hold, '관계를 삭제했어요');
   },
   edgeDir: (el) => { const { root, b, s, mu } = mapCtx(el); const e = s.map.edges.find(x => x.id === mu.sel.id); if (!e) return; e.dir = el.dataset.dir; commit('관계 수정', b); drawMap(root); renderInsp(root); renderLists(root); },
   edgeStyle: (el) => { const { root, b, s, mu } = mapCtx(el); const e = s.map.edges.find(x => x.id === mu.sel.id); if (!e) return; e.style = el.dataset.style; commit('관계 수정', b); drawMap(root); renderInsp(root); },
   edgeSwap: (el) => { const { root, b, s, mu } = mapCtx(el); const e = s.map.edges.find(x => x.id === mu.sel.id); if (!e) return; [e.from, e.to] = [e.to, e.from]; commit('관계 방향 변경', b); drawMap(root); renderInsp(root); renderLists(root); },
   /* 설정 모달 안 버튼 */
   exportAll: () => exportAllJSON(),
+  snoozeBackup: () => { state.backupSnoozeUntil = new Date(Date.now() + 7 * 864e5).toISOString(); commit('백업 알림 7일 미루기'); $$('[data-backup-note]').forEach(n => n.remove()); toast('7일 뒤에 다시 알려 드릴게요'); },
   importData: () => importJSON(),
   pdfAll: () => pdfDialog(pdfScopesFor(null)),
   checkUpdate: () => checkRemote(true),
@@ -2993,8 +3261,9 @@ Object.assign(ACT, {
     state.template = defaultTemplate(); commit('기본 템플릿 초기화'); toast('기본 템플릿을 되돌렸어요');
   },
   resetAll: async () => {
-    if (!await confirmDialog({ title: '모든 데이터를 삭제할까요?', message: `서재의 책 ${state.books.length}권과 모든 메모·이미지·설정이 이 브라우저에서 삭제돼요.\n삭제 후에는 되돌릴 수 없으니 먼저 JSON으로 백업해 두세요.`, ok: '모두 삭제' })) return;
-    state = migrate({ books: [] }); modalStack.slice().forEach(m => m.close()); location.hash = '#/'; commit('모든 데이터 삭제'); render(); toast('모든 데이터를 삭제했어요');
+    if (!await confirmDialog({ title: '모든 데이터를 삭제할까요?', message: `서재의 책 ${state.books.length}권과 모든 메모·이미지·설정이 이 브라우저에서 삭제돼요.\n${idbDead ? '삭제 후에는 되돌릴 수 없으니 먼저 JSON으로 백업해 두세요.' : '실수에 대비해 삭제 직전 상태를 ‘복원 지점’에 남겨 둬요. 완전히 지우려면 설정 › 복원 지점에서 함께 지워 주세요.'}`, ok: '모두 삭제' })) return;
+    if (!idbDead && state.books.length && !await makeSnap('reset') && !await confirmDialog({ title: '복원 지점을 만들지 못했어요', message: '그래도 모두 삭제할까요? 삭제한 뒤에는 되돌릴 수 없어요.', ok: '그래도 삭제' })) return;
+    state = migrate({ books: [], saveLog: state.saveLog }); modalStack.slice().forEach(m => m.close()); location.hash = '#/'; commit('모든 데이터 삭제'); render(); toast('모든 데이터를 삭제했어요');
   },
 });
 function addSectionItems(b, place) {
@@ -3013,8 +3282,9 @@ function addSectionItems(b, place) {
 async function deleteSection(b, s) {
   const detail = s.type === 'info' ? '책 제목·작가 등 Info 필드 내용이 함께 삭제돼요. (표지 이미지는 남아요)' : s.type === 'characters' ? `인물 ${s.map.nodes.length}명과 관계 ${s.map.edges.length}개가 함께 삭제돼요.` : `${s.type === 'words' ? '단어' : '메모'} ${allItems(s).filter(e => itemFilled(s, e)).length}개${allGroups(s).length ? `와 카테고리 ${allGroups(s).length}개` : ''}가 함께 삭제돼요.`;
   if (!await confirmDialog({ title: `‘${esc(s.title || '이름 없음')}’ 섹션을 삭제할까요?`, message: detail })) return;
+  if (!b.sections[s.id]) return; const hold = holdBook(b);
   const loc = secOfRow(b, s.id); if (loc) { loc.c.splice(loc.i, 1); if (loc.r.cols.every(c => !c.length)) b.rows = b.rows.filter(r => r !== loc.r); }
-  delete b.sections[s.id]; commit('섹션 삭제', b); renderBook(b); toast('섹션을 삭제했어요');
+  delete b.sections[s.id]; commit('섹션 삭제', b); renderBook(b); offerUndo(hold, '섹션을 삭제했어요');
 }
 function bookMenuItems(b, fromCard) {
   return [
@@ -3030,11 +3300,14 @@ function bookMenuItems(b, fromCard) {
   ];
 }
 async function deleteBook(b) {
-  if (!await confirmDialog({ title: `『${esc(bookTitle(b))}』 책을 삭제할까요?`, message: '책 정보, 메모, 표지, 등장인물 맵이 모두 삭제되며 되돌릴 수 없어요.' })) return;
-  state.books = state.books.filter(x => x.id !== b.id); delete ui.map;
+  if (!await confirmDialog({ title: `『${esc(bookTitle(b))}』 책을 삭제할까요?`, message: '책 정보, 메모, 표지, 등장인물 맵이 모두 삭제돼요.\n바로 아래 알림에서 되돌릴 수 있고, 삭제 직전 상태는 복원 지점에도 남겨 둬요.' })) return;
+  if (!state.books.includes(b)) return;
+  const hold = holdBook(b), cap = idbDead ? null : captureState();
+  state.books = state.books.filter(x => x.id !== b.id);
   ui.map = {}; commit(`『${bookTitle(b)}』 삭제`);
+  if (cap) makeSnap('delBook', cap);
   if (ui.route.name === 'book') location.hash = '#/'; else render();
-  toast('책을 삭제했어요');
+  offerUndo(hold, '책을 삭제했어요');
 }
 function duplicateBook(b) {
   const c = deep(b); c.id = uid('b'); c.createdAt = c.updatedAt = nowISO();
@@ -3096,6 +3369,13 @@ function resizeImage(file, max) {
 }
 
 /* ── Info 필드 설정 ── */
+/** 필드 값을 글자로 (종류를 바꿀 때 값이 사라지는지 비교용) */
+function fieldText(f) {
+  const v = f.value;
+  if (f.type === 'period') return v && typeof v === 'object' ? [v.start, v.end].filter(Boolean).join(' ~ ') : '';
+  if (f.type === 'rating') return +v ? String(+v) : '';
+  return String(v == null ? '' : v).trim();
+}
 function convertValue(f, nt) {
   const old = f.value; let v;
   if (nt === 'rating') { const n = parseFloat(old); v = isNaN(n) ? 0 : clamp(Math.round(n * 2) / 2, 0, 5); }
@@ -3133,9 +3413,18 @@ function openFieldSettings(b, s) {
     const t = e.target;
     if (t.classList.contains('fs-label')) { const f = fOf(t); f.label = t.value; commit('Info 필드 이름 변경', b); refreshSection(b, s.id); }
   });
-  box.addEventListener('change', e => {
+  box.addEventListener('change', async e => {
     const t = e.target;
-    if (t.classList.contains('fs-type')) { convertValue(fOf(t), t.value); commit('Info 필드 종류 변경', b); draw(); refreshSection(b, s.id); }
+    if (t.classList.contains('fs-type')) {
+      const f = fOf(t), nt = t.value; if (!f || f.type === nt) return;
+      const probe = deep(f); convertValue(probe, nt);
+      const was = fieldText(f), lost = was && fieldText(probe) !== was;
+      if (lost && !await confirmDialog({ title: '필드 종류를 바꿀까요?', message: `지금 입력된 값 “${esc(was.length > 60 ? was.slice(0, 60) + '…' : was)}”은(는) ‘${esc(FIELD_TYPES[nt] || nt)}’ 형식에 맞지 않아 지워지거나 바뀌어요.`, ok: '바꾸기' })) { t.value = f.type; return; }
+      if (!s.fields.includes(f)) return;
+      const hold = lost ? holdBook(b) : null;
+      convertValue(f, nt); commit('Info 필드 종류 변경', b); draw(); refreshSection(b, s.id);
+      if (hold) offerUndo(hold, '필드 종류를 바꿨어요');
+    }
     else if (t.classList.contains('fs-options')) { const f = fOf(t); f.options = t.value.split(',').map(x => x.trim()).filter(Boolean); commit('Info 선택지 변경', b); refreshSection(b, s.id); }
   });
   box.addEventListener('keydown', e => { if (e.target.classList.contains('fs-new-label') && e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); $('[data-fs="custom"]', box).click(); } });
@@ -3146,7 +3435,8 @@ function openFieldSettings(b, s) {
       const f = fOf(btn);
       const hasVal = f.type === 'period' ? (f.value.start || f.value.end) : !!f.value;
       if (!await confirmDialog({ title: `‘${esc(f.label || '이름 없음')}’ 필드를 삭제할까요?`, message: hasVal ? '이 필드에 입력한 내용도 함께 삭제돼요.' : '' })) return;
-      s.fields = s.fields.filter(x => x !== f); commit('Info 필드 삭제', b); draw(); refreshSection(b, s.id);
+      if (!s.fields.includes(f)) return; const hold = holdBook(b);
+      s.fields = s.fields.filter(x => x !== f); commit('Info 필드 삭제', b); draw(); refreshSection(b, s.id); offerUndo(hold, '필드를 삭제했어요');
     } else if (k === 'preset') {
       const p = PRESET[btn.dataset.role]; const f = newField(p);
       if (p.role === 'title') s.fields.unshift(f); else s.fields.push(f);
@@ -3282,9 +3572,9 @@ function openSecColor(b, s) {
    7. 가져오기 · 내보내기
    ════════════════════════════════════════════════════════════ */
 function exportAllJSON() {
-  const data = { app: 'reading-note', version: APP_VERSION, exportedAt: nowISO(), books: state.books, template: state.template, settings: state.settings };
-  download(`독서노트_백업_${fileStamp()}.json`, new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' }));
-  state.lastBackupAt = nowISO(); commit('JSON 백업 내보내기'); toast(`책 ${state.books.length}권을 백업 파일로 내보냈어요`);
+  download(`독서노트_백업_${fileStamp()}.json`, new Blob([JSON.stringify(exportShape(state), null, 1)], { type: 'application/json' }));
+  state.lastBackupAt = nowISO(); state.backupSnoozeUntil = null; commit('JSON 백업 내보내기'); toast(`책 ${state.books.length}권을 백업 파일로 내보냈어요`);
+  $$('[data-backup-note]').forEach(n => n.remove());
 }
 function exportBookJSON(b) {
   const data = { app: 'reading-note-book', version: APP_VERSION, exportedAt: nowISO(), book: b, palette: state.settings.palette };
@@ -3320,8 +3610,9 @@ function importDialog(books, full, name, foreignPal) {
 }
 async function doImport(books, full, mode, foreignPal) {
   const replaceSettings = mode === 'replace' && full && full.settings;
+  if (mode === 'replace' && !await confirmDialog({ title: '전체 덮어쓸까요?', message: `지금 서재의 책 ${state.books.length}권이 모두 삭제되고, 가져온 책 ${books.length}권으로 바뀌어요.${idbDead ? '' : '\n지금 서재는 ‘복원 지점’에 먼저 남겨 둬요.'}`, ok: '덮어쓰기' })) return;
+  if (state.books.length && (mode === 'replace' || books.some(nb => getBook(nb.id)))) await makeSnap('import');   // 바뀌는 책이 있으면 가져오기 전 상태 보관
   if (mode === 'replace') {
-    if (!await confirmDialog({ title: '전체 덮어쓸까요?', message: `지금 서재의 책 ${state.books.length}권이 모두 삭제되고, 가져온 책 ${books.length}권으로 바뀌어요.`, ok: '덮어쓰기' })) return;
     state.books = books;
     if (full && full.template) { const tb = normalizeBook({ id: 'tpl', sections: full.template.sections, rows: full.template.rows }); if (tb && Object.keys(tb.sections).length) state.template = { sections: tb.sections, rows: tb.rows }; }
     if (replaceSettings) state.settings = normalizeSettings(full.settings);
@@ -3467,7 +3758,7 @@ function logHTML() {
 function openSaveLog() {
   modal({
     title: `${icon('clock', 20)} 자동 저장 기록`, width: 520,
-    body: `<p class="muted small" style="margin:0 0 10px">모든 변경은 입력하는 즉시 이 브라우저에 자동 저장돼요. 마지막 저장: <b style="color:var(--ink)">${fmtDT(state.savedAt)}</b></p>${logHTML()}`,
+    body: `<p class="muted small" style="margin:0 0 10px">모든 변경은 입력하는 즉시 이 브라우저에 자동 저장돼요. 마지막 저장: <b style="color:var(--ink)">${lastSavedAt ? fmtDT(lastSavedAt) : '아직 없음'}</b>${saveFails ? ' · <b style="color:var(--danger)">최근 저장 실패, 자동 재시도 중</b>' : ''}</p>${logHTML()}`,
     actions: [{ label: 'JSON 백업', onClick: () => { exportAllJSON(); return false; } }, { label: '닫기', primary: true }]
   });
 }
@@ -3479,11 +3770,16 @@ function openSettings() {
   const m = modal({
     title: '설정', width: 560,
     body: `<section class="set-sec"><h3>${icon('clock', 17)} 자동 저장</h3>
-        <p>모든 변경은 입력하는 즉시 이 브라우저(IndexedDB)에 자동 저장돼요. 기기·브라우저를 옮기거나 브라우저 데이터를 지우기 전에는 JSON으로 백업해 두세요.</p>
-        <dl class="kv"><dt>마지막 저장</dt><dd>${fmtDT(state.savedAt)}</dd><dt>마지막 백업</dt><dd>${state.lastBackupAt ? fmtDT(state.lastBackupAt) : '아직 없음'}</dd><dt>사용 용량</dt><dd id="setUsage">계산 중…</dd></dl>
+        <p>모든 변경은 입력하는 즉시 이 브라우저에 자동 저장돼요. 기기·브라우저를 옮기거나 브라우저 데이터를 지우기 전에는 JSON으로 백업해 두세요.</p>
+        ${IS_IOS && !IS_STANDALONE ? `<p class="warn-note">${icon('info', 15)}<span>아이폰·아이패드 Safari는 이 사이트를 <b>7일 넘게 열지 않으면</b> 저장된 기록을 지울 수 있어요. 자주 열어 주거나 JSON 백업을 해 두세요. (홈 화면에 추가한 앱은 Safari와 저장 공간이 따로라서, 옮길 때는 JSON 백업 → 가져오기를 해 주세요)</span></p>` : ''}
+        <dl class="kv"><dt>마지막 저장</dt><dd>${lastSavedAt ? fmtDT(lastSavedAt) : '아직 없음'}${saveFails ? ' <b style="color:var(--danger)">· 최근 저장 실패, 자동 재시도 중</b>' : ''}</dd><dt>마지막 백업</dt><dd>${state.lastBackupAt ? fmtDT(state.lastBackupAt) : '아직 없음'}</dd><dt>저장 위치</dt><dd id="setWhere">${idbDead || whereMark === 'ls' ? '이 브라우저 (localStorage · 용량 작음)' : '이 브라우저 (IndexedDB)'}</dd><dt>사용 용량</dt><dd id="setUsage">계산 중…</dd></dl>
         <details class="savelog"><summary>저장 기록 ${state.saveLog.length}건 보기</summary>${logHTML()}</details></section>
       <section class="set-sec"><h3>${icon('database', 17)} 데이터</h3>
         <div class="btn-row"><button class="btn" data-act="exportAll">${icon('download', 16)}JSON 백업</button><button class="btn" data-act="importData">${icon('upload', 16)}JSON 가져오기</button><button class="btn" data-act="pdfAll">${icon('file', 16)}전체 PDF</button></div></section>
+      <section class="set-sec" id="snapSec"><h3>${icon('refresh', 17)} 복원 지점</h3>
+        <p>하루에 한 번, 그리고 책 삭제 · 가져오기 · 모든 데이터 삭제 직전에 서재 전체를 이 브라우저 안에 자동으로 보관해요. 최근 ${SNAP_MAX}개까지 남아요. (브라우저 데이터를 지우면 함께 지워지니 JSON 백업도 함께 해 두세요)</p>
+        <div id="snapList"><p class="muted small" style="margin:0">불러오는 중…</p></div>
+        <div class="btn-row" style="margin-top:10px"><button class="btn" data-snap-op="make" ${idbDead ? 'disabled' : ''}>${icon('plus', 16)}지금 복원 지점 만들기</button><button class="btn danger-ghost" data-snap-op="delAll" hidden>${icon('trash', 16)}복원 지점 모두 삭제</button></div></section>
       <section class="set-sec"><h3>${icon('columns', 17)} 화면</h3>
         <p>행마다 정한 1~3단은 PC·태블릿·휴대폰 모두에서 그대로 보여요. 휴대폰에서 글이 너무 좁게 느껴지면 아래를 켜 보세요. (PDF는 항상 설정한 단 그대로 나와요)</p>
         <label class="check" style="margin:0"><input type="checkbox" data-set="stackMobile" ${state.settings.stackMobile ? 'checked' : ''}> 휴대폰처럼 좁은 화면에서는 1단으로 쌓아 보기</label></section>
@@ -3505,9 +3801,54 @@ function openSettings() {
   });
   const u = $('#setUsage', m.el);
   const bytes = new Blob([JSON.stringify(state)]).size;
-  const fmt = n => n > 1048576 ? (n / 1048576).toFixed(1) + 'MB' : Math.max(1, Math.round(n / 1024)) + 'KB';
-  u.textContent = `기록 ${fmt(bytes)}`;
-  if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(e => { if (e.quota) u.textContent = `기록 ${fmt(bytes)} · 브라우저 허용량 약 ${fmt(e.quota)}`; }).catch(() => { });
+  u.textContent = `기록 ${fmtBytes(bytes)}`;
+  if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(e => { if (e.quota) u.textContent = `기록 ${fmtBytes(bytes)} · 브라우저 허용량 약 ${fmtBytes(e.quota)}`; }).catch(() => { });
+  if (!idbDead && navigator.storage && navigator.storage.persisted) navigator.storage.persisted().then(p => { const w = $('#setWhere', m.el); if (w) w.textContent += p ? ' · 영구 보관' : ''; }).catch(() => { });
+  const box = $('#snapSec', m.el);
+  const draw = async () => {
+    const list = await listSnaps(); const el = $('#snapList', box); if (!el) return;
+    el.innerHTML = snapListHTML(list);
+    $('[data-snap-op="delAll"]', box).hidden = !(list && list.length > 1);
+  };
+  draw();
+  box.addEventListener('click', async e => {
+    const btn = e.target.closest('[data-snap-op]'); if (!btn || btn.disabled) return;
+    const op = btn.dataset.snapOp, li = btn.closest('[data-snap-id]'), id = li && li.dataset.snapId;
+    const meta = id && (snapIdx || []).find(x => x.id === id);
+    if (op === 'make') { btn.disabled = true; const ok = await makeSnap('manual'); btn.disabled = false; toast(ok ? '복원 지점을 만들었어요' : '복원 지점을 만들지 못했어요'); draw(); }
+    else if (op === 'restore' && meta) { await restoreSnap(meta); }
+    else if (op === 'dl' && meta) {
+      try { const { rec, data } = await readSnap(id); download(`독서노트_복원지점_${fileStamp(new Date(rec.at))}.json`, new Blob([JSON.stringify(exportShape(data, { snapshotAt: rec.at }), null, 1)], { type: 'application/json' })); }
+      catch (err) { toast('복원 지점을 읽지 못했어요'); }
+    }
+    else if (op === 'del' && meta) {
+      if (!await confirmDialog({ title: '이 복원 지점을 삭제할까요?', message: `${fmtDT(meta.at)} · ${esc(SNAP_REASON[meta.reason] || meta.reason)} · 책 ${meta.books}권` })) return;
+      try { await deleteSnaps([id]); toast('복원 지점을 삭제했어요'); } catch (err) { toast('삭제하지 못했어요'); } draw();
+    }
+    else if (op === 'delAll') {
+      const n = (snapIdx || []).length;
+      if (!await confirmDialog({ title: `복원 지점 ${n}개를 모두 삭제할까요?`, message: '서재에 있는 지금 기록은 그대로 남아요.' })) return;
+      try { await deleteSnaps((snapIdx || []).map(x => x.id)); toast('복원 지점을 모두 삭제했어요'); } catch (err) { toast('삭제하지 못했어요'); } draw();
+    }
+  });
+}
+function fmtBytes(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + 'MB' : Math.max(1, Math.round(n / 1024)) + 'KB'; }
+function snapListHTML(list) {
+  if (!list) return '<p class="muted small" style="margin:0">이 브라우저에서는 복원 지점을 쓸 수 없어요. JSON 백업을 이용해 주세요.</p>';
+  if (!list.length) return '<p class="muted small" style="margin:0">아직 복원 지점이 없어요. 하루에 한 번 자동으로 만들어져요.</p>';
+  return `<ul class="snaps">${list.map(x => `<li data-snap-id="${esc(x.id)}"><div class="snap-info"><b>${fmtDT(x.at)}</b><span>${esc(SNAP_REASON[x.reason] || x.reason)} · 책 ${+x.books || 0}권 · ${fmtBytes(+x.size || 0)}</span></div><div class="snap-ops"><button type="button" class="btn sm" data-snap-op="restore">복원</button><button type="button" class="icon-btn sm" data-snap-op="dl" title="JSON으로 내려받기" aria-label="JSON으로 내려받기">${icon('download', 16)}</button><button type="button" class="icon-btn sm danger" data-snap-op="del" title="삭제" aria-label="복원 지점 삭제">${icon('trash', 16)}</button></div></li>`).join('')}</ul>`;
+}
+async function restoreSnap(meta) {
+  let got; try { got = await readSnap(meta.id); } catch (e) { toast('복원 지점을 읽지 못했어요'); return; }
+  let next; try { next = migrate(got.data); } catch (e) { toast('복원 지점이 손상되어 되돌릴 수 없어요'); return; }
+  if (!await confirmDialog({ title: '이 복원 지점으로 되돌릴까요?', message: `${fmtDT(got.rec.at)} 상태 (책 ${next.books.length}권)로 서재 전체가 바뀌어요.\n지금 내용은 ‘복원 직전’ 복원 지점으로 먼저 남겨 둘게요.`, ok: '복원', danger: false })) return;
+  if (!await makeSnap('restore') && !await confirmDialog({ title: '지금 내용을 보관하지 못했어요', message: '그래도 복원할까요? 지금 내용으로는 다시 돌아올 수 없게 돼요. 먼저 JSON 백업을 권해요.', ok: '그래도 복원' })) return;
+  next.saveLog = state.saveLog; next.lastBackupAt = state.lastBackupAt; next.firstUseAt = state.firstUseAt; next.backupSnoozeUntil = state.backupSnoozeUntil;
+  state = next; ui.map = {};
+  modalStack.slice().forEach(m => m.close()); closeMenu();
+  commit(`복원 지점으로 되돌리기 (${fmtDT(got.rec.at)})`);
+  if (ui.route.name === 'book') location.hash = '#/'; else render();
+  toast(`${fmtDT(got.rec.at)} 상태로 되돌렸어요`, { ms: 3500 });
 }
 let lastCheck = 0, snoozed = null, updateShown = false, updRetry = 0;
 function checkVersionOnLoad() {
@@ -3546,50 +3887,89 @@ async function checkRemote(manual) {
 }
 async function reloadForUpdate(v) {
   busy(true, '업데이트 중…');
-  if (!otherTabNewer && (saveTimer || pendingMsg)) await saveNow();
+  if (!otherTabNewer && isDirty()) { writeEmergency(); await saveNow({ flush: true }); }
   const u = new URL(location.href); u.searchParams.set('v', v); location.replace(u.toString());
 }
 
 /* ════════════════════════════════════════════════════════════
    9. 시작
    ════════════════════════════════════════════════════════════ */
+/** 백업 파일 형식 (가져오기로 다시 넣을 수 있음) */
+function exportShape(s, extra) { return Object.assign({ app: 'reading-note', version: APP_VERSION, exportedAt: nowISO() }, extra || {}, { books: (s && Array.isArray(s.books)) ? s.books : [], template: s && s.template, settings: s && s.settings }); }
+const BRAND_HTML = () => `<a class="brand" href="#/"><span class="brand-mark">${icon('book', 16)}</span><span>독서노트</span></a>`;
 function bootFail(raw) {
+  $('#abLeft').innerHTML = BRAND_HTML();
   view.innerHTML = `<div class="wrap"><div class="empty"><h3>저장된 기록을 읽지 못했어요</h3><p>기록은 지우지 않았어요. 먼저 원본 데이터를 내려받아 보관한 뒤 다시 시도해 주세요.</p>
     <div class="btn-row" style="justify-content:center"><button class="btn primary" id="bfDown">${icon('download', 16)}원본 데이터 내려받기</button><button class="btn" id="bfReload">${icon('refresh', 16)}다시 시도</button></div></div></div>`;
   $('#bfDown').onclick = () => { let txt; try { txt = JSON.stringify(raw, null, 1); } catch (e) { txt = String(raw); } download(`독서노트_원본_${fileStamp()}.json`, new Blob([txt], { type: 'application/json' })); };
   $('#bfReload').onclick = () => location.reload();
-  setSaveStatus('error');
+  setSaveStatus('blocked');
+}
+/** 저장소를 읽지 못했을 때: 아무것도 만들거나 저장하지 않고 다시 시도하게 함 */
+function bootReadError(L) {
+  const objs = (L.local || []).filter(isObj).sort((a, b) => tsOf(b) - tsOf(a)), raws = (L.local || []).filter(x => typeof x === 'string');
+  const has = objs.length || raws.length;
+  $('#abLeft').innerHTML = BRAND_HTML();
+  view.innerHTML = `<div class="wrap"><div class="empty"><h3>저장된 기록을 지금은 읽을 수 없어요</h3>
+    <p>브라우저 저장소가 잠시 응답하지 않아요. <b style="color:var(--ink)">기록은 지우거나 덮어쓰지 않았어요.</b><br>독서노트가 열린 다른 탭·창을 닫고 다시 시도해 보세요. 계속 안 되면 브라우저를 완전히 껐다 켠 뒤 열어 주세요.</p>
+    <div class="btn-row" style="justify-content:center"><button class="btn primary" id="bfReload">${icon('refresh', 16)}다시 시도</button>${has ? `<button class="btn" id="bfDown">${icon('download', 16)}임시 사본 내려받기</button>` : ''}</div></div></div>`;
+  $('#bfReload').onclick = () => location.reload();
+  if (has) $('#bfDown').onclick = () => { const txt = objs.length ? JSON.stringify(exportShape(objs[0]), null, 1) : raws[0]; download(`독서노트_임시사본_${fileStamp()}.json`, new Blob([txt], { type: 'application/json' })); };
+  setSaveStatus('blocked');
+}
+async function showMissingNotice() {
+  const snaps = await listSnaps();
+  modal({
+    title: '저장된 기록이 보이지 않아요', width: 470, focusDialog: true,
+    body: `<p class="confirm-msg">이 브라우저에서 독서노트를 쓴 적이 있는데, 지금은 저장된 기록이 비어 있어요. 브라우저가 저장 공간을 정리하면서 지웠을 수 있어요.\n${snaps && snaps.length ? `복원 지점 ${snaps.length}개가 남아 있어요. 설정 › 복원 지점에서 되살릴 수 있어요.` : 'JSON 백업 파일이 있다면 ‘JSON 가져오기’로 되살릴 수 있어요.'}</p>`,
+    actions: [{ label: '닫기' }, snaps && snaps.length ? { label: '복원 지점 보기', primary: true, onClick: () => { setTimeout(openSettings, 200); } } : { label: 'JSON 가져오기', primary: true, onClick: () => importJSON() }]
+  });
 }
 async function boot() {
   $('#btnData').innerHTML = icon('database', 19); $('#btnSettings').innerHTML = icon('settings', 19);
   try { const u = new URL(location.href); if (u.searchParams.has('v')) { u.searchParams.delete('v'); history.replaceState(null, '', u.toString()); } } catch (e) { }
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { }); } catch (e) { }
-  let first = false, saved;
-  try { saved = await kvGet('state'); } catch (e) { saved = undefined; }
-  if (saved && typeof saved === 'object') {
-    try { state = migrate(deep(saved)); }
-    catch (e) { console.error(e); return bootFail(saved); }
-  } else { state = migrate({}); state.books = [sampleBook()]; first = true; pendingMsg = '처음 시작 · 예시 책 추가'; await saveNow(); }
-  ui.route = parseHash(); render(); setSaveStatus('saved');
+  const L = await loadState();
+  if (L.kind === 'error') { console.error('저장소 읽기 실패', L.err); return bootReadError(L); }
+  let first = false, missing = false;
+  whereMark = LS.get('rn:where');
+  if (L.kind === 'ok') {
+    try { state = migrate(deep(L.data)); } catch (e) { console.error(e); return bootFail(L.data); }
+    savedCovers = L.baseCovers; lastSavedAt = state.savedAt; setWhere(L.from);
+    if (L.dirty) { changeSeq++; emSeq = L.usedEm ? changeSeq : null; pendingMsg = L.usedEm ? '마지막 변경 복구' : '저장 위치 정리'; }
+  } else {
+    state = migrate({});
+    if (L.missing) missing = true;
+    else { state.books = [sampleBook()]; first = true; changeSeq++; pendingMsg = '처음 시작 · 예시 책 추가'; }
+  }
+  try { ui.route = parseHash(); render(); }
+  catch (e) { console.error(e); const raw = L.data || state; state = null; return bootFail(raw); }
+  setSaveStatus(isDirty() ? 'saving' : 'saved');
+  if (isDirty()) saveNow();
   checkVersionOnLoad();
   if (first) setTimeout(() => toast('예시 책이 하나 들어 있어요. 자유롭게 고치거나 지워 보세요.', { ms: 5000 }), 600);
+  if (missing) setTimeout(showMissingNotice, 400);
+  if (L.usedEm) setTimeout(() => toast('지난번 마지막으로 입력한 내용까지 되살렸어요'), 700);
   setTimeout(() => checkRemote(false), 5000);
-  setInterval(() => checkRemote(false), 30 * 60 * 1000);
+  setTimeout(maybeAutoSnap, 4000);
+  setInterval(() => { checkRemote(false); maybeAutoSnap(); }, 30 * 60 * 1000);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') { emergencySave(); return; }
-    if (otherTabNewer) { if (!saveTimer && !pendingMsg) reloadFromStore('다른 탭에서 바뀐 내용을 불러왔어요'); else { clearTimeout(saveTimer); saveTimer = null; setSaveStatus('conflict'); showConflict(); } }
+    if (otherTabNewer) { if (!isDirty()) reloadFromStore('다른 탭에서 바뀐 내용을 불러왔어요'); else { clearTimeout(saveTimer); saveTimer = null; setSaveStatus('conflict'); showConflict(); } }
+    else if (saveFails && !saving) saveNow();          // 돌아오면 실패했던 저장을 바로 다시 시도
     if (Date.now() - lastCheck > 5 * 60 * 1000) checkRemote(false);
+    maybeAutoSnap();
   });
   window.addEventListener('pagehide', emergencySave);
-  window.addEventListener('beforeunload', emergencySave);
+  document.addEventListener('freeze', emergencySave);
+  window.addEventListener('beforeunload', e => {
+    emergencySave();
+    // 저장도 비상 사본도 실패한 상태라면 닫기 전에 한 번 묻기
+    if (state && isDirty() && saveFails && emSeq !== changeSeq && !otherTabNewer) { e.preventDefault(); e.returnValue = ''; }
+  });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { $$('.cmap', view).forEach(r => drawMap(r)); autosizeAll(view); });
-  if (bc) bc.onmessage = (ev) => {
-    if (!ev.data || ev.data.type !== 'saved' || ev.data.tab === TAB_ID) return;
-    otherTabNewer = true;
-    if (saveTimer || pendingMsg) return;               // 이 탭에도 저장 안 된 변경이 있으면 저장 시점에 선택하게 함
-    if (document.visibilityState === 'hidden') { reloadFromStore(); return; }
-    if (!staleToast) { staleToast = true; toast('다른 탭에서 내용이 바뀌었어요', { action: '불러오기', ms: 9000, onAction: () => reloadFromStore('최신 내용을 불러왔어요') }); }
-  };
+  if (bc) bc.onmessage = ev => { if (ev.data && ev.data.type === 'saved') onOtherSaved(ev.data); };
+  window.addEventListener('storage', ev => { if (ev.key === 'rn:ping' && ev.newValue) { try { onOtherSaved(JSON.parse(ev.newValue)); } catch (e) { } } });
 }
 boot();
 </script>
