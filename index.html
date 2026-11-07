@@ -33,11 +33,11 @@
     "version": "1.9.0",
     "date": "2026-11-07",
     "notes": [
-      "목차 편집의 추가 버튼과 이름을 ‘파트 → 챕터’ 순서로 바꿨어요",
+      "목차 편집을 ‘파트 → 챕터’ 순서로 바꾸고, 챕터 번호는 파트마다 1장부터 다시 매겨요 (‘여러 개 한 번에 추가’에서 파트마다 몇 장씩 한 번에 만들 수도 있어요)",
       "프롤로그 · 에필로그 · 작가의 말처럼 파트나 챕터가 아닌 항목도 ‘기타’로 따로 만들 수 있어요",
       "목차에 시작 쪽을 적어 두면, 메모에 쪽 번호만 적어도 맞는 파트 · 챕터로 자동으로 나뉘어요",
       "직접 고른 챕터가 먼저예요. 쪽 번호에 맞추고 싶으면 목차 편집의 ‘쪽 번호로 다시 나누기’를 눌러요",
-      "목차를 붙여 넣으면 줄 끝의 쪽 번호가 시작 쪽으로 들어가요"
+      "PDF 파일로 저장할 때 여러 줄에 걸친 형광펜이 앞 글자를 가리던 문제를 고쳤어요"
     ]
   },
   {
@@ -671,6 +671,10 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
 .p-doc .md code{background:#F1F1F3}
 .p-doc .md th,.p-doc .md td{border-color:#E1E1E6;padding:.25em .5em}
 .p-doc .md-table{overflow:visible}
+.p-doc mark.bg-split{background:transparent;padding:0;border-radius:0}
+.p-doc mark.bg-split .bg-pc{background:#FFEB80}
+.p-doc code.bg-split{background:transparent;padding:0}
+.p-doc code.bg-split .bg-pc{background:#F1F1F3}
 .p-frow .v .md{white-space:normal}
 
 /* ── 색상 ── */
@@ -889,6 +893,7 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
 .toc-range{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 0 12px;font-size:13.5px;color:var(--ink2)}
 .toc-range input{width:62px;height:34px;border:1px solid var(--line2);border-radius:8px;padding:0 6px;font-size:15px;text-align:center;outline:none;background:#fff}
 .toc-range input:focus,.toc-paste:focus,.sp-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.toc-sub{margin:-6px 0 12px;font-size:12px;color:var(--muted)}
 .toc-paste{display:block;width:100%;min-height:92px;border:1px solid var(--line2);border-radius:10px;padding:8px 10px;font-size:14px;line-height:1.55;resize:vertical;outline:none;background:#fff}
 .toc-paste-ops{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;font-size:12px;line-height:1.45;color:var(--muted)}
 .toc-paste-ops .btn{flex:none}
@@ -1750,7 +1755,29 @@ function chLabel(c) { return c ? (String(c.title || '').trim() || (c.kind === 'p
 /** 챕터가 속한 파트 (목차에서 바로 앞에 있는 파트) · 파트와 따로 항목은 어디에도 속하지 않음 */
 function chPartOf(b, c) { const L = chapters(b); if (!c || c.kind !== 'ch') return null; for (let i = L.indexOf(c) - 1; i >= 0; i--) if (L[i].kind === 'part') return L[i]; return null; }
 function chFull(b, c) { const p = chPartOf(b, c); return p ? `${chLabel(p)} · ${chLabel(c)}` : chLabel(c); }
-function nextChTitle(b, kind) { const n = chapters(b).filter(c => c.kind === kind).length + 1; return kind === 'part' ? `${n}부` : `${n}장`; }
+const TOC_FRONT_RX = /^(?:프롤로그|들어가며|들어가는\s*말|머리말|서문|서장|prologue|preface|foreword|introduction)/i;
+/** 파트 · 챕터를 넣을 자리: 마지막 파트·챕터 바로 뒤 (맨 뒤의 작가의 말 · 에필로그 같은 기타 항목보다 앞) */
+function tocInsertAt(L) {
+  let i = -1; L.forEach((c, k) => { if (c.kind !== 'extra') i = k; });
+  if (i >= 0) return i + 1;
+  let j = 0; while (j < L.length && TOC_FRONT_RX.test(String(L[j].title || '').trim())) j++;   // 기타 항목만 있으면 앞쪽 항목(프롤로그 등) 뒤
+  return j;
+}
+/** pos 자리에 넣을 새 이름: 파트는 앞의 파트 수 + 1, 챕터는 **같은 파트 안에서** 바로 앞 챕터 번호 + 1 (파트의 첫 챕터면 1장) */
+function nextTitleAt(b, kind, pos) {
+  const L = chapters(b); if (pos == null) pos = tocInsertAt(L);
+  if (kind === 'part') return `${L.slice(0, pos).filter(c => c.kind === 'part').length + 1}부`;
+  let last = null, count = 0;
+  for (let i = pos - 1; i >= 0; i--) { const c = L[i]; if (c.kind === 'part') break; if (c.kind === 'ch') { count++; if (!last) last = c; } }
+  const m = last && String(last.title).match(/(\d+)/);
+  return `${m ? +m[1] + 1 : count + 1}장`;
+}
+/** 메모 옆 버튼에 보일 이름: 같은 이름의 챕터가 여러 파트에 있으면 파트를 앞에 붙임 (예: 2부 · 1장) */
+function chChipLabel(b, c) {
+  if (!c) return ''; const t = chLabel(c); if (c.kind !== 'ch') return t;
+  const p = chapters(b).some(x => x !== c && x.kind === 'ch' && chLabel(x) === t) ? chPartOf(b, c) : null;
+  return p ? `${chLabel(p).split(' ')[0]} · ${t}` : t;
+}
 function pageNum(v) { const m = String(v == null ? '' : v).match(/\d+/); return m ? +m[0] : null; }
 function chPageTag(c) { const p = c && pageNum(c.page); return p == null ? '' : `p.${p}~`; }
 /** 목차에 시작 쪽이 하나라도 있는지 */
@@ -2615,7 +2642,7 @@ function chChipHTML(b, e) {
   if (!chapters(b).length) return '';
   const man = chapterOf(b, e.ch), c = effCh(b, e), auto = !!c && !(man && !e.chSoft && man === c), full = c ? esc(chFull(b, c)) : '';
   const why = !c ? '' : !auto ? '직접 고른 챕터' : autoChOf(b, e) === c ? `쪽 번호(p.${pageNum(e.page)})로 자동` : '앞 메모를 따라 임시로 (쪽을 적으면 쪽 번호로 정해져요)';
-  return `<button type="button" class="entry-ch${c ? ' has' : ''}${auto ? ' auto' : ''}${c && c.kind !== 'ch' ? ' is-' + c.kind : ''}" data-act="pickCh" title="${c ? `${full} · ${why}` : '챕터 고르기'}" aria-label="${c ? `챕터 ${full}, ${why} · 바꾸기` : '챕터 고르기'}">${c ? esc(chLabel(c)) : '장'}</button>`;
+  return `<button type="button" class="entry-ch${c ? ' has' : ''}${auto ? ' auto' : ''}${c && c.kind !== 'ch' ? ' is-' + c.kind : ''}" data-act="pickCh" title="${c ? `${full} · ${why}` : '챕터 고르기'}" aria-label="${c ? `챕터 ${full}, ${why} · 바꾸기` : '챕터 고르기'}">${c ? esc(chChipLabel(b, c)) : '장'}</button>`;
 }
 function itemHTML(b, s, e) {
   const words = s.type === 'words', sent = String(e.sentence || ''), hasSent = !!sent.trim();
@@ -2908,7 +2935,7 @@ function openToc(b) {
       <button type="button" class="icon-btn xs toc-del" data-toc="del" title="삭제" aria-label="삭제">${icon('x', 14)}</button>
     </li>`;
   };
-  const lastNo = () => { let n = 0; chapters(b).forEach(c => { const m = c.kind === 'ch' && String(c.title).match(/(\d+)/); if (m) n = Math.max(n, +m[1]); }); return n; };
+  const nextNo = () => parseInt(nextTitleAt(b, 'ch'), 10) || 1;   // 지금 파트에서 다음 챕터 번호
   const m = modal({
     title: `${icon('list', 19)} 목차 (파트 · 챕터)`, width: 540, className: 'toc-modal',
     body: `<p class="toc-intro">파트(부)와 챕터(장)를 순서대로 적어 두면, 메모·단어 옆 <span class="toc-demo">장</span> 버튼으로 챕터를 고르고 챕터별로 모아 볼 수 있어요. <b>시작 쪽</b>을 적어 두면 메모에 쪽 번호만 적어도 맞는 파트·챕터로 자동으로 나뉘어요.</p>
@@ -2918,6 +2945,8 @@ function openToc(b) {
       <div class="toc-add"><button type="button" class="btn sm" data-toc="addPart">${icon('plus', 15)}파트 추가</button><button type="button" class="btn sm" data-toc="addCh">${icon('plus', 15)}챕터 추가</button><button type="button" class="btn sm" data-toc="addExtra">${icon('plus', 15)}프롤로그 · 에필로그 · 작가의 말</button></div>
       <div class="toc-reflow" hidden><span>직접 고른 챕터보다 쪽 번호를 따르게 하려면</span><button type="button" class="btn sm" data-toc="reflow">${icon('refresh', 15)}쪽 번호로 다시 나누기</button></div>
       <details class="toc-bulk"><summary>여러 개 한 번에 추가</summary>
+        <div class="toc-range toc-batch"><input type="number" class="toc-parts" inputmode="numeric" min="1" max="20" value="2" aria-label="파트 수"><span>개 파트, 파트마다</span><input type="number" class="toc-per" inputmode="numeric" min="1" max="100" value="4" aria-label="파트마다 챕터 수"><span>장씩</span><button type="button" class="btn sm" data-toc="batch">만들기</button></div>
+        <p class="toc-sub">예: 1부 → 1장~4장, 2부 → 1장~4장 (파트마다 1장부터 다시 시작해요)</p>
         <div class="toc-range"><input type="number" class="toc-from" inputmode="numeric" min="1" max="999" aria-label="시작 번호"><span>장부터</span><input type="number" class="toc-to" inputmode="numeric" min="1" max="999" aria-label="끝 번호"><span>장까지</span><button type="button" class="btn sm" data-toc="range">만들기</button></div>
         <textarea class="toc-paste" rows="4" placeholder="목차를 붙여 넣으세요 (한 줄에 하나)&#10;예) 프롤로그 ··· 7&#10;1부 어린 시절 ··· 11&#10;1장 두 세계 ··· 13"></textarea>
         <div class="toc-paste-ops"><span>‘1부’ · ‘Part 3’은 파트, ‘프롤로그’ · ‘작가의 말’ 등은 기타 항목이 되고, 끝의 쪽 번호는 시작 쪽으로 들어가요</span><button type="button" class="btn sm" data-toc="paste">목차 추가</button></div>
@@ -2932,17 +2961,18 @@ function openToc(b) {
     $$('.toc-row', list).forEach(li => { const n = chUseCount(b, li.dataset.cid), el = $('.toc-n', li); el.textContent = n || ''; el.title = `이 항목에 들어간 메모·단어 ${n}개`; });
     $('.toc-reflow', m.el).hidden = !offPage().length;
   };
-  const draw = () => { list.innerHTML = chapters(b).map(rowHTML).join(''); const has = !!chapters(b).length; $('.toc-empty', m.el).hidden = has; $('.toc-head', m.el).hidden = !has; from.value = lastNo() + 1; to.value = lastNo() + 10; updInfo(); };
+  const draw = () => { list.innerHTML = chapters(b).map(rowHTML).join(''); const has = !!chapters(b).length; $('.toc-empty', m.el).hidden = has; $('.toc-head', m.el).hidden = !has; from.value = nextNo(); to.value = nextNo() + 9; updInfo(); };
   draw();
   const mark = msg => { changed = true; commit(msg, b); };
   const find = el => { const li = el && el.closest('[data-cid]'); return li ? chapters(b).find(x => x.id === li.dataset.cid) : null; };
-  const add = (items, focusLast, front) => {
+  const add = (items, focusLast, at) => {
     if (!items.length) return;
     if (!Array.isArray(b.chapters)) b.chapters = [];
     const room = CH_MAX - b.chapters.length; if (room <= 0) { toast(`목차는 ${CH_MAX}개까지 만들 수 있어요`); return; }
     const put = items.slice(0, room);
-    if (front) { let i = b.chapters.findIndex(x => x.kind !== 'extra'); if (i < 0) i = b.chapters.length; b.chapters.splice(i, 0, ...put); }   // 맨 앞 (앞쪽 기타 항목 뒤)
-    else b.chapters.push(...put);
+    let i = at === 'front' ? b.chapters.findIndex(x => x.kind !== 'extra') : at === 'end' ? b.chapters.length : typeof at === 'number' ? at : tocInsertAt(b.chapters);   // 'front' = 앞쪽 기타 항목 뒤
+    if (i < 0) i = b.chapters.length;
+    b.chapters.splice(clamp(i, 0, b.chapters.length), 0, ...put);
     mark(put.length > 1 ? `목차 ${put.length}개 추가` : '목차 추가'); draw();
     if (items.length > room) toast(`목차는 ${CH_MAX}개까지라 ${room}개만 추가했어요`, { ms: 3200 });
     const inp = $(`[data-cid="${put[put.length - 1].id}"] .toc-title`, list);
@@ -2951,9 +2981,9 @@ function openToc(b) {
   m.el.addEventListener('click', async ev => {
     const btn = ev.target.closest('[data-toc]'); if (!btn) return;
     const op = btn.dataset.toc, c = find(btn);
-    if (op === 'addCh' || op === 'addPart') { const k = op === 'addPart' ? 'part' : 'ch'; add([newChapter(k, nextChTitle(b, k))], true); }
+    if (op === 'addCh' || op === 'addPart') { const k = op === 'addPart' ? 'part' : 'ch'; add([newChapter(k, nextTitleAt(b, k))], true); }
     else if (op === 'addExtra') {
-      openMenu(btn, [{ header: '따로 넣을 항목' }, ...TOC_EXTRAS.map(([t, where]) => ({ icon: t ? 'plus' : 'edit', label: t || '직접 입력', hint: where === 'front' ? '맨 앞에' : '맨 뒤에', onClick: () => add([newChapter('extra', t)], true, where === 'front') }))]);
+      openMenu(btn, [{ header: '따로 넣을 항목' }, ...TOC_EXTRAS.map(([t, where]) => ({ icon: t ? 'plus' : 'edit', label: t || '직접 입력', hint: where === 'front' ? '맨 앞에' : '맨 뒤에', onClick: () => add([newChapter('extra', t)], true, where === 'front' ? 'front' : 'end') }))]);
     }
     else if (op === 'kind' && c) {
       openMenu(btn, [{ header: '종류' }, ...[['part', '파트', '여러 챕터를 묶는 큰 단위 (1부 · 2부)'], ['ch', '챕터', '1장 · 2장'], ['extra', '기타', '프롤로그 · 에필로그 · 작가의 말']].map(([k, l, h]) => ({ icon: c.kind === k ? 'check' : null, on: c.kind === k, label: l, hint: h, onClick: () => { if (c.kind === k) return; c.kind = k; mark('목차 수정'); draw(); } }))]);
@@ -2976,10 +3006,17 @@ function openToc(b) {
     else if (op === 'range') {
       let a = clamp(parseInt(from.value, 10) || 1, 1, 999), z = clamp(parseInt(to.value, 10) || a, 1, 999); if (a > z) [a, z] = [z, a];
       if (z - a >= 200) { toast('한 번에 200개까지 만들 수 있어요'); return; }
-      const have = new Set(chapters(b).map(x => String(x.title).trim()));
+      const pos = tocInsertAt(chapters(b)), have = new Set();   // 지금 파트 안에 이미 있는 이름만 건너뜀
+      for (let i = pos - 1; i >= 0; i--) { const x = chapters(b)[i]; if (x.kind === 'part') break; have.add(String(x.title).trim()); }
       const items = []; for (let i = a; i <= z; i++) if (!have.has(`${i}장`)) items.push(newChapter('ch', `${i}장`));
       if (!items.length) { toast('이미 모두 있어요'); return; }
       add(items, false); toast(`챕터 ${items.length}개를 만들었어요`);
+    }
+    else if (op === 'batch') {
+      const P = clamp(parseInt($('.toc-parts', m.el).value, 10) || 1, 1, 20), C = clamp(parseInt($('.toc-per', m.el).value, 10) || 1, 1, 100);
+      const pos = tocInsertAt(chapters(b)), p0 = chapters(b).slice(0, pos).filter(x => x.kind === 'part').length;
+      const items = []; for (let p = 1; p <= P; p++) { items.push(newChapter('part', `${p0 + p}부`)); for (let c = 1; c <= C; c++) items.push(newChapter('ch', `${c}장`)); }
+      add(items, false, pos); toast(`파트 ${P}개 · 챕터 ${P * C}개를 만들었어요`);
     }
     else if (op === 'paste') {
       const ta = $('.toc-paste', m.el), items = parseTocText(ta.value);
@@ -2997,8 +3034,12 @@ function openToc(b) {
     const t = ev.target; if (!t.classList || ev.key !== 'Enter' || ev.isComposing || ev.keyCode === 229) return;
     const isT = t.classList.contains('toc-title'), isP = t.classList.contains('toc-page'); if (!isT && !isP) return;
     ev.preventDefault();
-    const next = t.closest('[data-cid]').nextElementSibling, ni = next && $(isP ? '.toc-page' : '.toc-title', next);
-    if (ni) focusEnd(ni); else if (isT) add([newChapter('ch', nextChTitle(b, 'ch'))], true); else { t.blur(); updInfo(); }
+    const next = t.closest('[data-cid]').nextElementSibling, ni = next && $(isP ? '.toc-page' : '.toc-title', next), cur = find(t), nc = next && find(next);
+    if (isP) { if (ni) focusEnd(ni); else { t.blur(); updInfo(); } return; }
+    // 이름 칸 Enter: 다음 파트·챕터로 이동, 없으면(또는 다음이 맨 뒤 기타 항목이면) 바로 아래에 새 챕터
+    if (ni && (!nc || nc.kind !== 'extra' || (cur && cur.kind === 'extra'))) focusEnd(ni);
+    else if (cur && cur.kind === 'extra') t.blur();
+    else if (cur) { const pos = chapters(b).indexOf(cur) + 1; add([newChapter('ch', nextTitleAt(b, 'ch', pos))], true, pos); }
   });
   if (window.Sortable) sorter = Sortable.create(list, {
     handle: '.toc-grip', draggable: '.toc-row', animation: 160, forceFallback: true, fallbackTolerance: 4, ghostClass: 'sortable-ghost',
@@ -4387,7 +4428,7 @@ function printSecHTML(b, s, o) {
   if (!allItems(s).some(e => itemFilled(s, e))) return '';
   const byCh = o.byCh && chapters(b).length > 0;
   const pg = e => o.page && String(e.page).trim() ? 'p.' + esc(String(e.page).trim().replace(/^p\.?\s*/i, '')) : '';
-  const chTag = e => { if (byCh || !o.chap) return ''; const c = effCh(b, e); return c ? esc(chLabel(c)) : ''; };
+  const chTag = e => { if (byCh || !o.chap) return ''; const c = effCh(b, e); return c ? esc(chChipLabel(b, c)) : ''; };
   const filled = list => list.filter(x => itemFilled(s, x));
   /* 묶음 목록: 챕터별(파트 머리말 포함) 또는 카테고리별 → [{ part?, title?, items }] */
   let blocks;
@@ -4427,6 +4468,19 @@ function tocHTML(books) {
   return `<article class="p-book"><div class="p-cover-title">독서노트</div><div class="p-sub">책 ${books.length}권 · ${fmtDT(nowISO(), { sec: false })} 내보냄</div>
     <table class="p-toc"><thead><tr><th style="width:8mm">#</th><th>제목</th><th>작가</th><th style="width:30mm">별점</th><th style="width:18mm">상태</th></tr></thead><tbody>${books.map((b, i) => { const r = +roleVal(b, 'rating') || 0; return `<tr><td style="color:#A1A1AA">${i + 1}</td><td><b>${esc(bookTitle(b))}</b></td><td>${esc(bookAuthor(b))}</td><td>${r ? starsHTML(r, { size: 11 }) : ''}</td><td>${esc(roleVal(b, 'status'))}</td></tr>`; }).join('')}</tbody></table></article>`;
 }
+/** (PDF 파일 저장 전용) 형광펜 · 인라인 코드 배경을 글자 조각마다 칠해서, 여러 줄에 걸쳐도 줄마다 제자리에 그려지게 함 */
+function splitInlineBg(root) {
+  $$('mark, :not(pre) > code', root).forEach(el => {
+    const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), texts = []; while (tw.nextNode()) texts.push(tw.currentNode);
+    texts.forEach(t => {
+      const parts = t.data.match(/\S\s*|\s+/g); if (!parts || parts.length < 2) return;
+      const frag = document.createDocumentFragment();
+      parts.forEach(p => { const s = document.createElement('span'); s.className = 'bg-pc'; s.textContent = p; frag.append(s); });
+      t.replaceWith(frag);
+    });
+    el.classList.add('bg-split');
+  });
+}
 function waitImages(root) { return Promise.all($$('img', root).map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; }))); }
 async function exportPDF(books, mode, filename, o) {
   o = pdfOpts(o);
@@ -4442,6 +4496,7 @@ async function exportPDF(books, mode, filename, o) {
   const mg = PDF_MARGIN[o.margin];
   const holder = document.createElement('div'); holder.className = 'pdf-holder'; holder.style.width = (210 - mg * 2) + 'mm';
   holder.innerHTML = parts.map(p => pdfDocHTML(p, o)).join('');
+  splitInlineBg(holder);
   document.body.append(holder);
   try {
     await waitImages(holder); try { await document.fonts.ready; } catch (e) { }

@@ -190,6 +190,7 @@ v1.7.0에서 자동 테스트로 확인한 시나리오예요. 저장 코드를 
 - `book = { id, kind:'general'|'novel', createdAt, updatedAt, cover(dataURL|null), sections:{id→section}, rows:[{id, ratio[], cols:[[sectionId…]]}], chapters:[{id, kind:'part'|'ch'|'extra', title, page}] }`
   - 목차(`chapters`)는 책마다 따로예요. 기본 템플릿에는 넣지 않아요.
   - 순서는 **파트 → 챕터**. 챕터는 목차에서 바로 앞에 있는 파트에 속해요. `extra`(화면 이름 '기타': 프롤로그 · 에필로그 · 작가의 말 등)는 어디에도 속하지 않아요.
+  - 챕터 번호는 **파트마다 1장부터** (`nextTitleAt`). 새 파트 · 챕터는 맨 뒤 기타 항목 앞에 넣어요 (`tocInsertAt`). 같은 이름의 챕터가 여러 파트에 있으면 버튼 · PDF에 파트를 붙여요 (`chChipLabel`).
   - `page` = 시작 쪽. 메모의 챕터는 `effCh()`로 정해요: **직접 고른 `ch` → 쪽 번호(`autoChOf`) → 임시로 이어받은 `ch`(`chSoft:true`)**. 챕터를 보여 주거나 묶는 곳은 `e.ch` 대신 꼭 `effCh(b, e)`를 써요.
 - 섹션 `type`: `info` · `motivation` · `liked` · `unliked` · `learned` · `action` · `comment` · `words` · `characters` · `custom`
   - Info: `fields:[{id, role, label, type, value, hidden, options?}]`
@@ -239,4 +240,5 @@ v1.7.0에서 자동 테스트로 확인한 시나리오예요. 저장 코드를 
 - Pretendard `v1.3.9` (jsdelivr, dynamic subset)
 - SortableJS `1.15.6`
 - html2pdf.js `0.14.0` — PDF 만들 때만 늦게 불러와요 (`H2P_URL`).
+  - 안의 html2canvas는 여러 줄에 걸친 인라인 배경을 사각형 하나로 칠해서 앞 글자를 가려요. 그래서 PDF 파일용 사본은 `splitInlineBg()`로 형광펜 · 인라인 코드를 글자 조각으로 나눠요. 인라인 배경이 있는 새 요소를 만들면 여기에도 넣어요.
 - 새 라이브러리는 꼭 필요할 때만 추가해요. jsdelivr에서 **버전을 고정**해서 불러와요.
