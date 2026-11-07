@@ -4,7 +4,7 @@
 
 - **무엇:** 레이아웃을 자유롭게 꾸미는 독서노트 웹앱
 - **파일:** `index.html` 하나 (GitHub Pages에 그대로 올려서 씀)
-- **현재 버전:** 1.7.0 (2026-10-29)
+- **현재 버전:** 1.8.0 (2026-11-07)
 - **사용자:** 한국어 사용자, 아이폰 · 안드로이드 · PC를 모두 씀
 - **소통:** 사용자에게는 항상 **한국어**로, 개발 용어보다 쉬운 말로 설명해 주세요.
 
@@ -15,7 +15,7 @@
 어떤 수정을 하더라도 아래가 깨지면 안 돼요.
 
 1. **데이터 가져오기 · 내보내기** (JSON 백업 / 가져오기)
-2. **실시간 자동 저장** + 저장된 **날짜와 시간**을 화면에 표시 (`#saveStat`, 저장 기록)
+2. **실시간 자동 저장** + 저장된 **날짜와 시간**을 화면에 표시 (`#saveStat`, 저장 기록). 자동 저장은 그대로 두고, **'저장' 버튼**(`#btnSave`)으로 직접 저장도 할 수 있어야 해요 (v1.8.0 요청)
 3. **업데이트가 있으면 버전으로 체크**하고 팝업으로 알림 → 업데이트 뒤에는 "업데이트 완료" 팝업
 4. **모든 자료를 PDF로 내보내기** 가능
 5. 폰트는 **Pretendard**
@@ -72,6 +72,7 @@
 - 새 최상위 키는 `migrate()` 기본값에 추가해요.
 - 한 번만 하는 이전 작업은 `state.flags.xxx`로 표시해요 (예: `flags.wordsTpl` = 템플릿에 Words 한 번 추가).
 - 가져온 JSON은 믿지 않아요. id는 `safeId`, 표지는 `COVER_RX`와 길이 제한, 값은 문자열로 변환, 카테고리 중첩은 1단계로 펼쳐요.
+- 메모 항목 · 챕터 객체의 **모르는 필드는 지우지 않고 그대로 둬요** (`normItem`은 `Object.assign` 후 아는 필드만 정리). id를 바꿀 때는 그 id를 가리키는 값도 함께 바꿔요 (예: 챕터 id → 메모의 `ch`).
 - 백업 형식은 `exportShape()` 하나로 통일해요: `{ app:'reading-note', version, exportedAt, books, template, settings }`.
 
 ### 2-4. 여러 탭
@@ -177,6 +178,7 @@ v1.7.0에서 자동 테스트로 확인한 시나리오예요. 저장 코드를 
 | `2. 저장소` | IndexedDB/localStorage, `commit`/`saveNow`, 비상 사본, 다중 탭, 복원 지점, 되돌리기 |
 | `3. 공통 UI` | `modal`, `confirmDialog`, `openMenu`, `toast`, `busy` |
 | `4. 라우팅 · 렌더링` | `#/`(서재), `#/book/<id>`, `renderLibrary`, `renderBook`, Sortable 연결 |
+| `4-b. 챕터 · 쓰인 문장 · 직접 저장` | 목차 편집 `openToc`, 챕터별 모아 보기 `openChOverview`, 문장 팝업 `openSentPop`, `manualSave` |
 | `5. 등장인물 맵` | SVG 맵, 노드 · 관계 · 가지, `drawMap`, `autoLayout` |
 | `6. 이벤트 (위임)` | `ACT` 객체 + `data-act` 클릭 위임, document 단위 `input`/`keydown` 처리 |
 | `7. 가져오기 · 내보내기` | JSON, PDF(html2pdf), 인쇄용 `#printRoot` |
@@ -185,10 +187,14 @@ v1.7.0에서 자동 테스트로 확인한 시나리오예요. 저장 코드를 
 
 데이터 모양 (요약):
 - `state = { schema, books[], template, settings, saveLog[], savedAt, lastBackupAt, firstUseAt, backupSnoozeUntil, flags }`
-- `book = { id, kind:'general'|'novel', createdAt, updatedAt, cover(dataURL|null), sections:{id→section}, rows:[{id, ratio[], cols:[[sectionId…]]}] }`
+- `book = { id, kind:'general'|'novel', createdAt, updatedAt, cover(dataURL|null), sections:{id→section}, rows:[{id, ratio[], cols:[[sectionId…]]}], chapters:[{id, kind:'part'|'ch', title}] }`
+  - 목차(`chapters`)는 책마다 따로예요. 챕터는 목차에서 바로 앞에 있는 파트에 속해요. 기본 템플릿에는 넣지 않아요.
 - 섹션 `type`: `info` · `motivation` · `liked` · `unliked` · `learned` · `action` · `comment` · `words` · `characters` · `custom`
   - Info: `fields:[{id, role, label, type, value, hidden, options?}]`
-  - 메모형: `entries:[{id, text, page, done, word?} | {id, kind:'group', title, collapsed, items:[…]}]` (카테고리는 1단계만)
+  - 메모형: `entries:[{id, text, page, done, word?, sentence?, ch?} | {id, kind:'group', title, collapsed, items:[…]}]` (카테고리는 1단계만)
+    - `word` · `sentence`(단어가 쓰인 문장)는 Words에만, `ch`는 고른 챕터 id
+    - 섹션 보기 설정: `byCh`(챕터별로 묶어 보기), `sentHide`(Words: 문장은 눌러서 보기)
+- `settings.pdf = { fs, lh, margin, cols, cover, map, sent, page, chap, byCh, head }` — PDF 상세 설정 (`normPdf`가 정리)
   - 등장인물: `map:{ nodes:[{id, name, role, desc, color, main, parent, collapsed, x, y}], edges:[{id, from, to, label, dir, style}] }`
 
 ---

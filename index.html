@@ -803,7 +803,7 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
 .entry-sbtn{margin-top:5px;opacity:0;transition:opacity .15s}
 .entry:hover .entry-sbtn,.entry:focus-within .entry-sbtn{opacity:1}
 .icon-btn.xs.entry-sbtn:hover{color:var(--accent-ink);background:var(--accent-soft)}
-.sec:not(.sent-hide) .wentry.has-sent .entry-sbtn{display:none}
+.sec:not(.sent-hide) .wentry.has-sent .entry-sbtn{visibility:hidden}
 .sent-hide .entry-sbtn.has{opacity:1;color:var(--accent-ink);background:var(--accent-soft)}
 @media (hover:none){.entry-sbtn{opacity:.6}}
 .w-sent{display:none;flex:1 1 100%;order:9;align-items:flex-start;gap:4px;margin:-3px 0 6px 24px;padding-left:7px;border-left:2px solid var(--line2);color:var(--faint);min-width:0}
@@ -815,7 +815,7 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
 .entry-sent:focus{background:var(--soft);color:var(--ink2)}
 .entry-sent::placeholder{color:#B9B9C0}
 .w-hit{font-weight:700;color:var(--ink)}
-@container (max-width:320px){.w-sent{margin-left:0}.entry-sent{font-size:13px}.entry-ctl:has(.entry-ch.has),.entry-ctl:has(.entry-sbtn.has){display:flex}.entry-ctl .entry-ch,.entry-ctl .entry-sbtn{margin-top:0}}
+@container (max-width:320px){.w-sent{margin-left:0}.entry-sent{font-size:13px}.entry-ctl:has(.entry-ch.has),.sent-hide .entry-ctl:has(.entry-sbtn.has){display:flex}.entry-ctl .entry-ch,.entry-ctl .entry-sbtn{margin-top:0}}
 
 /* ── 챕터별 보기 (섹션 안) ── */
 .chv-bar{display:flex;align-items:center;gap:6px;margin:2px 0 6px;padding:5px 6px 5px 9px;border-radius:9px;background:var(--soft);font-size:12.5px;font-weight:650;color:var(--ink2)}
@@ -1323,7 +1323,10 @@ function mdExit(wrap) {
 }
 /* 클릭 도중(누르고 있는 동안)에는 레이아웃이 흔들리지 않도록 편집 종료를 잠시 미룸 */
 let mdPtrDown = false; const mdPending = new Set();
-function mdFlush() { mdPending.forEach(w => mdExit(w)); mdPending.clear(); }
+function mdFlush() { mdPending.forEach(w => mdExit(w)); mdPending.clear(); sentPending.forEach(sentCollapse); sentPending.clear(); }
+const sentPending = new Set();
+/** 빈 ‘쓰인 문장’ 칸 접기 (아직 그 줄에서 입력 중이면 그대로) */
+function sentCollapse(li) { if (!li.isConnected) return; const ta = li.querySelector('.entry-sent'); if (ta && !ta.value.trim() && document.activeElement !== ta) li.classList.remove('sent-open'); }
 let lastPtrAt = 0, lastTypeAt = 0, lastTabAt = 0;
 document.addEventListener('pointerdown', () => { mdPtrDown = true; lastPtrAt = Date.now(); }, true);
 document.addEventListener('input', () => { lastTypeAt = Date.now(); }, true);
@@ -3525,7 +3528,7 @@ document.addEventListener('focusout', e => {
     if (!(e.relatedTarget && w.contains(e.relatedTarget))) { if (mdPtrDown) mdPending.add(w); else setTimeout(() => mdExit(w), 0); }
     return;
   }
-  if (t.classList && t.classList.contains('entry-sent')) { const li = t.closest('.entry'); if (li && !t.value.trim()) li.classList.remove('sent-open'); return; }
+  if (t.classList && t.classList.contains('entry-sent')) { const li = t.closest('.entry'); if (li && !t.value.trim()) { if (mdPtrDown) sentPending.add(li); else setTimeout(() => sentCollapse(li), 0); } return; }
   if (t.classList && t.classList.contains('sec-title')) {
     const b = curBook(); if (!b) return; const s = b.sections[t.closest('.sec').dataset.sec]; if (!s) return;
     const v = t.textContent.trim(); if (v !== s.title) { s.title = v; commit('섹션 이름 변경', b); }
