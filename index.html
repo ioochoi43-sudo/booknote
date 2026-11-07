@@ -18,7 +18,7 @@
      새로고침 후에는 "업데이트 완료" 팝업으로 변경 내역을 보여줍니다.
   ─────────────────────────────────────────────────────────────
 -->
-<meta name="app-version" content="1.7.0">
+<meta name="app-version" content="1.8.0">
 <title>독서노트</title>
 <meta name="theme-color" content="#ffffff">
 <meta name="description" content="레이아웃을 자유롭게 꾸미는 독서노트 · 등장인물 맵 · 자동 저장 · PDF 내보내기">
@@ -29,6 +29,17 @@
 
 <script type="application/json" id="changelog">
 [
+  {
+    "version": "1.8.0",
+    "date": "2026-11-07",
+    "notes": [
+      "챕터별로 정리할 수 있어요. 책마다 목차(파트·챕터)를 만들고, 메모·단어 옆 ‘장’ 버튼으로 챕터를 골라요",
+      "섹션을 챕터별로 묶어 보거나, ‘챕터’ 버튼으로 책 전체 기록을 챕터별로 모아 볼 수 있어요",
+      "단어 옆 ❝ 버튼으로 그 단어가 쓰인 문장을 적을 수 있어요. 회색으로 바로 보이거나, 눌러서 보는 팝업 중에 고를 수 있어요 (섹션 ⋯ 메뉴)",
+      "자동 저장은 그대로이고, 위쪽 ‘저장’ 버튼으로 언제든 직접 저장할 수 있어요",
+      "PDF 상세 설정: 글자 크기 · 줄 간격 · 여백 · 단 배치 · 넣을 섹션과 내용을 고를 수 있고, 고른 설정은 다음에도 기억해요"
+    ]
+  },
   {
     "version": "1.7.0",
     "date": "2026-10-29",
@@ -639,13 +650,13 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
 .md-help pre{margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;white-space:pre-wrap;color:var(--ink2);background:var(--soft);padding:6px 8px;border-radius:7px}
 .md-help .md{font-size:14px}
 /* PDF · 인쇄용 마크다운 */
-.p-doc .md{font-size:inherit;line-height:1.6;color:inherit}
+.p-doc .md{font-size:inherit;line-height:var(--lh,1.6);color:inherit}
 .p-doc .md p{margin:0 0 .25em}
 .p-doc .md h1,.p-doc .md h2,.p-doc .md h3,.p-doc .md h4,.p-doc .md h5,.p-doc .md h6{margin:.4em 0 .2em}
-.p-doc .md h1{font-size:12.5pt}.p-doc .md h2{font-size:11.5pt}.p-doc .md h3,.p-doc .md h4,.p-doc .md h5,.p-doc .md h6{font-size:10.5pt}
+.p-doc .md h1{font-size:calc(12.5pt*var(--k,1))}.p-doc .md h2{font-size:calc(11.5pt*var(--k,1))}.p-doc .md h3,.p-doc .md h4,.p-doc .md h5,.p-doc .md h6{font-size:calc(10.5pt*var(--k,1))}
 .p-doc .md ul,.p-doc .md ol{margin:.1em 0 .3em}
 .p-doc .md pre{padding:.45em .65em;border-radius:6px;background:#F5F5F7}
-.p-doc .md pre code{white-space:pre-wrap;font-size:8pt}
+.p-doc .md pre code{white-space:pre-wrap;font-size:calc(8pt*var(--k,1))}
 .p-doc .md code{background:#F1F1F3}
 .p-doc .md th,.p-doc .md td{border-color:#E1E1E6;padding:.25em .5em}
 .p-doc .md-table{overflow:visible}
@@ -759,35 +770,197 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
   .grp-more{width:22px}
 }
 
+/* ── 직접 저장 버튼 ── */
+.save-btn{margin-right:4px;gap:5px;padding:0 11px 0 9px}
+.save-btn .ic{margin-left:-1px}
+.save-btn.done{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink)}
+.save-btn:disabled{opacity:.75}
+.mini-spin{width:14px;height:14px;border-radius:50%;border:2px solid var(--line2);border-top-color:var(--accent);animation:spin .8s linear infinite;flex:none}
+@media (max-width:640px){.save-btn{margin-right:2px;padding:0 9px 0 8px;gap:4px}}
+@media (max-width:360px){.save-btn span:not(.mini-spin){display:none}.save-btn{padding:0 7px}}
+
+/* ── 메뉴: 체크 · 긴 목록 ── */
+.menu{max-height:calc(100vh - 16px);overflow-y:auto;overscroll-behavior:contain}
+.menu-item.on{font-weight:700;color:var(--ink)}
+.menu-item.mi-part{font-weight:750;color:var(--ink)}
+.menu-item.in-part{padding-left:26px}
+.menu-item.mi-none{color:var(--muted)}
+
+/* ── 챕터 버튼 (메모·단어 옆) ── */
+.entry-ch{flex:none;max-width:92px;height:24px;margin:6px 3px 0 0;padding:0 8px;border:1px solid var(--line2);border-radius:999px;background:#fff;font-size:11.5px;font-weight:650;line-height:22px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .15s,border-color .15s}
+.entry-ch:hover{border-color:var(--ink2)}
+.entry-ch.has{background:var(--soft);border-color:var(--soft)}
+.entry-ch.has:hover{border-color:var(--line2)}
+.entry-ch.is-part{font-weight:800}
+.entry-ch:not(.has){border-style:dashed;color:var(--muted);opacity:0}
+.entry:hover .entry-ch,.entry:focus-within .entry-ch{opacity:1}
+@media (hover:none){.entry-ch:not(.has){opacity:.6}}
+.entry.flash{animation:eflash 1.6s ease-out}
+@keyframes eflash{0%,35%{background:var(--accent-soft)}100%{background:transparent}}
+
+/* ── 단어가 쓰인 문장 ── */
+.wentry{flex-wrap:wrap}
+.entry-sbtn{margin-top:5px;opacity:0;transition:opacity .15s}
+.entry:hover .entry-sbtn,.entry:focus-within .entry-sbtn{opacity:1}
+.icon-btn.xs.entry-sbtn:hover{color:var(--accent-ink);background:var(--accent-soft)}
+.sec:not(.sent-hide) .wentry.has-sent .entry-sbtn{display:none}
+.sent-hide .entry-sbtn.has{opacity:1;color:var(--accent-ink);background:var(--accent-soft)}
+@media (hover:none){.entry-sbtn{opacity:.6}}
+.w-sent{display:none;flex:1 1 100%;order:9;align-items:flex-start;gap:4px;margin:-3px 0 6px 24px;padding-left:7px;border-left:2px solid var(--line2);color:var(--faint);min-width:0}
+.wentry.has-sent .w-sent,.wentry.sent-open .w-sent{display:flex}
+.sent-hide .wentry .w-sent{display:none!important}
+.w-sent .ic{margin-top:7px}
+.entry-sent{flex:1;min-width:0;border:0;resize:none;background:transparent;padding:3px 6px;border-radius:7px;line-height:1.55;min-height:28px;overflow:hidden;outline:none;color:var(--muted);font-size:13.5px;field-sizing:content}
+.entry-sent:hover{background:#FAFAFB}
+.entry-sent:focus{background:var(--soft);color:var(--ink2)}
+.entry-sent::placeholder{color:#B9B9C0}
+.w-hit{font-weight:700;color:var(--ink)}
+@container (max-width:320px){.w-sent{margin-left:0}.entry-sent{font-size:13px}.entry-ctl:has(.entry-ch.has),.entry-ctl:has(.entry-sbtn.has){display:flex}.entry-ctl .entry-ch,.entry-ctl .entry-sbtn{margin-top:0}}
+
+/* ── 챕터별 보기 (섹션 안) ── */
+.chv-bar{display:flex;align-items:center;gap:6px;margin:2px 0 6px;padding:5px 6px 5px 9px;border-radius:9px;background:var(--soft);font-size:12.5px;font-weight:650;color:var(--ink2)}
+.chv-t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chv-short{display:none}
+.chv-bar small{font-weight:500;color:var(--muted);font-size:12px}
+.chv-off{flex:none;height:26px;padding:0 9px;border:1px solid var(--line2);border-radius:7px;background:#fff;font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap}
+.chv-off:hover{border-color:var(--ink2)}
+.chv{list-style:none;margin:0;padding:0}
+.chg{list-style:none;margin:0 0 2px -8px;border-top:1px solid var(--line)}
+.chv>.chg:first-child,.chg-part+.chg{border-top:0}
+.chg-head{display:flex;align-items:center;gap:4px;min-height:34px;padding-left:8px}
+.chg-title{flex:0 1 auto;min-width:0;font-weight:750;font-size:14px;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chg.is-none .chg-title{color:var(--muted);font-weight:650}
+.chg-head .grp-count{margin-left:2px}
+.chg-add{margin-left:auto}
+.icon-btn.xs.chg-add{color:var(--muted)}
+.icon-btn.xs.chg-add:hover{color:var(--accent-ink);background:var(--accent-soft)}
+.chg>.entries{margin:0 0 4px 8px;padding-left:8px;border-left:2px solid var(--line2)}
+.chg-part{list-style:none;margin:8px 0 0 -8px;padding:8px 8px 0;border-top:1.5px solid var(--line2);font-size:12px;font-weight:800;color:var(--muted)}
+.chv>.chg-part:first-child{margin-top:0;border-top:0;padding-top:2px}
+.chv-empty{margin:6px 0;color:var(--faint);font-size:13px}
+@container (max-width:320px){.chv-long{display:none}.chv-short{display:inline}.chv-bar{padding:4px 4px 4px 7px;gap:4px}.chv-off{padding:0 7px}.chg>.entries{margin-left:4px;padding-left:6px}}
+@container (max-width:210px){.chv-bar>.ic{display:none}.chv-off{font-size:11.5px;padding:0 5px}}
+
+/* ── 목차 편집 ── */
+.toc-intro{margin:0 0 12px;color:var(--muted);font-size:13.5px;line-height:1.6}
+.toc-demo{display:inline-block;padding:0 8px;border:1px solid var(--soft);border-radius:999px;background:var(--soft);font-size:11.5px;font-weight:650;line-height:20px;color:var(--ink2)}
+.toc-list{list-style:none;margin:0;padding:0}
+.toc-row{display:flex;align-items:center;gap:4px;padding:3px 0;border-top:1px solid var(--line);background:#fff}
+.toc-row:first-child{border-top:0}
+.toc-row.is-part~.toc-row.is-ch{padding-left:18px}
+.toc-row.is-part:not(:first-child){border-top:1.5px solid var(--line2);margin-top:4px;padding-top:7px}
+.toc-grip{height:30px}
+.toc-kind{flex:none;height:26px;min-width:46px;padding:0 8px;border:1px solid var(--line2);border-radius:7px;background:#fff;font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
+.toc-kind:hover{border-color:var(--ink2);color:var(--ink2)}
+.toc-row.is-part .toc-kind{background:var(--ink);border-color:var(--ink);color:#fff}
+.toc-title{flex:1;min-width:0;height:36px;border:1px solid transparent;border-radius:8px;padding:0 8px;background:transparent;font-size:15px;font-weight:600;color:var(--ink);outline:none}
+.toc-row.is-part .toc-title{font-weight:800}
+.toc-title:hover{background:#FAFAFB}
+.toc-title:focus{background:#fff;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.toc-title::placeholder{color:#B9B9C0;font-weight:500}
+.toc-n{flex:none;min-width:22px;text-align:center;font-size:11.5px;font-weight:700;color:var(--muted);background:var(--soft);border-radius:999px;padding:0 6px;font-variant-numeric:tabular-nums}
+.toc-n:empty{visibility:hidden}
+.toc-empty{margin:4px 0 8px;color:var(--faint);font-size:13px}
+.toc-add{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 2px}
+.toc-bulk{margin-top:12px;border-top:1px solid var(--line);padding-top:6px}
+.toc-bulk summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--ink2);padding:6px 0}
+.toc-range{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 0 12px;font-size:13.5px;color:var(--ink2)}
+.toc-range input{width:62px;height:34px;border:1px solid var(--line2);border-radius:8px;padding:0 6px;font-size:15px;text-align:center;outline:none;background:#fff}
+.toc-range input:focus,.toc-paste:focus,.sp-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.toc-paste{display:block;width:100%;min-height:92px;border:1px solid var(--line2);border-radius:10px;padding:8px 10px;font-size:14px;line-height:1.55;resize:vertical;outline:none;background:#fff}
+.toc-paste-ops{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;font-size:12px;line-height:1.45;color:var(--muted)}
+.toc-paste-ops .btn{flex:none}
+
+/* ── 챕터별 모아 보기 ── */
+.chov-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px;font-size:12.5px;color:var(--muted)}
+.chov-top .btn{flex:none}
+.chov-g{padding:8px 0 4px;border-top:1px solid var(--line)}
+.chov-g h4{display:flex;align-items:center;gap:8px;margin:0 0 2px;font-size:15px;font-weight:800;letter-spacing:-.02em;min-width:0}
+.chov-g h4 span{min-width:0;overflow-wrap:anywhere}
+.chov-g h4 small{flex:none;font-size:11.5px;font-weight:700;color:var(--muted);background:var(--soft);border-radius:999px;padding:0 7px;font-variant-numeric:tabular-nums}
+.chov-g h4 em{flex:none;font-style:normal;font-size:12px;font-weight:500;color:var(--faint)}
+.chov-g.is-part{border-top:1.5px solid var(--line2);margin-top:4px}
+.chov-g.is-part h4{font-size:16.5px}
+.chov-g.in-part{padding-left:14px}
+.chov-g.is-empty{padding:5px 0 3px}
+.chov-g.is-empty:not(.is-part) h4{font-size:13.5px;font-weight:650;color:var(--muted)}
+.chov-g.in-part.is-empty{padding-left:14px}
+.chov-g ul,.chov-none ul{list-style:none;margin:0;padding:0}
+.chov-it{display:block;padding:7px 8px;margin:0 -8px;border-radius:10px;cursor:pointer;outline:none}
+.chov-it:hover{background:var(--hover)}
+.chov-it:focus-visible{box-shadow:0 0 0 2px var(--accent) inset}
+.chov-meta{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:650;color:var(--muted);margin-bottom:1px}
+.chov-sec{display:inline-flex;align-items:center;gap:5px;min-width:0}
+.chov-sec::before{content:"";width:7px;height:7px;border-radius:2px;background:var(--c);flex:none}
+.chov-pg{margin-left:auto;color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums}
+.chov-body .md{font-size:14px;line-height:1.6}
+.chov-w b{font-size:14.5px}
+.chov-sent{margin-top:3px;font-size:13px;color:var(--muted);white-space:pre-wrap}
+.chov-none{margin-top:10px;border-top:1px solid var(--line);padding-top:6px}
+.chov-none summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--ink2);padding:6px 0}
+.chov-tip{margin:12px 0 2px;font-size:12px;line-height:1.5;color:var(--muted)}
+
+/* ── 쓰인 문장 팝업 ── */
+.sp-word{padding:2px 0 10px;border-bottom:1px solid var(--line)}
+.sp-word>b{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.sp-mean{margin-top:2px;font-size:14px;color:var(--ink2)}
+.sp-view{margin:12px 0 2px;padding:10px 12px;border-radius:12px;background:var(--soft);font-size:15px;line-height:1.65;color:var(--ink2);white-space:pre-wrap;overflow-wrap:anywhere}
+.sp-q{color:var(--muted);margin-right:3px}
+.sp-none{color:var(--muted);font-size:13.5px}
+.sp-input{display:block;width:100%;min-height:84px;border:1px solid var(--line2);border-radius:10px;padding:9px 11px;font-size:15px;line-height:1.55;resize:vertical;outline:none;background:#fff}
+
+/* ── PDF 상세 설정 ── */
+.pset{margin-top:14px;border-top:1px solid var(--line)}
+.pset>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;padding:12px 0 6px;font-size:13.5px;font-weight:800;color:var(--ink)}
+.pset>summary::-webkit-details-marker{display:none}
+.pset>summary::after{content:"";width:7px;height:7px;border-right:1.8px solid var(--muted);border-bottom:1.8px solid var(--muted);transform:rotate(45deg);margin-top:-4px;transition:transform .15s}
+.pset[open]>summary::after{transform:rotate(-135deg);margin-top:3px}
+.pset-row{display:flex;align-items:center;gap:8px 10px;min-height:42px;flex-wrap:wrap}
+.pset-k{flex:none;width:62px;font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap}
+.pset-sub{width:auto;margin:14px 0 4px}
+.pset-sub small{font-weight:500}
+.pdf-fs{display:flex;align-items:center;gap:2px;flex:1;min-width:0}
+.pdf-fs input{flex:1;min-width:60px;accent-color:var(--ink);margin:0 4px}
+.pdf-fs output{min-width:42px;text-align:right;font-size:13.5px;font-weight:750;color:var(--ink);font-variant-numeric:tabular-nums}
+.pdf-sample{margin:0 0 6px 72px;padding:6px 10px;border:1px dashed var(--line2);border-radius:9px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pchks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}
+.pchk{display:flex;align-items:center;gap:8px;min-height:36px;font-size:13.5px;font-weight:600;color:var(--ink2);cursor:pointer;line-height:1.35}
+.pchk input{width:17px;height:17px;accent-color:var(--ink);flex:none;margin:0}
+.pchk.dim{opacity:.45}
+.psec-dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:1px}
+.pset-foot{margin-top:6px}
+@media (max-width:420px){.pdf-sample{margin-left:0}.pset-row{gap:8px}.pchk{font-size:13px}}
+.p-words.has-chap th:nth-child(3){width:19mm}
+
 /* ── Print / PDF document ── */
 #printRoot{display:none}
 .pdf-holder{position:fixed;left:-14000px;top:0;width:186mm;background:#fff;pointer-events:none}
-.p-doc{font-family:var(--font);color:#18181B;background:#fff;font-size:10pt;line-height:1.6;letter-spacing:-.01em;word-break:keep-all;overflow-wrap:anywhere}
-.p-run{display:flex;justify-content:space-between;gap:10px;font-size:7.5pt;color:#A1A1AA;padding-bottom:5px;border-bottom:1px solid #ECECEF;margin-bottom:12px}
+.p-doc{font-family:var(--font);color:#18181B;background:#fff;font-size:calc(10pt*var(--k,1));line-height:var(--lh,1.6);letter-spacing:-.01em;word-break:keep-all;overflow-wrap:anywhere}
+.p-run{display:flex;justify-content:space-between;gap:10px;font-size:calc(7.5pt*var(--k,1));color:#A1A1AA;padding-bottom:5px;border-bottom:1px solid #ECECEF;margin-bottom:12px}
 .p-row{display:grid;gap:10px;margin-bottom:10px;align-items:start}
 .p-col{display:flex;flex-direction:column;gap:10px;min-width:0}
 .p-sec{border:1px solid #E6E6EA;border-radius:9px;padding:9px 12px 8px}
-.p-sec-head{display:flex;align-items:center;gap:6px;font-weight:800;font-size:10.5pt;margin-bottom:4px;letter-spacing:-.02em}
+.p-sec-head{display:flex;align-items:center;gap:6px;font-weight:800;font-size:calc(10.5pt*var(--k,1));margin-bottom:4px;letter-spacing:-.02em}
 .p-dot{width:7px;height:7px;border-radius:2px;flex:none}
-.p-hint{font-weight:500;color:#A1A1AA;font-size:8pt;margin-left:2px}
+.p-hint{font-weight:500;color:#A1A1AA;font-size:calc(8pt*var(--k,1));margin-left:2px}
 .p-entry{display:flex;gap:8px;padding:4px 0;border-top:1px solid #F1F1F3}
 .p-words{width:100%;border-collapse:collapse;table-layout:fixed}
-.p-words th{font-size:7.5pt;color:#A1A1AA;font-weight:700;text-align:left;padding:1px 6px 3px;border-bottom:1px solid #ECECEF}
+.p-words th{font-size:calc(7.5pt*var(--k,1));color:#A1A1AA;font-weight:700;text-align:left;padding:1px 6px 3px;border-bottom:1px solid #ECECEF}
 .p-words th:first-child,.p-words td:first-child{padding-left:0}
 .p-words th:nth-child(1){width:30%}.p-words th:nth-child(3){width:12mm;text-align:right;padding-right:0}
 .p-words td{padding:4px 6px;border-top:1px solid #F1F1F3;vertical-align:top}
 .p-words tbody tr:first-child td{border-top:0}
 .p-words .w{font-weight:700;overflow-wrap:anywhere}
 .p-words .m{border-left:1px solid #ECECEF}
-.p-words .pg{text-align:right;padding-right:0;color:#A1A1AA;font-size:8pt;white-space:nowrap}
-.p-words .p-wgrp td{font-weight:800;font-size:9pt;color:#3F3F46;padding:7px 0 3px;border-top:1px solid #E6E6EA}
+.p-words .pg{text-align:right;padding-right:0;color:#A1A1AA;font-size:calc(8pt*var(--k,1));white-space:nowrap}
+.p-words .p-wgrp td{font-weight:800;font-size:calc(9pt*var(--k,1));color:#3F3F46;padding:7px 0 3px;border-top:1px solid #E6E6EA}
 .p-grp{margin:2px 0}
-.p-grp-title{display:flex;align-items:center;gap:6px;font-weight:800;font-size:9.4pt;color:#3F3F46;padding:6px 0 2px;border-top:1px solid #ECECEF}
+.p-grp-title{display:flex;align-items:center;gap:6px;font-weight:800;font-size:calc(9.4pt*var(--k,1));color:#3F3F46;padding:6px 0 2px;border-top:1px solid #ECECEF}
 .p-grp-title::before{content:"";width:3px;height:11px;border-radius:2px;background:#C4C4CC;flex:none}
 .p-grp .p-entry{margin-left:9px;padding-left:0}
 .p-entry:first-child{border-top:0}
 .p-text{flex:1;min-width:0}
-.p-page{color:#A1A1AA;font-size:8pt;white-space:nowrap;padding-top:1px}
+.p-page{color:#A1A1AA;font-size:calc(8pt*var(--k,1));white-space:nowrap;padding-top:1px}
 .p-check{width:12px;height:12px;border:1.2px solid #A1A1AA;border-radius:3px;flex:none;margin-top:3px;font-size:8pt;line-height:9px;text-align:center;color:#fff;font-weight:800}
 .p-check.on{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
 .p-done .p-text{color:#A1A1AA;text-decoration:line-through}
@@ -795,23 +968,30 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
 .p-info{display:flex;gap:14px;align-items:flex-start}
 .p-cover{width:30mm;border-radius:5px;border:1px solid #E6E6EA;flex:none;display:block}
 .p-info-main{flex:1;min-width:0}
-.p-title{font-size:17pt;font-weight:800;line-height:1.3;letter-spacing:-.035em;margin:2px 0 6px}
-.p-frow{display:grid;grid-template-columns:22mm minmax(0,1fr);gap:8px;padding:2px 0;border-bottom:1px solid #F3F3F5;font-size:9pt}
+.p-title{font-size:calc(17pt*var(--k,1));font-weight:800;line-height:1.3;letter-spacing:-.035em;margin:2px 0 6px}
+.p-frow{display:grid;grid-template-columns:22mm minmax(0,1fr);gap:8px;padding:2px 0;border-bottom:1px solid #F3F3F5;font-size:calc(9pt*var(--k,1))}
 .p-frow .k{color:#8B8B93;font-weight:600}
 .p-frow .v{white-space:pre-wrap;min-width:0}
-.p-tag{display:inline-block;padding:0 6px;border-radius:99px;background:#F1F1F3;font-size:8pt;margin:0 3px 2px 0}
+.p-tag{display:inline-block;padding:0 6px;border-radius:99px;background:#F1F1F3;font-size:calc(8pt*var(--k,1));margin:0 3px 2px 0}
 .p-map{border:1px solid #F0F0F2;border-radius:8px;padding:4px;margin:4px 0 8px}
-.p-chars{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:8.6pt}
-.p-chars h5{margin:2px 0 2px;font-size:8pt;color:#8B8B93}
+.p-chars{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:calc(8.6pt*var(--k,1))}
+.p-chars h5{margin:2px 0 2px;font-size:calc(8pt*var(--k,1));color:#8B8B93}
 .p-chars ul{margin:0;padding:0;list-style:none}
 .p-chars li{padding:2px 0;border-bottom:1px solid #F3F3F5}
 .p-chars .r{color:#8B8B93}
-.p-foot{margin-top:10px;font-size:7.5pt;color:#A1A1AA;text-align:right}
-.p-cover-title{font-size:30pt;font-weight:800;letter-spacing:-.045em;margin:24mm 0 2px}
-.p-sub{color:#8B8B93;font-size:10pt}
-.p-toc{width:100%;border-collapse:collapse;font-size:9.5pt;margin-top:12mm}
-.p-toc th{text-align:left;font-size:8.5pt;color:#8B8B93;border-bottom:1.5px solid #18181B;padding:6px}
+.p-foot{margin-top:10px;font-size:calc(7.5pt*var(--k,1));color:#A1A1AA;text-align:right}
+.p-cover-title{font-size:calc(30pt*var(--k,1));font-weight:800;letter-spacing:-.045em;margin:24mm 0 2px}
+.p-sub{color:#8B8B93;font-size:calc(10pt*var(--k,1))}
+.p-toc{width:100%;border-collapse:collapse;font-size:calc(9.5pt*var(--k,1));margin-top:12mm}
+.p-toc th{text-align:left;font-size:calc(8.5pt*var(--k,1));color:#8B8B93;border-bottom:1.5px solid #18181B;padding:6px}
 .p-toc td{padding:7px 6px;border-bottom:1px solid #ECECEF;vertical-align:middle}
+.p-sent{margin:2px 0 1px;padding-left:7px;border-left:1.5px solid #E1E1E6;color:#71717A;font-size:calc(8.6pt*var(--k,1));white-space:pre-wrap}
+.p-sent .w-hit{color:#3F3F46;font-weight:700}
+.p-words .pg .p-chap{display:block;white-space:normal;line-height:1.35}
+.p-chpart{font-weight:800;font-size:calc(9.8pt*var(--k,1));color:#18181B;padding:8px 0 1px;border-top:1.5px solid #D4D4DA;letter-spacing:-.02em}
+.p-chpart+.p-grp .p-grp-title{border-top:0}
+.p-words .p-wpart td{font-weight:800;font-size:calc(9.8pt*var(--k,1));color:#18181B;padding:9px 0 2px;border-top:1.5px solid #D4D4DA}
+.p-words .p-wpart+.p-wgrp td{border-top:0}
 @media print{
   @page{size:A4;margin:13mm 12mm}
   html,body{background:#fff}
@@ -819,7 +999,7 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
   #printRoot{display:block}
   .p-book+.p-book{break-before:page}
   .p-sec,.p-entry,.p-words tr,.p-frow,.p-info,.p-map,.p-toc tr,.p-chars li{break-inside:avoid}
-  .p-sec-head,.p-grp-title{break-after:avoid}
+  .p-sec-head,.p-grp-title,.p-chpart{break-after:avoid}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
@@ -831,6 +1011,7 @@ input[type=date].fin{min-width:0;font-variant-numeric:tabular-nums}
       <div class="ab-left" id="abLeft"></div>
       <div class="ab-right">
         <button class="savestat" id="saveStat" data-act="saveLog" title="자동 저장 기록 보기"><span class="dot"></span><span class="st-txt">불러오는 중…</span></button>
+        <button class="btn sm save-btn" id="btnSave" data-act="manualSave" title="지금 저장 (Ctrl/⌘+S)" aria-label="지금 저장"></button>
         <button class="icon-btn" data-act="dataMenu" id="btnData" title="가져오기 · 내보내기" aria-label="가져오기 · 내보내기"></button>
         <button class="icon-btn" data-act="settings" id="btnSettings" title="설정" aria-label="설정"></button>
       </div>
@@ -938,6 +1119,7 @@ const ICONS = {
   task: '<rect x="3" y="4" width="7" height="7" rx="1.6"/><path d="M4.9 7.6l1.3 1.3 2.2-2.4M14 7.5h7"/><rect x="3" y="13.5" width="7" height="7" rx="1.6"/><path d="M14 17h7"/>',
   quote: '<path d="M4 11.5h4.5V17H4zM4 11.5C4 8 5.5 6.5 8.5 6M13.5 11.5H18V17h-4.5zM13.5 11.5c0-3.5 1.5-5 4.5-5.5"/>',
   code: '<path d="M8.5 7.5L4 12l4.5 4.5M15.5 7.5L20 12l-4.5 4.5"/>',
+  save: '<path d="M5 3.5h11.2L20 7.3V19a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19V5a1.5 1.5 0 0 1 1-1.5z"/><path d="M8 3.5v5h7v-5M7.5 20.5v-6.5h9v6.5"/>',
   help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.8M12 17.3h.01"/>',
 };
 function icon(name, size = 18) { return `<svg class="ic" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ''}</svg>`; }
@@ -1394,7 +1576,21 @@ function normalizeSettings(x) {
   out.secColors = {}; Object.keys(DEFAULT_SEC_COLORS).forEach(t => { out.secColors[t] = isColor(sc[t]) ? sc[t] : DEFAULT_SEC_COLORS[t]; });
   out.accent = isColor(s.accent) ? s.accent : null;
   out.secStyle = SEC_STYLES.some(o => o.v === s.secStyle) ? s.secStyle : 'dot';
+  out.pdf = normPdf(s.pdf);
   return out;
+}
+/* ── PDF 상세 설정 ── */
+const PDF_DEF = { fs: 10, lh: 'normal', margin: 'normal', cols: 'layout', cover: true, map: true, sent: true, page: true, chap: true, byCh: false, head: true };
+const PDF_LH = { tight: 1.45, normal: 1.6, loose: 1.85 };
+const PDF_MARGIN = { narrow: 8, normal: 12, wide: 18 };
+function normPdf(x) {
+  const p = (x && typeof x === 'object' && !Array.isArray(x)) ? x : {}, o = Object.assign({}, p);
+  o.fs = clamp(Math.round((parseFloat(p.fs) || PDF_DEF.fs) * 2) / 2, 8, 14);
+  o.lh = PDF_LH[p.lh] ? p.lh : PDF_DEF.lh;
+  o.margin = PDF_MARGIN[p.margin] ? p.margin : PDF_DEF.margin;
+  o.cols = p.cols === 'one' ? 'one' : 'layout';
+  ['cover', 'map', 'sent', 'page', 'chap', 'byCh', 'head'].forEach(k => { o[k] = typeof p[k] === 'boolean' ? p[k] : PDF_DEF[k]; });
+  return o;
 }
 function applyTheme() {
   const r = document.documentElement.style, a = accentHex(), keys = ['--accent', '--accent-ink', '--accent-soft', '--accent-line', '--accent-fg'];
@@ -1496,7 +1692,7 @@ const FILTERS = [{ v: 'all', l: '전체' }, { v: '읽는 중', l: '읽는 중' }
 
 function emptyValue(t) { return t === 'rating' ? 0 : t === 'period' ? { start: '', end: '' } : ''; }
 function newEntry(text = '', page = '') { return { id: uid('e'), text, page, done: false }; }
-function newWord(word = '', text = '', page = '') { return { id: uid('e'), word, text, page, done: false }; }
+function newWord(word = '', text = '', page = '', sentence = '') { return { id: uid('e'), word, text, page, done: false, sentence }; }
 function freshEntry(type) { return type === 'words' ? newWord() : newEntry(); }
 function wordSortKey(e) { return String(e.word || '').trim(); }
 /* ── 카테고리(접고 펼치는 묶음): entries 안에 { kind:'group', title, collapsed, items:[...] } ── */
@@ -1512,7 +1708,35 @@ function findNode(s, id) {
   }
   return null;
 }
-function itemFilled(s, e) { return s.type === 'words' ? !!(String(e.word || '').trim() || String(e.text || '').trim()) : !!String(e.text || '').trim(); }
+function itemFilled(s, e) { return s.type === 'words' ? !!(String(e.word || '').trim() || String(e.text || '').trim() || String(e.sentence || '').trim()) : !!String(e.text || '').trim(); }
+/* ── 챕터(목차): b.chapters = [{ id, kind:'part'|'ch', title }] · 메모·단어의 ch = 고른 챕터(또는 파트) id ── */
+const CH_MAX = 400;
+function newChapter(kind = 'ch', title = '') { return { id: uid('c'), kind: kind === 'part' ? 'part' : 'ch', title }; }
+function chapters(b) { return (b && Array.isArray(b.chapters)) ? b.chapters : []; }
+function chapterOf(b, id) { return id ? chapters(b).find(c => c.id === id) || null : null; }
+function chLabel(c) { return c ? (String(c.title || '').trim() || (c.kind === 'part' ? '이름 없는 파트' : '이름 없는 챕터')) : ''; }
+/** 챕터가 속한 파트 (목차에서 바로 앞에 있는 파트) */
+function chPartOf(b, c) { const L = chapters(b); if (!c || c.kind === 'part') return null; for (let i = L.indexOf(c) - 1; i >= 0; i--) if (L[i].kind === 'part') return L[i]; return null; }
+function chFull(b, c) { const p = chPartOf(b, c); return p ? `${chLabel(p)} · ${chLabel(c)}` : chLabel(c); }
+function nextChTitle(b, kind) { const n = chapters(b).filter(c => c.kind === kind).length + 1; return kind === 'part' ? `${n}부` : `${n}장`; }
+/** 메모를 목차 순서로 묶음 → [{ ch, items }] · 챕터를 고르지 않은 메모는 맨 끝(ch: null) */
+function groupByChapter(b, items) {
+  const L = chapters(b), known = new Set(L.map(c => c.id)), buckets = new Map(), none = [];
+  items.forEach(e => { if (e.ch && known.has(e.ch)) { if (!buckets.has(e.ch)) buckets.set(e.ch, []); buckets.get(e.ch).push(e); } else none.push(e); });
+  const out = L.filter(c => buckets.has(c.id)).map(c => ({ ch: c, items: buckets.get(c.id) }));
+  if (none.length) out.push({ ch: null, items: none });
+  return out;
+}
+function chUseCount(b, id) { let n = 0; Object.values(b.sections).forEach(s => { if (s.entries) allItems(s).forEach(e => { if (e.ch === id) n++; }); }); return n; }
+/** 단어가 쓰인 문장에서 그 단어를 굵게 (기본형 '~다', 괄호 속 한자도 고려) */
+function hiWord(sentence, word) {
+  const txt = String(sentence || ''), w = String(word || '').trim(); if (!w) return esc(txt);
+  const keys = new Set(); const add = k => { k = k.trim(); if (k.length) keys.add(k); if (k.length > 1 && /다$/.test(k)) keys.add(k.slice(0, -1)); };
+  add(w); add(w.replace(/\s*[(（\[].*?[)）\]]\s*/g, ' '));
+  const list = [...keys].sort((a, c) => c.length - a.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  let rx; try { rx = new RegExp('(' + list.join('|') + ')', 'gi'); } catch (e) { return esc(txt); }
+  return txt.split(rx).map((part, i) => i % 2 ? `<b class="w-hit">${esc(part)}</b>` : esc(part)).join('');
+}
 /** 그룹 위치는 그대로 두고, 그룹 사이사이의 메모끼리 + 그룹 안의 메모끼리 정렬 */
 function sortRuns(list, cmp) {
   const out = []; let run = [];
@@ -1564,6 +1788,11 @@ function normalizeBook(b) {
   b.kind = b.kind === 'novel' ? 'novel' : 'general';
   b.createdAt = okDate(b.createdAt) || n; b.updatedAt = okDate(b.updatedAt) || b.createdAt;
   b.cover = (typeof b.cover === 'string' && b.cover.length < 12e6 && COVER_RX.test(b.cover)) ? b.cover : null;
+  const chSeen = new Set(), chMap = new Map();
+  b.chapters = (Array.isArray(b.chapters) ? b.chapters : []).filter(c => c && typeof c === 'object' && !Array.isArray(c)).slice(0, CH_MAX).map(c => {
+    const id = safeId(c.id, 'c', chSeen); if (typeof c.id === 'string' && !chMap.has(c.id)) chMap.set(c.id, id);
+    return Object.assign({}, c, { id, kind: c.kind === 'part' ? 'part' : 'ch', title: String(c.title ?? '').replace(/\s*[\r\n]+\s*/g, ' ').slice(0, 200) });
+  });
   const secs = (b.sections && typeof b.sections === 'object' && !Array.isArray(b.sections)) ? b.sections : {};
   const out = {}, secMap = new Map(), secSeen = new Set(), entSeen = new Set();
   Object.entries(secs).forEach(([k, s]) => {
@@ -1593,13 +1822,21 @@ function normalizeBook(b) {
       const edges = (Array.isArray(m.edges) ? m.edges : []).filter(e => e && typeof e === 'object' && nMap.has(e.from) && nMap.has(e.to) && nMap.get(e.from) !== nMap.get(e.to)).map(e => ({ id: safeId(e.id, 'l', eSeen), from: nMap.get(e.from), to: nMap.get(e.to), label: String(e.label ?? ''), dir: ['none', 'forward', 'both'].includes(e.dir) ? e.dir : 'forward', style: e.style === 'dashed' ? 'dashed' : 'solid' }));
       s.map = { nodes, edges }; delete s.entries; delete s.fields;
     } else {
-      const normItem = e => { const ne = { id: safeId(e.id, 'e', entSeen), text: String(e.text ?? '').replace(/\r\n?/g, '\n'), page: String(e.page ?? ''), done: !!e.done }; if (s.type === 'words') ne.word = String(e.word ?? '').replace(/\s*[\r\n]+\s*/g, ' '); return ne; };
+      const normItem = e => {   // 모르는 필드도 그대로 보존
+        const ne = Object.assign({}, e, { id: safeId(e.id, 'e', entSeen), text: String(e.text ?? '').replace(/\r\n?/g, '\n'), page: String(e.page ?? ''), done: !!e.done });
+        delete ne.kind; delete ne.items;
+        if (s.type === 'words') { ne.word = String(e.word ?? '').replace(/\s*[\r\n]+\s*/g, ' '); ne.sentence = String(e.sentence ?? '').replace(/\r\n?/g, '\n'); }
+        const ch = typeof e.ch === 'string' ? (chMap.get(e.ch) || e.ch) : ''; if (ch && SAFE_ID.test(ch)) ne.ch = ch; else delete ne.ch;
+        return ne;
+      };
       const normList = (arr, depth) => (Array.isArray(arr) ? arr : []).filter(e => e && typeof e === 'object' && !Array.isArray(e)).flatMap(e => {
         if (e.kind !== 'group') return [normItem(e)];
         if (depth > 0) return normList(e.items, depth);            // 카테고리 안의 카테고리는 펼쳐서 한 단계로
         return [{ id: safeId(e.id, 'g', entSeen), kind: 'group', title: String(e.title ?? '').replace(/\s*[\r\n]+\s*/g, ' ').slice(0, 200), collapsed: !!e.collapsed, items: normList(e.items, 1) }];
       });
       s.entries = normList(s.entries, 0);
+      if (s.byCh !== undefined) s.byCh = !!s.byCh;
+      if (s.sentHide !== undefined) s.sentHide = !!s.sentHide;
       delete s.fields; delete s.map;
     }
     out[s.id] = s;
@@ -2074,7 +2311,7 @@ function openMenu(anchor, items) {
     if (!it) return;
     if (it === '-') { m.insertAdjacentHTML('beforeend', '<div class="menu-sep"></div>'); return; }
     if (it.header) { m.insertAdjacentHTML('beforeend', `<div class="menu-h">${it.header}</div>`); return; }
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'menu-item' + (it.danger ? ' danger' : ''); b.disabled = !!it.disabled; b.setAttribute('role', 'menuitem');
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'menu-item' + (it.danger ? ' danger' : '') + (it.on ? ' on' : '') + (it.cls ? ' ' + it.cls : ''); b.disabled = !!it.disabled; b.setAttribute('role', 'menuitem');
     b.innerHTML = `${it.icon ? icon(it.icon, 17) : '<span class="ic-sp"></span>'}<span>${it.label}</span>${it.hint ? `<small>${it.hint}</small>` : ''}`;
     b.onclick = (e) => { e.stopPropagation(); closeMenu(); if (it.onClick) it.onClick(); };
     m.append(b);
@@ -2084,6 +2321,7 @@ function openMenu(anchor, items) {
   let left = r.right - mw; if (left < 8) left = Math.min(Math.max(8, r.left), innerWidth - mw - 8);
   let top = r.bottom + 6; if (top + mh > innerHeight - 8) top = Math.max(8, r.top - mh - 6);
   m.style.left = left + 'px'; m.style.top = top + 'px';
+  const on = m.querySelector('.menu-item.on'); if (on && m.scrollHeight > m.clientHeight) m.scrollTop = Math.max(0, on.offsetTop - m.clientHeight / 2);
   menuEl = m; menuAnchor = anchor;
   menuScrollY = window.scrollY;
   // 메뉴는 click에서 열리므로 그 클릭의 pointerdown은 이미 지나감 → 바로 연결해도 안전
@@ -2161,11 +2399,11 @@ function filteredBooks() {
   return arr;
 }
 function bookSearchText(b) {
-  const parts = [];
+  const parts = chapters(b).map(c => c.title);
   Object.values(b.sections).forEach(s => {
     parts.push(s.title);
     if (s.fields) s.fields.forEach(f => parts.push(typeof f.value === 'object' ? '' : String(f.value)));
-    if (s.entries) { allGroups(s).forEach(g => parts.push(g.title)); allItems(s).forEach(e => parts.push(e.word || '', e.text)); }
+    if (s.entries) { allGroups(s).forEach(g => parts.push(g.title)); allItems(s).forEach(e => parts.push(e.word || '', e.text, e.sentence || '')); }
     if (s.map) { s.map.nodes.forEach(n => parts.push(n.name, n.role, n.desc)); s.map.edges.forEach(e => parts.push(e.label)); }
   });
   return parts.join(' ').toLowerCase();
@@ -2254,6 +2492,7 @@ function renderBook(b) {
       <div class="bt-actions">
         <button class="btn" data-act="addSectionEnd" title="섹션 추가">${icon('plus', 16)}<span>섹션</span></button>
         <button class="btn ${ui.layoutEdit ? 'on' : ''}" data-act="toggleLayout" aria-pressed="${ui.layoutEdit}" title="레이아웃 편집">${icon(ui.layoutEdit ? 'check' : 'layout', 16)}<span>${ui.layoutEdit ? '편집 완료' : '레이아웃'}</span></button>
+        <button class="btn" data-act="chapters" title="${chapters(b).length ? '챕터별 모아 보기' : '목차 · 챕터 만들기'}">${icon('list', 16)}<span>챕터</span></button>
         <button class="btn" data-act="pdfBook" title="PDF로 내보내기">${icon('file', 16)}<span>PDF</span></button>
         <button class="icon-btn" data-act="bookMenu" title="더보기" aria-label="더보기">${icon('more')}</button>
       </div>
@@ -2296,7 +2535,7 @@ function secHTML(b, s) {
   const d = SEC[s.type] || SEC.custom;
   const hint = d.hint && s.title === d.title ? `<span class="sec-hint">${d.hint}</span>` : '';
   const tools = s.type === 'info' ? `<button class="btn ghost sm sec-tool" data-act="fieldSettings" title="필드 설정">${icon('settings', 15)}<span>필드 설정</span></button>` : '';
-  return `<article class="sec sec-${s.type}" data-sec="${s.id}" style="${secVars(s)}">
+  return `<article class="sec sec-${s.type}${s.type === 'words' && s.sentHide ? ' sent-hide' : ''}" data-sec="${s.id}" style="${secVars(s)}">
     <header class="sec-head">
       <span class="grip sec-handle" title="끌어서 이동">${icon('grip', 16)}</span>
       <span class="sec-dot"></span>
@@ -2305,16 +2544,25 @@ function secHTML(b, s) {
       <button class="icon-btn sm" data-act="secMenu" title="섹션 메뉴" aria-label="섹션 메뉴">${icon('more', 18)}</button>
     </header>
     <div class="sec-summary">${secSummary(b, s)}</div>
-    <div class="sec-body">${s.type === 'info' ? infoHTML(b, s) : s.type === 'characters' ? mapHTML(s) : entriesHTML(s)}</div>
+    <div class="sec-body">${s.type === 'info' ? infoHTML(b, s) : s.type === 'characters' ? mapHTML(s) : entriesHTML(b, s)}</div>
   </article>`;
 }
-function itemHTML(s, e) {
-  const ctl = `<div class="entry-ctl"><span class="grip entry-handle eh-ctl" title="끌어서 순서 변경">${icon('grip', 14)}</span><input class="entry-page" value="${esc(e.page)}" placeholder="p." inputmode="numeric" aria-label="페이지" title="페이지"><button type="button" class="icon-btn xs entry-del" data-act="delEntry" title="삭제" aria-label="${s.type === 'words' ? '단어' : '메모'} 삭제">${icon('x', 14)}</button></div>`;
-  if (s.type === 'words') return `<li class="entry wentry" data-entry="${e.id}">
+/** 메모·단어 옆 챕터 버튼 (책에 목차가 있을 때만) */
+function chChipHTML(b, e) {
+  if (!chapters(b).length) return '';
+  const c = chapterOf(b, e.ch), full = c ? esc(chFull(b, c)) : '';
+  return `<button type="button" class="entry-ch${c ? ' has' : ''}${c && c.kind === 'part' ? ' is-part' : ''}" data-act="pickCh" title="${c ? '챕터: ' + full : '챕터 고르기'}" aria-label="${c ? `챕터 ${full} · 바꾸기` : '챕터 고르기'}">${c ? esc(chLabel(c)) : '장'}</button>`;
+}
+function itemHTML(b, s, e) {
+  const words = s.type === 'words', sent = String(e.sentence || ''), hasSent = !!sent.trim();
+  const sentBtn = words ? `<button type="button" class="icon-btn xs entry-sbtn${hasSent ? ' has' : ''}" data-act="sentBtn" title="${hasSent ? '쓰인 문장 보기' : '쓰인 문장 추가'}" aria-label="${hasSent ? '쓰인 문장 보기' : '쓰인 문장 추가'}">${icon('quote', 14)}</button>` : '';
+  const ctl = `<div class="entry-ctl"><span class="grip entry-handle eh-ctl" title="끌어서 순서 변경">${icon('grip', 14)}</span>${chChipHTML(b, e)}${sentBtn}<input class="entry-page" value="${esc(e.page)}" placeholder="p." inputmode="numeric" aria-label="페이지" title="페이지"><button type="button" class="icon-btn xs entry-del" data-act="delEntry" title="삭제" aria-label="${words ? '단어' : '메모'} 삭제">${icon('x', 14)}</button></div>`;
+  if (words) return `<li class="entry wentry${hasSent ? ' has-sent' : ''}" data-entry="${e.id}">
       <span class="grip entry-handle eh-main" title="끌어서 순서 변경">${icon('grip', 14)}</span>
       <textarea class="entry-word" rows="1" placeholder="단어" aria-label="단어" spellcheck="false">${esc(e.word || '')}</textarea>
       ${mdxHTML(e.text, `<textarea class="entry-text" rows="1" placeholder="뜻" aria-label="뜻">${esc(e.text)}</textarea>`)}
       ${ctl}
+      <div class="w-sent">${icon('quote', 13)}<textarea class="entry-sent" rows="1" placeholder="이 단어가 쓰인 문장" aria-label="단어가 쓰인 문장" spellcheck="false">${esc(sent)}</textarea></div>
     </li>`;
   const d = SEC[s.type] || SEC.custom, act = s.type === 'action';
   return `<li class="entry ${act && e.done ? 'done' : ''}" data-entry="${e.id}">
@@ -2324,7 +2572,7 @@ function itemHTML(s, e) {
       ${ctl}
     </li>`;
 }
-function groupHTML(s, g) {
+function groupHTML(b, s, g) {
   const words = s.type === 'words', unit = words ? '단어' : '메모', n = g.items.filter(e => itemFilled(s, e)).length;
   return `<li class="grp${g.collapsed ? ' collapsed' : ''}" data-grp="${g.id}">
     <div class="grp-head">
@@ -2335,17 +2583,36 @@ function groupHTML(s, g) {
       <button type="button" class="icon-btn xs grp-more" data-act="grpMenu" title="카테고리 메뉴" aria-label="카테고리 메뉴">${icon('more', 15)}</button>
     </div>
     <div class="grp-body">
-      <ul class="entries${words ? ' words' : ''}" data-sec="${s.id}" data-grp="${g.id}" data-kind="${words ? 'words' : 'notes'}">${g.items.map(e => itemHTML(s, e)).join('')}</ul>
+      <ul class="entries${words ? ' words' : ''}" data-sec="${s.id}" data-grp="${g.id}" data-kind="${words ? 'words' : 'notes'}">${g.items.map(e => itemHTML(b, s, e)).join('')}</ul>
       <p class="grp-hint">${unit}를 이곳으로 끌어 놓거나 아래에서 추가하세요</p>
       <button type="button" class="add-entry grp-add" data-act="grpAdd" aria-label="이 카테고리에 ${unit} 추가">${icon('plus', 14)} ${unit} 추가</button>
     </div>
   </li>`;
 }
-function entriesHTML(s) {
+function entriesHTML(b, s) {
   const words = s.type === 'words', unit = words ? '단어' : '메모';
   const head = words && allItems(s).length ? `<div class="w-head" aria-hidden="true"><span class="wh-g"></span><span class="wh-w">단어</span><span class="wh-m">뜻</span><span class="wh-p">쪽</span><span class="wh-x"></span></div>` : '';
-  return `${head}<ul class="entries${words ? ' words' : ''}" data-sec="${s.id}" data-root="1" data-kind="${words ? 'words' : 'notes'}">${s.entries.map(e => isGroup(e) ? groupHTML(s, e) : itemHTML(s, e)).join('')}</ul>
+  if (s.byCh && chapters(b).length) return chViewHTML(b, s, head);
+  return `${head}<ul class="entries${words ? ' words' : ''}" data-sec="${s.id}" data-root="1" data-kind="${words ? 'words' : 'notes'}">${s.entries.map(e => isGroup(e) ? groupHTML(b, s, e) : itemHTML(b, s, e)).join('')}</ul>
     <div class="add-btns"><button type="button" class="add-entry" data-act="addEntry" title="${unit} 추가 (Ctrl/⌘+Enter로도 추가돼요)" aria-label="${unit} 추가">${icon('plus', 15)} ${unit} 추가</button><button type="button" class="add-entry add-grp" data-act="addGroup" title="접고 펼 수 있는 카테고리로 ${unit}를 묶어요" aria-label="카테고리 추가">${icon('folder', 15)} 카테고리</button></div>`;
+}
+/** 챕터별 보기: 메모를 목차 순서로 묶어서 보여 줌 (실제 순서·카테고리는 그대로) */
+function chViewHTML(b, s, head) {
+  const words = s.type === 'words', unit = words ? '단어' : '메모', kind = words ? 'words' : 'notes';
+  const groups = groupByChapter(b, allItems(s)), parts = new Set();
+  const html = groups.map(g => {
+    const c = g.ch; let pre = '';
+    if (c && c.kind === 'ch') { const p = chPartOf(b, c); if (p && !parts.has(p.id)) { parts.add(p.id); pre = `<li class="chg-part"><span>${esc(chLabel(p))}</span></li>`; } }
+    if (c && c.kind === 'part') parts.add(c.id);
+    const n = g.items.filter(e => itemFilled(s, e)).length, name = c ? esc(chLabel(c)) : '챕터 없음';
+    return `${pre}<li class="chg${c ? (c.kind === 'part' ? ' is-part' : '') : ' is-none'}" data-ch="${c ? c.id : ''}">
+      <div class="chg-head"><span class="chg-title">${name}</span><span class="grp-count" title="${unit} ${n}개">${n}</span><button type="button" class="icon-btn xs chg-add" data-act="chAddEntry" data-ch="${c ? c.id : ''}" title="‘${name}’에 ${unit} 추가" aria-label="‘${name}’에 ${unit} 추가">${icon('plus', 15)}</button></div>
+      <ul class="entries${words ? ' words' : ''}" data-sec="${s.id}" data-nosort="1" data-kind="${kind}">${g.items.map(e => itemHTML(b, s, e)).join('')}</ul>
+    </li>`;
+  }).join('');
+  return `${head}<div class="chv-bar">${icon('list', 14)}<span class="chv-t"><span class="chv-long">챕터별로 보는 중 <small>· 순서 바꾸기는 기본 보기에서</small></span><span class="chv-short">챕터별</span></span><button type="button" class="chv-off" data-act="chViewOff">기본 보기</button></div>
+    ${html ? `<ul class="chv" data-sec="${s.id}">${html}</ul>` : `<p class="chv-empty">아직 ${unit}가 없어요</p>`}
+    <div class="add-btns"><button type="button" class="add-entry" data-act="chAddPick" aria-label="${unit} 추가 (챕터 고르기)">${icon('plus', 15)} ${unit} 추가</button></div>`;
 }
 function infoHTML(b, s) {
   const fields = s.fields.filter(f => !f.hidden);
@@ -2390,6 +2657,7 @@ function refreshSection(b, secId) {
   return el;
 }
 function initEntrySortable(ul) {
+  if (ul.dataset.nosort) return;
   const root = ul.dataset.root === '1';
   sortable(ul, {
     handle: root ? '.entry-handle, .grp-handle' : '.entry-handle',
@@ -2437,7 +2705,7 @@ function autosize(t) {
   if (!t.getClientRects().length) return;
   t.style.height = 'auto'; t.style.height = (t.scrollHeight + t.offsetHeight - t.clientHeight) + 'px';
 }
-function autosizeAll(root) { requestAnimationFrame(() => $$('textarea.entry-text, textarea.entry-word, textarea.fin', root).forEach(autosize)); }
+function autosizeAll(root) { requestAnimationFrame(() => $$('textarea.entry-text, textarea.entry-word, textarea.entry-sent, textarea.fin', root).forEach(autosize)); }
 function updateGrpCount(s, g) {
   const c = $(`.sec[data-sec="${s.id}"] .grp[data-grp="${g.id}"] .grp-count`, view); if (!c) return;
   const n = g.items.filter(e => itemFilled(s, e)).length; c.textContent = n; c.title = `${s.type === 'words' ? '단어' : '메모'} ${n}개`;
@@ -2448,7 +2716,7 @@ function addGroupTo(b, s) {
   if (i) { i.focus(); i.scrollIntoView({ block: 'nearest' }); }
 }
 function grpAddItem(b, s, g) {
-  g.collapsed = false; const en = freshEntry(s.type); g.items.push(en); commit(s.type === 'words' ? '단어 추가' : '메모 추가', b);
+  g.collapsed = false; const en = freshEntry(s.type), last = g.items[g.items.length - 1]; if (last && last.ch) en.ch = last.ch; g.items.push(en); commit(s.type === 'words' ? '단어 추가' : '메모 추가', b);
   const el = refreshSection(b, s.id), ta = el && $(`[data-entry="${en.id}"] ${s.type === 'words' ? '.entry-word' : '.entry-text'}`, el); if (ta) ta.focus();
 }
 function setAllCollapsed(b, s, v) {
@@ -2471,6 +2739,230 @@ async function deleteGroup(b, s, g) {
     body: `<p class="confirm-msg">안에 ${unit} ${n}개가 있어요. 어떻게 할까요?\n‘${unit}는 남기기’를 고르면 카테고리만 지워지고 ${unit}는 그 자리에 그대로 남아요.</p>`,
     actions: [{ label: '취소', focus: true }, { label: `${unit}는 남기기`, onClick: () => remove(true) }, { label: '모두 삭제', danger: true, onClick: () => remove(false) }]
   });
+}
+/* ════════════════════════════════════════════════════════════
+   4-b. 챕터(목차) · 단어가 쓰인 문장 · 직접 저장
+   ════════════════════════════════════════════════════════════ */
+function chMenuItems(b, cur, pick, o = {}) {
+  return [
+    { header: o.header || '챕터 고르기' },
+    { icon: cur === '' ? 'check' : null, on: cur === '', label: o.noneLabel || '챕터 없음', cls: 'mi-none', onClick: () => pick(null) },
+    ...chapters(b).map(c => ({ icon: cur === c.id ? 'check' : null, on: cur === c.id, label: esc(chLabel(c)), cls: c.kind === 'part' ? 'mi-part' : chPartOf(b, c) ? 'mi-ch in-part' : 'mi-ch', onClick: () => pick(c) })),
+    '-',
+    { icon: 'edit', label: '목차 편집', onClick: () => openToc(b) },
+  ];
+}
+function flashEntry(secId, id) {
+  const li = $(`.sec[data-sec="${secId}"] [data-entry="${id}"]`, view); if (!li) return null;
+  li.classList.remove('flash'); void li.offsetWidth; li.classList.add('flash'); setTimeout(() => li.classList.remove('flash'), 1600);
+  return li;
+}
+function setEntryCh(b, s, en, c) {
+  const id = c ? c.id : '';
+  if ((en.ch || '') === id) return;
+  if (id) en.ch = id; else delete en.ch;
+  commit(c ? '챕터 지정' : '챕터 지정 풀기', b);
+  if (s.byCh && chapters(b).length) { refreshSection(b, s.id); const li = flashEntry(s.id, en.id); if (li) li.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
+  const chip = $(`.sec[data-sec="${s.id}"] [data-entry="${en.id}"] .entry-ch`, view); if (chip) chip.outerHTML = chChipHTML(b, en);
+}
+/** 고른 챕터의 마지막 메모 바로 뒤에 새 메모 (그 챕터에 메모가 없으면 맨 끝) */
+function addEntryToCh(b, s, c) {
+  const en = freshEntry(s.type), key = c ? c.id : '', known = new Set(chapters(b).map(x => x.id)); if (c) en.ch = c.id;
+  let after = null; allItems(s).forEach(x => { if ((x.ch && known.has(x.ch) ? x.ch : '') === key) after = x; });
+  const loc = after && findNode(s, after.id);
+  if (loc) loc.list.splice(loc.index + 1, 0, en); else s.entries.push(en);
+  commit(s.type === 'words' ? '단어 추가' : '메모 추가', b);
+  const el = refreshSection(b, s.id), ta = el && $(`[data-entry="${en.id}"] ${s.type === 'words' ? '.entry-word' : '.entry-text'}`, el);
+  if (ta) { ta.focus(); ta.scrollIntoView({ block: 'nearest' }); }
+}
+function toggleChView(b, s) {
+  if (s.byCh && chapters(b).length) { s.byCh = false; commit('기본 보기로', b); refreshSection(b, s.id); return; }
+  s.byCh = true; commit('챕터별로 묶어 보기', b);
+  if (!chapters(b).length) { openToc(b); toast('목차를 만들면 이 섹션이 챕터별로 묶여 보여요', { ms: 3600 }); return; }
+  refreshSection(b, s.id);
+}
+function sortByChapter(b, s) {
+  const idx = new Map(chapters(b).map((c, i) => [c.id, i])), key = e => idx.has(e.ch) ? idx.get(e.ch) : 1e9;
+  const pn = e => { const m = String(e.page).match(/\d+/); return m ? +m[0] : 1e9; };
+  const hold = holdBook(b);
+  s.entries = sortRuns(s.entries, (a, c) => (key(a) - key(c)) || (pn(a) - pn(c)));
+  commit('챕터 순서대로 정렬', b); refreshSection(b, s.id); offerUndo(hold, '챕터 순서대로 정렬했어요');
+}
+/** 팝업으로 보는 ‘쓰인 문장’ (섹션 메뉴에서 ‘눌러서 보기’로 바꿨을 때) */
+function openSentPop(b, s, en) {
+  const viewHTML = () => String(en.sentence || '').trim() ? `<span class="sp-q" aria-hidden="true">❝</span>${hiWord(en.sentence, en.word)}` : '<span class="sp-none">아직 적은 문장이 없어요</span>';
+  const m = modal({
+    title: `${icon('quote', 18)} 쓰인 문장`, width: 460, className: 'sent-pop',
+    body: `<div class="sp-word"><b>${esc((en.word || '').trim() || '(단어 없음)')}</b>${String(en.text || '').trim() ? `<div class="md sp-mean">${md(en.text, { static: true })}</div>` : ''}</div>
+      <div class="sp-view">${viewHTML()}</div>
+      <label class="mlabel" for="spInput">문장 적기 · 고치기</label>
+      <textarea id="spInput" class="sp-input" rows="3" placeholder="이 단어가 쓰인 문장을 적어 두세요" spellcheck="false">${esc(en.sentence || '')}</textarea>`,
+    actions: [{ label: '닫기', primary: true }],
+    onClose: () => { if (curBook() === b && b.sections[s.id]) refreshSection(b, s.id); }
+  });
+  const ta = $('.sp-input', m.el), v = $('.sp-view', m.el);
+  ta.addEventListener('input', () => { en.sentence = ta.value; v.innerHTML = viewHTML(); commit('단어가 쓰인 문장 수정', b); });
+  if (!String(en.sentence || '').trim() && !IS_TOUCH) setTimeout(() => ta.focus(), 60);
+}
+/* ── 목차 편집 ── */
+function focusEnd(inp) { inp.focus(); const n = inp.value.length; try { inp.setSelectionRange(n, n); } catch (e) { } }
+const TOC_PART_RX = /^(?:제\s*)?(?:\d+|[일이삼사오육칠팔구십]+|[IVXⅠ-Ⅻ]+)\s*부(?![가-힣])|^part\s*[\dIVX]+\b/i;
+function parseTocText(txt) {
+  return String(txt || '').split(/\r?\n/).map(l => l.replace(/^\s*[-•·*▪◦]\s+/, '').replace(/(?:\s*[.·…ㆍ]{2,}\s*|\t+)\d+\s*$/, '').replace(/\s+/g, ' ').trim()).filter(Boolean)
+    .map(l => newChapter(TOC_PART_RX.test(l) ? 'part' : 'ch', l.slice(0, 200)));
+}
+function openToc(b) {
+  let changed = false, sorter = null;
+  const rowHTML = c => {
+    const n = chUseCount(b, c.id), part = c.kind === 'part';
+    return `<li class="toc-row ${part ? 'is-part' : 'is-ch'}" data-cid="${c.id}">
+      <span class="grip toc-grip" title="끌어서 순서 변경">${icon('grip', 14)}</span>
+      <button type="button" class="toc-kind" data-toc="kind" title="눌러서 파트 ↔ 챕터 바꾸기" aria-label="${part ? '파트' : '챕터'} · 눌러서 바꾸기">${part ? '파트' : '챕터'}</button>
+      <input class="toc-title" value="${esc(c.title)}" placeholder="${part ? '파트 이름 (예: 1부)' : '챕터 이름 (예: 1장)'}" maxlength="200" autocomplete="off" spellcheck="false" aria-label="${part ? '파트' : '챕터'} 이름">
+      <span class="toc-n" title="이 항목을 고른 메모·단어 ${n}개">${n || ''}</span>
+      <button type="button" class="icon-btn xs toc-del" data-toc="del" title="삭제" aria-label="삭제">${icon('x', 14)}</button>
+    </li>`;
+  };
+  const lastNo = () => { let n = 0; chapters(b).forEach(c => { const m = c.kind === 'ch' && String(c.title).match(/(\d+)/); if (m) n = Math.max(n, +m[1]); }); return n; };
+  const m = modal({
+    title: `${icon('list', 19)} 목차 · 챕터`, width: 520, className: 'toc-modal',
+    body: `<p class="toc-intro">파트(부)와 챕터(장)를 순서대로 적어 두면, 메모·단어 옆 <span class="toc-demo">장</span> 버튼으로 챕터를 고르고 챕터별로 모아 볼 수 있어요.</p>
+      <ul class="toc-list"></ul>
+      <p class="toc-empty">아직 목차가 없어요. 아래에서 챕터나 파트를 추가해 보세요.</p>
+      <div class="toc-add"><button type="button" class="btn sm" data-toc="addCh">${icon('plus', 15)}챕터 추가</button><button type="button" class="btn sm" data-toc="addPart">${icon('plus', 15)}파트 추가</button></div>
+      <details class="toc-bulk"><summary>여러 개 한 번에 추가</summary>
+        <div class="toc-range"><input type="number" class="toc-from" inputmode="numeric" min="1" max="999" aria-label="시작 번호"><span>장부터</span><input type="number" class="toc-to" inputmode="numeric" min="1" max="999" aria-label="끝 번호"><span>장까지</span><button type="button" class="btn sm" data-toc="range">만들기</button></div>
+        <textarea class="toc-paste" rows="4" placeholder="목차를 붙여 넣으세요 (한 줄에 하나)&#10;예) 1부 어린 시절&#10;1장 두 세계&#10;2장 카인"></textarea>
+        <div class="toc-paste-ops"><span>‘1부’ · ‘제2부’ · ‘Part 3’으로 시작하는 줄은 파트가 돼요</span><button type="button" class="btn sm" data-toc="paste">목차 추가</button></div>
+      </details>`,
+    actions: [{ label: '완료', primary: true }],
+    onClose: () => { if (sorter) { try { sorter.destroy(); } catch (err) { } } if (changed && curBook() === b) renderBook(b); }
+  });
+  const list = $('.toc-list', m.el), from = $('.toc-from', m.el), to = $('.toc-to', m.el);
+  const draw = () => { list.innerHTML = chapters(b).map(rowHTML).join(''); $('.toc-empty', m.el).hidden = !!chapters(b).length; from.value = lastNo() + 1; to.value = lastNo() + 10; };
+  draw();
+  const mark = msg => { changed = true; commit(msg, b); };
+  const find = el => { const li = el && el.closest('[data-cid]'); return li ? chapters(b).find(x => x.id === li.dataset.cid) : null; };
+  const add = (items, focusLast) => {
+    if (!items.length) return;
+    if (!Array.isArray(b.chapters)) b.chapters = [];
+    const room = CH_MAX - b.chapters.length; if (room <= 0) { toast(`목차는 ${CH_MAX}개까지 만들 수 있어요`); return; }
+    const put = items.slice(0, room); b.chapters.push(...put);
+    mark(put.length > 1 ? `목차 ${put.length}개 추가` : '목차 추가'); draw();
+    if (items.length > room) toast(`목차는 ${CH_MAX}개까지라 ${room}개만 추가했어요`, { ms: 3200 });
+    const inp = $(`[data-cid="${put[put.length - 1].id}"] .toc-title`, list);
+    if (inp) { inp.scrollIntoView({ block: 'nearest' }); if (focusLast) focusEnd(inp); }
+  };
+  m.el.addEventListener('click', async ev => {
+    const btn = ev.target.closest('[data-toc]'); if (!btn) return;
+    const op = btn.dataset.toc, c = find(btn);
+    if (op === 'addCh' || op === 'addPart') { const k = op === 'addPart' ? 'part' : 'ch'; add([newChapter(k, nextChTitle(b, k))], true); }
+    else if (op === 'kind' && c) { c.kind = c.kind === 'part' ? 'ch' : 'part'; mark('목차 수정'); draw(); }
+    else if (op === 'del' && c) {
+      const n = chUseCount(b, c.id);
+      if (n && !await confirmDialog({ title: `‘${esc(chLabel(c))}’ 항목을 목차에서 지울까요?`, message: `이 항목을 고른 메모·단어 ${n}개는 그대로 남고, 챕터 지정만 풀려요.` })) return;
+      if (!chapters(b).includes(c)) return;
+      const hold = holdBook(b);
+      b.chapters = chapters(b).filter(x => x !== c);
+      Object.values(b.sections).forEach(s => { if (s.entries) allItems(s).forEach(x => { if (x.ch === c.id) delete x.ch; }); });
+      mark('목차 삭제'); draw(); offerUndo(hold, n ? `목차에서 지웠어요 (메모 ${n}개는 그대로)` : '목차에서 지웠어요');
+    }
+    else if (op === 'range') {
+      let a = clamp(parseInt(from.value, 10) || 1, 1, 999), z = clamp(parseInt(to.value, 10) || a, 1, 999); if (a > z) [a, z] = [z, a];
+      if (z - a >= 200) { toast('한 번에 200개까지 만들 수 있어요'); return; }
+      const have = new Set(chapters(b).map(x => String(x.title).trim()));
+      const items = []; for (let i = a; i <= z; i++) if (!have.has(`${i}장`)) items.push(newChapter('ch', `${i}장`));
+      if (!items.length) { toast('이미 모두 있어요'); return; }
+      add(items, false); toast(`챕터 ${items.length}개를 만들었어요`);
+    }
+    else if (op === 'paste') {
+      const ta = $('.toc-paste', m.el), items = parseTocText(ta.value);
+      if (!items.length) { toast('붙여 넣은 목차가 없어요'); ta.focus(); return; }
+      add(items, false); ta.value = ''; toast(`목차 ${items.length}개를 추가했어요`);
+    }
+  });
+  m.el.addEventListener('input', ev => {
+    const t = ev.target; if (!t.classList.contains('toc-title')) return; const c = find(t); if (!c) return;
+    c.title = t.value.replace(/\s*[\r\n]+\s*/g, ' ').slice(0, 200); mark('목차 이름 수정');
+  });
+  m.el.addEventListener('keydown', ev => {
+    const t = ev.target; if (!t.classList || !t.classList.contains('toc-title') || ev.key !== 'Enter' || ev.isComposing || ev.keyCode === 229) return;
+    ev.preventDefault();
+    const next = t.closest('[data-cid]').nextElementSibling, ni = next && $('.toc-title', next);
+    if (ni) focusEnd(ni); else add([newChapter('ch', nextChTitle(b, 'ch'))], true);
+  });
+  if (window.Sortable) sorter = Sortable.create(list, {
+    handle: '.toc-grip', draggable: '.toc-row', animation: 160, forceFallback: true, fallbackTolerance: 4, ghostClass: 'sortable-ghost',
+    onEnd: () => {
+      const by = new Map(chapters(b).map(c => [c.id, c])), ids = $$(':scope > [data-cid]', list).map(x => x.dataset.cid);
+      const next = ids.map(id => by.get(id)).filter(Boolean); chapters(b).forEach(c => { if (!next.includes(c)) next.push(c); });
+      b.chapters = next; mark('목차 순서 변경'); draw();
+    }
+  });
+  if (!chapters(b).length && !IS_TOUCH) setTimeout(() => { const f = $('[data-toc="addCh"]', m.el); if (f) f.focus(); }, 60);
+}
+/* ── 챕터별 모아 보기 ── */
+function bookTextSections(b) { const out = []; b.rows.forEach(r => r.cols.forEach(c => c.forEach(id => { const s = b.sections[id]; if (s && s.entries) out.push(s); }))); return out; }
+function openChOverview(b) {
+  const L = chapters(b), known = new Set(L.map(c => c.id)), by = new Map(), none = [];
+  bookTextSections(b).forEach(s => allItems(s).forEach(e => {
+    if (!itemFilled(s, e)) return; const k = e.ch && known.has(e.ch) ? e.ch : '';
+    if (k) { if (!by.has(k)) by.set(k, []); by.get(k).push({ s, e }); } else none.push({ s, e });
+  }));
+  const pg = e => { const v = String(e.page || '').trim().replace(/^p\.?\s*/i, ''); return v ? `<span class="chov-pg">p.${esc(v)}</span>` : ''; };
+  const itemLi = ({ s, e }) => {
+    const body = s.type === 'words'
+      ? `<div class="chov-w"><b>${esc((e.word || '').trim() || '(단어 없음)')}</b></div>${String(e.text || '').trim() ? `<div class="md">${md(e.text, { static: true })}</div>` : ''}${String(e.sentence || '').trim() ? `<div class="chov-sent">❝ ${hiWord(e.sentence, e.word)}</div>` : ''}`
+      : `<div class="md">${md(e.text, { static: true })}</div>`;
+    return `<li class="chov-it" data-go-sec="${s.id}" data-go-entry="${e.id}" role="button" tabindex="0" title="책에서 이 ${s.type === 'words' ? '단어' : '메모'}로 가기">
+      <div class="chov-meta"><span class="chov-sec" style="--c:${secColor(s)}">${esc(s.title || '이름 없음')}</span>${pg(e)}</div><div class="chov-body">${body}</div></li>`;
+  };
+  const total = [...by.values()].reduce((n, a) => n + a.length, 0);
+  const groups = L.map(c => {
+    const items = by.get(c.id) || [], part = c.kind === 'part';
+    return `<section class="chov-g${part ? ' is-part' : ''}${items.length ? '' : ' is-empty'}${!part && chPartOf(b, c) ? ' in-part' : ''}">
+      <h4><span>${esc(chLabel(c))}</span>${items.length ? `<small>${items.length}</small>` : part ? '' : '<em>기록 없음</em>'}</h4>
+      ${items.length ? `<ul>${items.map(itemLi).join('')}</ul>` : ''}</section>`;
+  }).join('');
+  const m = modal({
+    title: `${icon('book', 19)} 챕터별 모아 보기`, width: 620, className: 'chov-modal',
+    body: `<div class="chov-top"><span>챕터를 고른 기록 ${total}개${none.length ? ` · 고르지 않은 기록 ${none.length}개` : ''}</span><button type="button" class="btn sm" data-chov="toc">${icon('edit', 15)}목차 편집</button></div>
+      ${groups}
+      ${none.length ? `<details class="chov-none"><summary>챕터를 고르지 않은 기록 ${none.length}개</summary><ul>${none.map(itemLi).join('')}</ul></details>` : ''}
+      <p class="chov-tip">기록을 누르면 책의 그 자리로 가요. 챕터는 메모·단어 옆 <span class="toc-demo">장</span> 버튼으로 골라요.</p>`,
+    actions: [{ label: '닫기', primary: true }]
+  });
+  const go = it => { m.close(); goToEntry(b, it.dataset.goSec, it.dataset.goEntry); };
+  m.el.addEventListener('click', ev => {
+    if (ev.target.closest('[data-chov="toc"]')) { m.close(); setTimeout(() => openToc(b), 180); return; }
+    if (ev.target.closest('a[href]')) return;
+    const it = ev.target.closest('[data-go-entry]'); if (it) go(it);
+  });
+  m.el.addEventListener('keydown', ev => { const it = ev.target.closest && ev.target.closest('[data-go-entry]'); if (it && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); go(it); } });
+}
+function goToEntry(b, secId, id) {
+  const s = b.sections[secId]; if (!s || curBook() !== b) return;
+  const loc = findNode(s, id); if (!loc) return;
+  if (ui.layoutEdit) { ui.layoutEdit = false; renderBook(b); }
+  if (loc.group && loc.group.collapsed && !(s.byCh && chapters(b).length)) { loc.group.collapsed = false; commit('카테고리 펼치기', b); refreshSection(b, s.id); }
+  setTimeout(() => { const li = flashEntry(secId, id); if (li) li.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 190);
+}
+/* ── 직접 저장 (자동 저장은 그대로) ── */
+let manualBusy = false, saveBtnTimer = 0;
+function setSaveBtn(st) {
+  const el = $('#btnSave'); if (!el) return;
+  el.classList.toggle('done', st === 'done'); el.disabled = st === 'busy';
+  el.innerHTML = st === 'done' ? `${icon('check', 16)}<span>저장됨</span>` : st === 'busy' ? `<span class="mini-spin" aria-hidden="true"></span><span>저장 중</span>` : `${icon('save', 16)}<span>저장</span>`;
+}
+async function manualSave() {
+  if (!state || manualBusy) return;
+  if (otherTabNewer) { setSaveStatus('conflict'); showConflict(); return; }
+  manualBusy = true; clearTimeout(saveBtnTimer); setSaveBtn('busy');
+  pendingMsg = pendingMsg || '직접 저장';
+  let ok = false; try { ok = await saveNow({ force: true, flush: true }); } catch (err) { ok = false; }
+  manualBusy = false;
+  if (ok) { setSaveBtn('done'); toast('저장했어요'); saveBtnTimer = setTimeout(() => setSaveBtn(), 1800); }
+  else { setSaveBtn(); if (!otherTabNewer) toast('지금은 저장하지 못했어요. 자동으로 다시 시도할게요.'); }
 }
 let _rz; window.addEventListener('resize', () => { clearTimeout(_rz); _rz = setTimeout(() => autosizeAll(view), 150); });
 
@@ -2924,11 +3416,11 @@ document.addEventListener('keydown', e => {
     if (e.target.matches && e.target.matches('.mdx > textarea')) { e.preventDefault(); e.target.blur(); return; }
   }
   if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.code === 'KeyS' || e.key === 's' || e.key === 'S')) {
-    if (!state) { e.preventDefault(); return; } e.preventDefault(); pendingMsg = pendingMsg || '직접 저장'; saveNow({ force: true, flush: true }).then(ok => { if (ok) toast('저장했어요'); else if (!otherTabNewer) toast('지금은 저장하지 못했어요. 자동으로 다시 시도할게요.'); }); return; }
+    e.preventDefault(); if (state) manualSave(); return; }
   const t = e.target;
   if (t.classList && t.classList.contains('sec-title') && e.key === 'Enter') { if (e.isComposing || e.keyCode === 229) return; e.preventDefault(); t.blur(); return; }
   if (t.classList && t.classList.contains('grp-title') && (e.key === 'Enter' || e.key === 'Escape')) { if (e.isComposing || e.keyCode === 229) return; e.preventDefault(); t.blur(); return; }
-  if (t.classList && t.classList.contains('entry-text') && e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); addEntryAfter(t); return; }
+  if (t.classList && (t.classList.contains('entry-text') || t.classList.contains('entry-sent')) && e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); addEntryAfter(t); return; }
   if (t.classList && t.classList.contains('entry-word') && e.key === 'Enter') {
     if (e.isComposing || e.keyCode === 229) return;        // 한글 조합 중 Enter는 글자 확정에 쓰임
     e.preventDefault();
@@ -2959,6 +3451,14 @@ document.addEventListener('input', e => {
   if (t.id === 'libSearch') { ui.search = t.value; renderGrid(); return; }
   if (t.type === 'checkbox') return;
   const b = curBook(); if (!b) return;
+  if (t.classList.contains('entry-sent')) {
+    const s = b.sections[t.closest('[data-sec]').dataset.sec]; const loc = s && findNode(s, t.closest('[data-entry]').dataset.entry); const en = loc && loc.node; if (!en || isGroup(en)) return;
+    en.sentence = t.value; autosize(t);
+    const li = t.closest('.entry'), has = !!t.value.trim(); li.classList.toggle('has-sent', has);
+    const sb = $('.entry-sbtn', li); if (sb) { sb.classList.toggle('has', has); sb.title = has ? '쓰인 문장 보기' : '쓰인 문장 추가'; sb.setAttribute('aria-label', sb.title); }
+    if (loc.group) queueMicrotask(() => updateGrpCount(s, loc.group));
+    commit('단어가 쓰인 문장 수정', b); return;
+  }
   if (t.classList.contains('entry-text') || t.classList.contains('entry-page') || t.classList.contains('entry-word')) {
     const s = b.sections[t.closest('[data-sec]').dataset.sec]; const loc = s && findNode(s, t.closest('[data-entry]').dataset.entry); const en = loc && loc.node; if (!en || isGroup(en)) return;
     if (loc.group) queueMicrotask(() => updateGrpCount(s, loc.group));
@@ -3025,6 +3525,7 @@ document.addEventListener('focusout', e => {
     if (!(e.relatedTarget && w.contains(e.relatedTarget))) { if (mdPtrDown) mdPending.add(w); else setTimeout(() => mdExit(w), 0); }
     return;
   }
+  if (t.classList && t.classList.contains('entry-sent')) { const li = t.closest('.entry'); if (li && !t.value.trim()) li.classList.remove('sent-open'); return; }
   if (t.classList && t.classList.contains('sec-title')) {
     const b = curBook(); if (!b) return; const s = b.sections[t.closest('.sec').dataset.sec]; if (!s) return;
     const v = t.textContent.trim(); if (v !== s.title) { s.title = v; commit('섹션 이름 변경', b); }
@@ -3074,7 +3575,7 @@ function setRating(st, f, v, b) {
 function addEntryAfter(t) {
   const b = curBook(); const s = b.sections[t.closest('[data-sec]').dataset.sec];
   const loc = findNode(s, t.closest('[data-entry]').dataset.entry); if (!loc) return;
-  const en = freshEntry(s.type); loc.list.splice(loc.index + 1, 0, en); commit(s.type === 'words' ? '단어 추가' : '메모 추가', b);
+  const en = freshEntry(s.type); if (loc.node.ch) en.ch = loc.node.ch; loc.list.splice(loc.index + 1, 0, en); commit(s.type === 'words' ? '단어 추가' : '메모 추가', b);
   const el = refreshSection(b, s.id); const ta = el && $(`[data-entry="${en.id}"] ${s.type === 'words' ? '.entry-word' : '.entry-text'}`, el); if (ta) ta.focus();
 }
 
@@ -3145,6 +3646,11 @@ Object.assign(ACT, {
       isText && allGroups(s).length ? { icon: 'chevron', label: '모든 카테고리 펼치기', onClick: () => setAllCollapsed(b, s, false) } : null,
       s.type === 'words' ? { icon: 'sort', label: '단어 가나다순으로 정렬', onClick: () => { s.entries = sortRuns(s.entries, (a, c) => { const x = wordSortKey(a), y = wordSortKey(c); if (!x !== !y) return x ? -1 : 1; return x.localeCompare(y, 'ko'); }); commit('단어 정렬', b); refreshSection(b, s.id); toast('가나다순으로 정렬했어요'); } } : null,
       isText ? { icon: 'sort', label: s.type === 'words' ? '단어를 페이지 순으로 정렬' : '메모를 페이지 순으로 정렬', onClick: () => { const pn = e => { const m = String(e.page).match(/\d+/); return m ? +m[0] : Infinity; }; s.entries = sortRuns(s.entries, (a, c) => pn(a) - pn(c)); commit('메모 정렬', b); refreshSection(b, s.id); toast('페이지 순으로 정렬했어요'); } } : null,
+      isText ? '-' : null,
+      isText ? { icon: 'list', label: s.byCh && chapters(b).length ? '챕터 묶기 풀기 (기본 보기)' : '챕터별로 묶어 보기', onClick: () => toggleChView(b, s) } : null,
+      isText && chapters(b).length ? { icon: 'sort', label: '챕터 순서대로 정렬', onClick: () => sortByChapter(b, s) } : null,
+      s.type === 'words' ? { icon: 'quote', label: s.sentHide ? '쓰인 문장 바로 보이기 (회색)' : '쓰인 문장은 눌러서 보기 (팝업)', onClick: () => { s.sentHide = !s.sentHide; commit(s.sentHide ? '문장은 눌러서 보기' : '문장 바로 보이기', b); refreshSection(b, s.id); toast(s.sentHide ? '문장은 ❝ 버튼을 눌러서 볼 수 있어요' : '문장을 회색으로 바로 보여 줄게요'); } } : null,
+      isText ? '-' : null,
       s.type === 'info' ? null : { icon: 'copy', label: '섹션 복제', onClick: () => { const c = deep(s); c.id = uid('s'); c.title = (s.title || '섹션') + ' 사본'; if (c.entries) reIdEntries(c.entries); if (c.fields) c.fields.forEach(f => f.id = uid('f')); b.sections[c.id] = c; const loc = secOfRow(b, s.id); if (loc) loc.c.splice(loc.i + 1, 0, c.id); else b.rows.push(newRow([[c.id]])); commit('섹션 복제', b); renderBook(b); } },
       { icon: 'layout', label: '위치 바꾸기 (레이아웃 편집)', onClick: () => { ui.layoutEdit = true; renderBook(b); } },
       '-',
@@ -3178,7 +3684,7 @@ Object.assign(ACT, {
     ]);
   },
   addEntry: (el) => {
-    const { b, s } = ctxSec(el); if (!s) return; const en = freshEntry(s.type); s.entries.push(en); commit(s.type === 'words' ? '단어 추가' : '메모 추가', b);
+    const { b, s } = ctxSec(el); if (!s) return; const en = freshEntry(s.type), last = s.entries[s.entries.length - 1]; if (last && !isGroup(last) && last.ch) en.ch = last.ch; s.entries.push(en); commit(s.type === 'words' ? '단어 추가' : '메모 추가', b);
     const sec = refreshSection(b, s.id); const ta = sec && $(`[data-entry="${en.id}"] ${s.type === 'words' ? '.entry-word' : '.entry-text'}`, sec); if (ta) ta.focus();
   },
   delEntry: async (el) => {
@@ -3194,6 +3700,21 @@ Object.assign(ACT, {
     if (!await confirmDialog({ title: '이 메모를 삭제할까요?', message: prev ? `“${esc(short)}”` : '내용이 비어 있는 메모예요.' })) return;
     const hold = holdBook(b); removeIt(); commit('메모 삭제', b); refreshSection(b, s.id); offerUndo(hold, '메모를 삭제했어요');
   },
+  /* 챕터 */
+  chapters: () => { const b = curBook(); if (!b) return; if (chapters(b).length) openChOverview(b); else openToc(b); },
+  pickCh: (el) => {
+    const { b, s } = ctxSec(el); if (!s) return; const en = (findNode(s, el.closest('[data-entry]').dataset.entry) || {}).node; if (!en || isGroup(en)) return;
+    openMenu(el, chMenuItems(b, en.ch || '', c => setEntryCh(b, s, en, c)));
+  },
+  chAddEntry: (el) => { const { b, s } = ctxSec(el); if (s) addEntryToCh(b, s, chapterOf(b, el.dataset.ch)); },
+  chAddPick: (el) => { const { b, s } = ctxSec(el); if (s) openMenu(el, chMenuItems(b, null, c => addEntryToCh(b, s, c), { header: `어느 챕터에 ${s.type === 'words' ? '단어를' : '메모를'} 추가할까요?`, noneLabel: '챕터 없이 추가' })); },
+  chViewOff: (el) => { const { b, s } = ctxSec(el); if (!s) return; s.byCh = false; commit('기본 보기로', b); refreshSection(b, s.id); },
+  sentBtn: (el) => {
+    const { b, s } = ctxSec(el); if (!s) return; const li = el.closest('.entry'), en = (findNode(s, li.dataset.entry) || {}).node; if (!en || isGroup(en)) return;
+    if (s.sentHide) { openSentPop(b, s, en); return; }
+    li.classList.add('sent-open'); const ta = $('.entry-sent', li); if (ta) { autosize(ta); try { ta.focus({ preventScroll: true }); } catch (err) { ta.focus(); } ta.scrollIntoView({ block: 'nearest' }); }
+  },
+  manualSave: () => manualSave(),
   /* 맵 */
   mapAdd: (el) => { const { root } = mapCtx(el); addNode(root); },
   mapConnect: (el) => {
@@ -3293,6 +3814,9 @@ function bookMenuItems(b, fromCard) {
     { icon: 'copy', label: '책 복제', onClick: () => duplicateBook(b) },
     !fromCard ? { icon: 'layout', label: '이 구성을 기본 템플릿으로', onClick: () => saveTemplate(b) } : null,
     '-',
+    !fromCard ? { icon: 'list', label: '목차 · 챕터 편집', onClick: () => openToc(b) } : null,
+    !fromCard && chapters(b).length ? { icon: 'book', label: '챕터별 모아 보기', onClick: () => openChOverview(b) } : null,
+    !fromCard ? '-' : null,
     { icon: 'download', label: 'JSON으로 내보내기', onClick: () => exportBookJSON(b) },
     { icon: 'file', label: 'PDF로 내보내기', onClick: () => pdfDialog(pdfScopesFor(b, true)) },
     '-',
@@ -3643,16 +4167,75 @@ function pdfScopesFor(b, onlyThis) {
 }
 function pdfDialog(scopes) {
   if (!scopes.length || !scopes[0].books.length) { toast('내보낼 책이 없어요'); return; }
+  const P = normPdf(state.settings.pdf), books = [...new Set(scopes.flatMap(sc => sc.books))];
+  const one = scopes.find(sc => sc.books.length === 1) || null, ob = one && one.books[0];
+  const has = {
+    ch: books.some(b => chapters(b).length),
+    sent: books.some(b => Object.values(b.sections).some(s => s.type === 'words' && allItems(s).some(x => String(x.sentence || '').trim()))),
+    map: books.some(b => Object.values(b.sections).some(s => s.type === 'characters' && s.map.nodes.length)),
+    cover: books.some(b => b.cover),
+  };
+  const seg = (key, opts) => `<div class="seg pdf-seg" role="group" data-pseg="${key}">${opts.map(([v, l]) => `<button type="button" class="${P[key] === v ? 'on' : ''}" data-v="${v}" aria-pressed="${P[key] === v}">${l}</button>`).join('')}</div>`;
+  const chk = (key, label, show = true) => show ? `<label class="pchk"><input type="checkbox" data-pchk="${key}" ${P[key] ? 'checked' : ''}><span>${label}</span></label>` : '';
+  const secList = ob ? (() => { const out = []; ob.rows.forEach(r => r.cols.forEach(c => c.forEach(id => { const s = ob.sections[id]; if (s && printSecHTML(ob, s, Object.assign({}, PDF_DEF, { secs: null }))) out.push(s); }))); return out; })() : [];
+  const fsTxt = v => `${String(v).replace(/\.0$/, '')}pt`;
   modal({
-    title: 'PDF로 내보내기', width: 480,
+    title: 'PDF로 내보내기', width: 500, className: 'pdf-modal',
     body: `${scopes.length > 1 ? `<div class="mlabel" style="margin-top:0">범위</div><div class="radio-cards">${scopes.map((s, i) => `<label><input type="radio" name="pscope" value="${i}" ${i ? '' : 'checked'}><div><b>${s.label}</b><span>${s.desc}</span></div></label>`).join('')}</div>` : `<p style="margin:0 0 4px"><b>${scopes[0].label}</b> <span class="muted">${scopes[0].desc}</span></p>`}
       <div class="mlabel">방식</div>
       <div class="radio-cards">
         <label><input type="radio" name="pmode" value="download" checked><div><b>PDF 파일로 바로 저장</b><span>.pdf 파일을 곧바로 내려받아요</span></div></label>
         <label><input type="radio" name="pmode" value="print"><div><b>인쇄 창에서 저장</b><span>대상을 ‘PDF로 저장’으로 고르면 글자 선택이 되는 고화질 PDF가 돼요</span></div></label>
-      </div>`,
-    actions: [{ label: '취소' }, { label: '내보내기', primary: true, onClick: (api) => { const si = +(($('input[name=pscope]:checked', api.el) || {}).value || 0); const mode = $('input[name=pmode]:checked', api.el).value; const sc = scopes[si]; setTimeout(() => exportPDF(sc.books, mode, sc.file), 60); } }]
+      </div>
+      <details class="pset" open><summary>상세 설정</summary>
+        <div class="pset-row"><span class="pset-k">글자 크기</span><div class="pdf-fs"><button type="button" class="icon-btn sm" data-fs="-0.5" aria-label="글자 작게">${icon('zoomOut', 17)}</button><input type="range" min="8" max="14" step="0.5" value="${P.fs}" aria-label="글자 크기"><button type="button" class="icon-btn sm" data-fs="0.5" aria-label="글자 크게">${icon('zoomIn', 17)}</button><output>${fsTxt(P.fs)}</output></div></div>
+        <div class="pdf-sample" aria-hidden="true">본문 글자가 이 정도 크기로 나와요 · 가나다 Aa 123</div>
+        <div class="pset-row"><span class="pset-k">줄 간격</span>${seg('lh', [['tight', '좁게'], ['normal', '보통'], ['loose', '넓게']])}</div>
+        <div class="pset-row"><span class="pset-k">여백</span>${seg('margin', [['narrow', '좁게'], ['normal', '보통'], ['wide', '넓게']])}</div>
+        <div class="pset-row"><span class="pset-k">단 배치</span>${seg('cols', [['layout', '설정한 단 그대로'], ['one', '1단으로']])}</div>
+        <div class="pset-k pset-sub">넣을 내용</div>
+        <div class="pchks">
+          ${chk('cover', '표지 이미지', has.cover)}${chk('map', '인물 관계도 그림', has.map)}${chk('sent', '단어가 쓰인 문장', has.sent)}${chk('page', '페이지 (p.)')}${chk('chap', '챕터 이름', has.ch)}${chk('byCh', '메모를 챕터별로 묶기', has.ch)}${chk('head', '머리글 · 바닥글')}
+        </div>
+        ${secList.length > 1 ? `<div class="psecs-wrap"${one === scopes[0] ? '' : ' hidden'}><div class="pset-k pset-sub">넣을 섹션 <small>· 이 책만 내보낼 때</small></div><div class="pchks psecs">${secList.map(s => `<label class="pchk"><input type="checkbox" data-psec="${s.id}" checked><span><i class="psec-dot" style="background:${secColor(s)}"></i>${esc(s.title || '이름 없음')}</span></label>`).join('')}</div></div>` : ''}
+        <div class="pset-foot"><button type="button" class="btn ghost sm" data-preset="reset">${icon('refresh', 15)}기본값으로</button></div>
+      </details>`,
+    actions: [{ label: '취소' }, {
+      label: '내보내기', primary: true, onClick: (api) => {
+        const si = +(($('input[name=pscope]:checked', api.el) || {}).value || 0); const mode = $('input[name=pmode]:checked', api.el).value; const sc = scopes[si];
+        const wrap = $('.psecs-wrap', api.el), secs = wrap && sc === one ? new Set($$('[data-psec]:checked', api.el).map(x => x.dataset.psec)) : null;
+        if (secs && !secs.size) { toast('넣을 섹션을 하나 이상 골라 주세요'); return false; }
+        const o = normPdf(P);
+        if (JSON.stringify(o) !== JSON.stringify(normPdf(state.settings.pdf))) { state.settings.pdf = o; commit('PDF 설정 변경'); }
+        setTimeout(() => exportPDF(sc.books, mode, sc.file, Object.assign({}, o, { secs })), 60);
+      }
+    }],
   });
+  const el = modalStack[modalStack.length - 1].el, range = $('.pdf-fs input', el), out = $('.pdf-fs output', el), sample = $('.pdf-sample', el);
+  const paint = () => {
+    range.value = P.fs; out.textContent = fsTxt(P.fs);
+    sample.style.fontSize = (P.fs * 4 / 3).toFixed(2) + 'px'; sample.style.lineHeight = PDF_LH[P.lh];
+    $$('[data-pseg]', el).forEach(g => $$('button', g).forEach(bt => { const on = P[g.dataset.pseg] === bt.dataset.v; bt.classList.toggle('on', on); bt.setAttribute('aria-pressed', on); }));
+    $$('[data-pchk]', el).forEach(c => { c.checked = !!P[c.dataset.pchk]; });
+    const bc = $('[data-pchk="byCh"]', el), cc = $('[data-pchk="chap"]', el); if (bc && cc) cc.closest('.pchk').classList.toggle('dim', P.byCh);
+  };
+  paint();
+  range.addEventListener('input', () => { P.fs = normPdf({ fs: range.value }).fs; paint(); });
+  el.addEventListener('click', ev => {
+    const fb = ev.target.closest('[data-fs]'); if (fb) { P.fs = normPdf({ fs: P.fs + (+fb.dataset.fs) }).fs; paint(); return; }
+    const sb = ev.target.closest('[data-pseg] button'); if (sb) { P[sb.closest('[data-pseg]').dataset.pseg] = sb.dataset.v; paint(); return; }
+    if (ev.target.closest('[data-preset="reset"]')) { Object.assign(P, PDF_DEF); paint(); $$('[data-psec]', el).forEach(c => { c.checked = true; }); toast('PDF 설정을 기본값으로 바꿨어요'); }
+  });
+  el.addEventListener('change', ev => {
+    const c = ev.target.closest('[data-pchk]'); if (c) { P[c.dataset.pchk] = c.checked; paint(); return; }
+    if (ev.target.name === 'pscope') { const w = $('.psecs-wrap', el); if (w) w.hidden = scopes[+ev.target.value] !== one; }
+  });
+}
+function pdfOpts(o) { return Object.assign({ secs: null }, normPdf(o || state.settings.pdf), o && o.secs ? { secs: o.secs } : {}); }
+function pdfDocHTML(inner, o) { return `<div class="p-doc" style="--k:${o.fs / 10};--lh:${PDF_LH[o.lh]}">${inner}</div>`; }
+function setPageMargin(o) {
+  let st = $('#pdfPage'); if (!st) { st = document.createElement('style'); st.id = 'pdfPage'; document.head.append(st); }
+  const m = PDF_MARGIN[o.margin]; st.textContent = `@media print{@page{size:A4;margin:${m + 1}mm ${m}mm}}`;
 }
 function printVal(f) {
   const v = f.value;
@@ -3666,72 +4249,95 @@ function printVal(f) {
   }
 }
 function isEmptyVal(f) { return f.type === 'period' ? !(f.value.start || f.value.end) : f.type === 'rating' ? !+f.value : !String(f.value).trim(); }
-function printSecHTML(b, s) {
+function printSecHTML(b, s, o) {
   if (!s) return '';
+  o = o || pdfOpts();
+  if (o.secs && !o.secs.has(s.id)) return '';
   const d = SEC[s.type] || SEC.custom, color = secColor(s), sty = state.settings.secStyle;
   const head = `${sty === 'band' ? `<div class="p-band" style="background:${color}"></div>` : ''}<div class="p-sec-head"><span class="p-dot" style="background:${color}"></span><span${sty === 'title' ? ` style="color:${readableOn(color)}"` : ''}>${esc(s.title || '이름 없음')}</span>${d.hint && s.title === d.title ? `<span class="p-hint">${d.hint}</span>` : ''}</div>`;
   if (s.type === 'info') {
-    const vis = s.fields.filter(f => !f.hidden && !isEmptyVal(f)), title = vis.find(f => f.role === 'title'), rest = vis.filter(f => f !== title);
-    if (!vis.length && !b.cover) return '';
-    return `<section class="p-sec">${head}<div class="p-info">${b.cover ? `<img class="p-cover" src="${esc(b.cover)}" alt="">` : ''}<div class="p-info-main">${title ? `<div class="p-title">${esc(title.value)}</div>` : ''}<div class="p-fields">${rest.map(f => `<div class="p-frow"><span class="k">${esc(f.label)}</span><span class="v">${printVal(f)}</span></div>`).join('')}</div></div></div></section>`;
+    const vis = s.fields.filter(f => !f.hidden && !isEmptyVal(f)), title = vis.find(f => f.role === 'title'), rest = vis.filter(f => f !== title), cover = o.cover && b.cover;
+    if (!vis.length && !cover) return '';
+    return `<section class="p-sec">${head}<div class="p-info">${cover ? `<img class="p-cover" src="${esc(b.cover)}" alt="">` : ''}<div class="p-info-main">${title ? `<div class="p-title">${esc(title.value)}</div>` : ''}<div class="p-fields">${rest.map(f => `<div class="p-frow"><span class="k">${esc(f.label)}</span><span class="v">${printVal(f)}</span></div>`).join('')}</div></div></div></section>`;
   }
   if (s.type === 'characters') {
     if (!s.map.nodes.length) return '';
     const byId = new Map(s.map.nodes.map(n => [n.id, n]));
-    return `<section class="p-sec">${head}<div class="p-map">${staticMapSVG(s)}</div><div class="p-chars">
+    return `<section class="p-sec">${head}${o.map ? `<div class="p-map">${staticMapSVG(s)}</div>` : ''}<div class="p-chars">
       <div><h5>등장인물</h5><ul>${treeOrder(s.map).map(({ n, d }) => `<li style="padding-left:${Math.min(d, 6) * 12}px">${d ? '<span class="r">└ </span>' : ''}<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${resolveColor(n.color)};margin-right:6px"></span><b>${esc(n.name || '이름 없음')}</b>${n.role ? ` <span class="r">· ${esc(n.role)}</span>` : ''}${n.desc ? `<div class="r" style="padding-left:13px;white-space:pre-wrap">${esc(n.desc)}</div>` : ''}</li>`).join('')}</ul></div>
       <div><h5>관계</h5><ul>${s.map.edges.map(e => { const a = byId.get(e.from), c = byId.get(e.to); if (!a || !c) return ''; return `<li>${esc(a.name)} <span class="r">${e.dir === 'both' ? '↔' : e.dir === 'none' ? '—' : '→'}</span> ${esc(c.name)}${e.label ? ` <span class="r">· ${esc(e.label)}</span>` : ''}</li>`; }).join('') || '<li class="r">없음</li>'}</ul></div></div></section>`;
   }
   if (!allItems(s).some(e => itemFilled(s, e))) return '';
-  const pg = e => String(e.page).trim() ? 'p.' + esc(String(e.page).trim().replace(/^p\.?\s*/i, '')) : '';
-  const nodes = (s.entries || []).filter(e => isGroup(e) ? e.items.some(x => itemFilled(s, x)) : itemFilled(s, e));
+  const byCh = o.byCh && chapters(b).length > 0;
+  const pg = e => o.page && String(e.page).trim() ? 'p.' + esc(String(e.page).trim().replace(/^p\.?\s*/i, '')) : '';
+  const chTag = e => { if (byCh || !o.chap) return ''; const c = chapterOf(b, e.ch); return c ? esc(chLabel(c)) : ''; };
+  const filled = list => list.filter(x => itemFilled(s, x));
+  /* 묶음 목록: 챕터별(파트 머리말 포함) 또는 카테고리별 → [{ part?, title?, items }] */
+  let blocks;
+  if (byCh) {
+    const parts = new Set(); blocks = [];
+    groupByChapter(b, filled(allItems(s))).forEach(g => {
+      const c = g.ch;
+      if (c && c.kind === 'ch') { const p = chPartOf(b, c); if (p && !parts.has(p.id)) { parts.add(p.id); blocks.push({ part: chLabel(p) }); } }
+      if (c && c.kind === 'part') { parts.add(c.id); blocks.push({ part: chLabel(c), items: g.items }); return; }
+      blocks.push({ title: c ? chLabel(c) : '챕터 없음', none: !c, items: g.items });
+    });
+    if (blocks.length === 1 && blocks[0].none) blocks = blocks[0].items.map(item => ({ item }));   // 챕터를 고른 메모가 하나도 없으면 머리말 없이
+  } else blocks = (s.entries || []).filter(e => isGroup(e) ? e.items.some(x => itemFilled(s, x)) : itemFilled(s, e)).map(e => isGroup(e) ? { title: e.title.trim() || '카테고리', items: filled(e.items) } : { item: e });
   if (s.type === 'words') {
-    const wrow = e => `<tr><td class="w">${esc((e.word || '').trim())}</td><td class="m"><div class="md">${md(e.text, { static: true })}</div></td><td class="pg">${pg(e)}</td></tr>`;
-    return `<section class="p-sec">${head}<table class="p-words"><thead><tr><th>단어</th><th>뜻</th><th>쪽</th></tr></thead><tbody>${nodes.map(e => isGroup(e) ? `<tr class="p-wgrp"><td colspan="3">${esc(e.title.trim() || '카테고리')}</td></tr>${e.items.filter(x => itemFilled(s, x)).map(wrow).join('')}` : wrow(e)).join('')}</tbody></table></section>`;
+    const meta = o.page || (o.chap && !byCh && chapters(b).length);
+    const wrow = e => { const ct = chTag(e), p = pg(e), sent = o.sent && String(e.sentence || '').trim() ? `<div class="p-sent">❝ ${hiWord(e.sentence, e.word)}</div>` : ''; return `<tr><td class="w">${esc((e.word || '').trim())}</td><td class="m"><div class="md">${md(e.text, { static: true })}</div>${sent}</td>${meta ? `<td class="pg">${ct ? `<span class="p-chap">${ct}</span>` : ''}${p}</td>` : ''}</tr>`; };
+    const cols = meta ? 3 : 2;
+    const body = blocks.map(x => x.item ? wrow(x.item) : x.part !== undefined ? `<tr class="p-wpart"><td colspan="${cols}">${esc(x.part)}</td></tr>${(x.items || []).map(wrow).join('')}` : `<tr class="p-wgrp"><td colspan="${cols}">${esc(x.title)}</td></tr>${x.items.map(wrow).join('')}`).join('');
+    return `<section class="p-sec">${head}<table class="p-words${meta ? '' : ' no-meta'}${o.chap && !byCh && chapters(b).length ? ' has-chap' : ''}"><thead><tr><th>단어</th><th>뜻</th>${meta ? `<th>${o.page ? '쪽' : '챕터'}</th>` : ''}</tr></thead><tbody>${body}</tbody></table></section>`;
   }
-  const prow = e => `<div class="p-entry${s.type === 'action' && e.done ? ' p-done' : ''}">${s.type === 'action' ? `<span class="p-check${e.done ? ' on' : ''}">${e.done ? '✓' : ''}</span>` : ''}<div class="p-text md">${md(e.text, { static: true })}</div>${pg(e) ? `<span class="p-page">${pg(e)}</span>` : ''}</div>`;
-  return `<section class="p-sec">${head}<div>${nodes.map(e => isGroup(e) ? `<div class="p-grp"><div class="p-grp-title">${esc(e.title.trim() || '카테고리')}</div>${e.items.filter(x => itemFilled(s, x)).map(prow).join('')}</div>` : prow(e)).join('')}</div></section>`;
+  const prow = e => { const m = [chTag(e), pg(e)].filter(Boolean).join(' · '); return `<div class="p-entry${s.type === 'action' && e.done ? ' p-done' : ''}">${s.type === 'action' ? `<span class="p-check${e.done ? ' on' : ''}">${e.done ? '✓' : ''}</span>` : ''}<div class="p-text md">${md(e.text, { static: true })}</div>${m ? `<span class="p-page">${m}</span>` : ''}</div>`; };
+  return `<section class="p-sec">${head}<div>${blocks.map(x => x.item ? prow(x.item) : x.part !== undefined ? `<div class="p-chpart">${esc(x.part)}</div>${x.items && x.items.length ? `<div class="p-grp">${x.items.map(prow).join('')}</div>` : ''}` : `<div class="p-grp"><div class="p-grp-title">${esc(x.title)}</div>${x.items.map(prow).join('')}</div>`).join('')}</div></section>`;
 }
-function printBookHTML(b) {
+function printBookHTML(b, o) {
+  o = o || pdfOpts();
   const rows = b.rows.map(r => {
-    const cols = r.cols.map(c => c.map(id => printSecHTML(b, b.sections[id])).join(''));
+    const cols = r.cols.map(c => c.map(id => printSecHTML(b, b.sections[id], o)).join(''));
     if (cols.every(x => !x)) return '';
+    if (o.cols === 'one') return `<div class="p-row" style="grid-template-columns:minmax(0,1fr)"><div class="p-col">${cols.join('')}</div></div>`;
     return `<div class="p-row" style="grid-template-columns:${r.ratio.map(x => `minmax(0,${x}fr)`).join(' ')}">${cols.map(x => `<div class="p-col">${x}</div>`).join('')}</div>`;
   }).join('');
-  const hasInfo = Object.values(b.sections).some(s => s.type === 'info');
-  const lead = !hasInfo ? `<div class="p-info" style="margin-bottom:12px">${b.cover ? `<img class="p-cover" src="${esc(b.cover)}" alt="">` : ''}<div class="p-title">${esc(bookTitle(b))}</div></div>` : '';
-  return `<article class="p-book"><div class="p-run"><span>독서노트</span><span>${esc(bookTitle(b))}${bookAuthor(b) ? ' · ' + esc(bookAuthor(b)) : ''}</span></div>${lead}${rows || '<p style="color:#A1A1AA">기록이 없어요.</p>'}<div class="p-foot">마지막 수정 ${fmtDT(b.updatedAt, { wd: false, sec: false })} · 내보낸 날 ${fmtDT(nowISO(), { wd: false, sec: false })}</div></article>`;
+  const hasInfo = Object.values(b.sections).some(s => s.type === 'info' && !(o.secs && !o.secs.has(s.id)));
+  const lead = !hasInfo ? `<div class="p-info" style="margin-bottom:12px">${o.cover && b.cover ? `<img class="p-cover" src="${esc(b.cover)}" alt="">` : ''}<div class="p-title">${esc(bookTitle(b))}</div></div>` : '';
+  return `<article class="p-book">${o.head ? `<div class="p-run"><span>독서노트</span><span>${esc(bookTitle(b))}${bookAuthor(b) ? ' · ' + esc(bookAuthor(b)) : ''}</span></div>` : ''}${lead}${rows || '<p style="color:#A1A1AA">기록이 없어요.</p>'}${o.head ? `<div class="p-foot">마지막 수정 ${fmtDT(b.updatedAt, { wd: false, sec: false })} · 내보낸 날 ${fmtDT(nowISO(), { wd: false, sec: false })}</div>` : ''}</article>`;
 }
 function tocHTML(books) {
   return `<article class="p-book"><div class="p-cover-title">독서노트</div><div class="p-sub">책 ${books.length}권 · ${fmtDT(nowISO(), { sec: false })} 내보냄</div>
     <table class="p-toc"><thead><tr><th style="width:8mm">#</th><th>제목</th><th>작가</th><th style="width:30mm">별점</th><th style="width:18mm">상태</th></tr></thead><tbody>${books.map((b, i) => { const r = +roleVal(b, 'rating') || 0; return `<tr><td style="color:#A1A1AA">${i + 1}</td><td><b>${esc(bookTitle(b))}</b></td><td>${esc(bookAuthor(b))}</td><td>${r ? starsHTML(r, { size: 11 }) : ''}</td><td>${esc(roleVal(b, 'status'))}</td></tr>`; }).join('')}</tbody></table></article>`;
 }
 function waitImages(root) { return Promise.all($$('img', root).map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; }))); }
-async function exportPDF(books, mode, filename) {
-  const parts = (books.length > 1 ? [tocHTML(books)] : []).concat(books.map(printBookHTML));
+async function exportPDF(books, mode, filename, o) {
+  o = pdfOpts(o);
+  const parts = (books.length > 1 ? [tocHTML(books)] : []).concat(books.map(b => printBookHTML(b, o)));
   if (mode === 'print') {
-    const pr = $('#printRoot'); pr.innerHTML = `<div class="p-doc">${parts.join('')}</div>`; printPrepared = true;
+    const pr = $('#printRoot'); pr.innerHTML = pdfDocHTML(parts.join(''), o); printPrepared = true; setPageMargin(o);
     await waitImages(pr); try { await document.fonts.ready; } catch (e) { }
     setTimeout(() => window.print(), 50); return;
   }
   busy(true, 'PDF 만드는 중…');
   try { await loadScript(H2P_URL); if (!window.html2pdf) throw new Error('no lib'); }
-  catch (e) { busy(false); toast('PDF 모듈을 불러오지 못해 인쇄 창으로 열게요'); return exportPDF(books, 'print', filename); }
-  const holder = document.createElement('div'); holder.className = 'pdf-holder';
-  holder.innerHTML = parts.map(p => `<div class="p-doc">${p}</div>`).join('');
+  catch (e) { busy(false); toast('PDF 모듈을 불러오지 못해 인쇄 창으로 열게요'); return exportPDF(books, 'print', filename, o); }
+  const mg = PDF_MARGIN[o.margin];
+  const holder = document.createElement('div'); holder.className = 'pdf-holder'; holder.style.width = (210 - mg * 2) + 'mm';
+  holder.innerHTML = parts.map(p => pdfDocHTML(p, o)).join('');
   document.body.append(holder);
   try {
     await waitImages(holder); try { await document.fonts.ready; } catch (e) { }
     const els = $$(':scope > .p-doc', holder);
     const maxH = Math.max(...els.map(e => e.scrollHeight), 1);
     const scale = clamp(Math.sqrt(15e6 / (holder.offsetWidth * maxH)), .75, 2);
-    if (maxH * scale > 30000) { holder.remove(); busy(false); toast('내용이 길어서 인쇄 창으로 열게요. ‘PDF로 저장’을 고르면 돼요', { ms: 5000 }); return exportPDF(books, 'print', filename); }
+    if (maxH * scale > 30000) { holder.remove(); busy(false); toast('내용이 길어서 인쇄 창으로 열게요. ‘PDF로 저장’을 고르면 돼요', { ms: 5000 }); return exportPDF(books, 'print', filename, o); }
     const opt = {
-      margin: [12, 12, 13, 12], filename: safeName(filename.replace(/\.pdf$/i, '')) + '.pdf',
+      margin: [mg, mg, mg + 1, mg], filename: safeName(filename.replace(/\.pdf$/i, '')) + '.pdf',
       image: { type: 'jpeg', quality: .95 },
       html2canvas: { scale, useCORS: true, backgroundColor: '#ffffff', logging: false },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'], avoid: ['.p-sec', '.p-entry', '.p-words tr', '.p-grp-title', '.p-sec-head', '.p-info', '.p-map', '.p-frow', '.p-toc tr', '.p-chars li'] },
+      pagebreak: { mode: ['css', 'legacy'], avoid: ['.p-sec', '.p-entry', '.p-words tr', '.p-grp-title', '.p-chpart', '.p-sec-head', '.p-info', '.p-map', '.p-frow', '.p-toc tr', '.p-chars li'] },
     };
     let w = html2pdf().set(opt).from(els[0]).toPdf();
     els.slice(1).forEach(el => { w = w.get('pdf').then(pdf => { pdf.addPage(); }).from(el).toContainer().toCanvas().toPdf(); });
@@ -3744,7 +4350,8 @@ let printPrepared = false;
 window.addEventListener('beforeprint', () => {
   if (printPrepared || !state) return;
   const b = curBook(), books = b ? [b] : state.books; if (!books.length) return;
-  $('#printRoot').innerHTML = `<div class="p-doc">${(books.length > 1 ? [tocHTML(books)] : []).concat(books.map(printBookHTML)).join('')}</div>`;
+  const o = pdfOpts(); setPageMargin(o);
+  $('#printRoot').innerHTML = pdfDocHTML((books.length > 1 ? [tocHTML(books)] : []).concat(books.map(x => printBookHTML(x, o))).join(''), o);
 });
 window.addEventListener('afterprint', () => { printPrepared = false; });
 
@@ -3926,7 +4533,7 @@ async function showMissingNotice() {
   });
 }
 async function boot() {
-  $('#btnData').innerHTML = icon('database', 19); $('#btnSettings').innerHTML = icon('settings', 19);
+  $('#btnData').innerHTML = icon('database', 19); $('#btnSettings').innerHTML = icon('settings', 19); setSaveBtn();
   try { const u = new URL(location.href); if (u.searchParams.has('v')) { u.searchParams.delete('v'); history.replaceState(null, '', u.toString()); } } catch (e) { }
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { }); } catch (e) { }
   const L = await loadState();
