@@ -4,7 +4,7 @@
 
 - **무엇:** 레이아웃을 자유롭게 꾸미는 독서노트 웹앱
 - **파일:** `index.html` 하나 (GitHub Pages에 그대로 올려서 씀)
-- **현재 버전:** 1.8.0 (2026-11-07)
+- **현재 버전:** 1.9.0 (2026-11-07)
 - **사용자:** 한국어 사용자, 아이폰 · 안드로이드 · PC를 모두 씀
 - **소통:** 사용자에게는 항상 **한국어**로, 개발 용어보다 쉬운 말로 설명해 주세요.
 
@@ -187,12 +187,14 @@ v1.7.0에서 자동 테스트로 확인한 시나리오예요. 저장 코드를 
 
 데이터 모양 (요약):
 - `state = { schema, books[], template, settings, saveLog[], savedAt, lastBackupAt, firstUseAt, backupSnoozeUntil, flags }`
-- `book = { id, kind:'general'|'novel', createdAt, updatedAt, cover(dataURL|null), sections:{id→section}, rows:[{id, ratio[], cols:[[sectionId…]]}], chapters:[{id, kind:'part'|'ch', title}] }`
-  - 목차(`chapters`)는 책마다 따로예요. 챕터는 목차에서 바로 앞에 있는 파트에 속해요. 기본 템플릿에는 넣지 않아요.
+- `book = { id, kind:'general'|'novel', createdAt, updatedAt, cover(dataURL|null), sections:{id→section}, rows:[{id, ratio[], cols:[[sectionId…]]}], chapters:[{id, kind:'part'|'ch'|'extra', title, page}] }`
+  - 목차(`chapters`)는 책마다 따로예요. 기본 템플릿에는 넣지 않아요.
+  - 순서는 **파트 → 챕터**. 챕터는 목차에서 바로 앞에 있는 파트에 속해요. `extra`(화면 이름 '기타': 프롤로그 · 에필로그 · 작가의 말 등)는 어디에도 속하지 않아요.
+  - `page` = 시작 쪽. 메모의 챕터는 `effCh()`로 정해요: **직접 고른 `ch` → 쪽 번호(`autoChOf`) → 임시로 이어받은 `ch`(`chSoft:true`)**. 챕터를 보여 주거나 묶는 곳은 `e.ch` 대신 꼭 `effCh(b, e)`를 써요.
 - 섹션 `type`: `info` · `motivation` · `liked` · `unliked` · `learned` · `action` · `comment` · `words` · `characters` · `custom`
   - Info: `fields:[{id, role, label, type, value, hidden, options?}]`
-  - 메모형: `entries:[{id, text, page, done, word?, sentence?, ch?} | {id, kind:'group', title, collapsed, items:[…]}]` (카테고리는 1단계만)
-    - `word` · `sentence`(단어가 쓰인 문장)는 Words에만, `ch`는 고른 챕터 id
+  - 메모형: `entries:[{id, text, page, done, word?, sentence?, ch?, chSoft?} | {id, kind:'group', title, collapsed, items:[…]}]` (카테고리는 1단계만)
+    - `word` · `sentence`(단어가 쓰인 문장)는 Words에만, `ch`는 고른 챕터 id, `chSoft`는 앞 메모를 따라 임시로 정해진 챕터 표시
     - 섹션 보기 설정: `byCh`(챕터별로 묶어 보기), `sentHide`(Words: 문장은 눌러서 보기)
 - `settings.pdf = { fs, lh, margin, cols, cover, map, sent, page, chap, byCh, head }` — PDF 상세 설정 (`normPdf`가 정리)
   - 등장인물: `map:{ nodes:[{id, name, role, desc, color, main, parent, collapsed, x, y}], edges:[{id, from, to, label, dir, style}] }`
@@ -216,6 +218,8 @@ v1.7.0에서 자동 테스트로 확인한 시나리오예요. 저장 코드를 
   - 입력칸 글자 크기는 16px 이상이어야 해요 (확대 방지). iOS에서는 viewport에 `maximum-scale=1`을 덧붙여요.
   - `.md-view`에는 `onclick="void 0"` + `cursor:pointer`가 있어야 탭이 인식돼요. 지우면 "글자가 안 적히는" 버그가 다시 생겨요.
 - **포커스할 때 레이아웃이 밀리면 안 돼요.** 안드로이드에서 엉뚱한 곳이 눌려요. 버튼은 항상 자리에 두고 `visibility`로 숨겨요.
+  - 누르는 도중(`mdPtrDown`)에 화면을 바꿔야 하면 미뤘다가 손을 뗀 뒤에 해요 (`mdPending` · `sentPending` · `tapQueue` → `mdFlush`).
+  - 입력 중인 섹션은 다시 그리지 않아요. 챕터별 보기의 재묶음은 섹션 밖으로 나간 뒤에 해요 (`regroupSoon`).
 - **한글 입력:** Enter · Tab · Escape를 처리하기 전에 `e.isComposing || e.keyCode === 229`를 확인해요.
 - 글 쓰는 중에는 업데이트 팝업을 미뤄요 (`userIsTyping()`).
 - 중요한 선택 창은 `modal({ focusDialog:true })`로 열어요. 쓰던 Enter · Space가 버튼을 누르지 않게 해요.
